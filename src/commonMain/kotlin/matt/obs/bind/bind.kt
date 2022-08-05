@@ -81,7 +81,7 @@ fun <T, R, TT: ValProp<R?>> ValProp<T>.chainBinding(
 }
 
 fun <E, R> BasicObservableCollection<E>.binding(
-  vararg dependencies: MObservableObject<*>,
+  vararg dependencies: MObservableVal<*>,
   op: (Collection<E>)->R,
 ): ValProp<R> {
   val prop = this
