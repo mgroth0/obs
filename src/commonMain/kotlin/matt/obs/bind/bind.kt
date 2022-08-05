@@ -1,15 +1,16 @@
 package matt.obs.bind
 
 import matt.klib.lang.go
-import matt.obs.olist.BasicObservableCollection
-import matt.obs.olist.MObservable
+import matt.obs.MObservableObject
+import matt.obs.MObservableVal
+import matt.obs.col.BasicObservableCollection
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 import kotlin.contracts.ExperimentalContracts
 
 fun <T, R> ValProp<T>.binding(
-  vararg dependencies: MObservable<*>,
+  vararg dependencies: MObservableVal<T>,
   debug: Boolean = false,
   op: (T)->R,
 ): ValProp<R> {
@@ -28,6 +29,28 @@ fun <T, R> ValProp<T>.binding(
   }
 }
 
+fun <T: MObservableObject<T>, R> MObservableObject<T>.binding(
+  vararg dependencies: MObservableVal<T>,
+  debug: Boolean = false,
+  op: T.()->R,
+): ValProp<R> {
+  @Suppress("UNCHECKED_CAST")
+  val prop = this as T
+  return VarProp(prop.op()).apply {
+	val b = this
+	prop.onChange {
+	  if (debug) println("MObservableObject changed: $prop")
+	  b.value = prop.op()
+	}
+	dependencies.forEach {
+	  it.onChange {
+		if (debug) println("dep changed: $it")
+		b.value = prop.op()
+	  }
+	}
+  }
+}
+
 
 @OptIn(ExperimentalContracts::class)
 fun <T, R, TT: ValProp<R?>> ValProp<T>.chainBinding(
@@ -39,7 +62,7 @@ fun <T, R, TT: ValProp<R?>> ValProp<T>.chainBinding(
   var tt = op(value)
 
   return BindableProperty(tt?.value).apply {
-	println("initial value = ${value}")
+	println("initial value = $value")
 	var listener = tt?.onChange {
 	  value = tt?.value
 	  println("value2=${value}")
@@ -58,7 +81,7 @@ fun <T, R, TT: ValProp<R?>> ValProp<T>.chainBinding(
 }
 
 fun <E, R> BasicObservableCollection<E>.binding(
-  vararg dependencies: MObservable<*>,
+  vararg dependencies: MObservableObject<*>,
   op: (Collection<E>)->R,
 ): ValProp<R> {
   val prop = this
