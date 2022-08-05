@@ -10,7 +10,7 @@ import matt.obs.prop.VarProp
 import kotlin.contracts.ExperimentalContracts
 
 fun <T, R> ValProp<T>.binding(
-  vararg dependencies: MObservableVal<T>,
+  vararg dependencies: MObservableVal<*>,
   debug: Boolean = false,
   op: (T)->R,
 ): ValProp<R> {
