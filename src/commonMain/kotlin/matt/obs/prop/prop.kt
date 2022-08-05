@@ -5,7 +5,7 @@ import matt.obs.MObservableVarImpl
 import kotlin.reflect.KProperty
 
 
-open class ReadOnlyBindableProperty<T>(value: T): MObservableVarImpl<T>() {
+open class ReadOnlyBindableProperty<T>(value: T): MObservableVarImpl<T>(value) {
 
   init {
 	onChange { v ->
