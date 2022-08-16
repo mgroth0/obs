@@ -1,54 +1,30 @@
 package matt.obs.prop
 
 import matt.klib.lang.B
-import matt.obs.MObservableVarImpl
-import kotlin.reflect.KProperty
+import matt.obs.MObservableROValBase
+import matt.obs.WritableMObservableVal
 
 
-open class ReadOnlyBindableProperty<T>(value: T): MObservableVarImpl<T>(value) {
+open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
 
-  init {
-	onChange { v ->
-	  boundedProps.forEach {
-		if (it.value != v) it.value = v
+  override var value = value
+	protected set(v) {
+	  if (v != field) {
+		field = v
+		notifyListeners(v)
 	  }
 	}
-  }
-
-  private val boundedProps = mutableSetOf<BindableProperty<in T>>()
-
-  fun removeListener(listener: (T)->Unit) {
-	listeners -= listener
-  }
-
-  fun addBoundedProp(p: BindableProperty<in T>) {
-	boundedProps += p
-  }
-
-  operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
-	return value
-  }
 
 }
 
-
-class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value) {
-
-  fun bind(other: ReadOnlyBindableProperty<out T>) {
-	this.value = other.value
-	other.addBoundedProp(this)
-  }
-
-  fun bindBidirectional(other: BindableProperty<T>) {
-	this.value = other.value
-	other.addBoundedProp(this)
-	addBoundedProp(other)
-  }
-
-  operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: T) {
-	value = newValue
-  }
-
+open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T> {
+  override var value = value
+	set(v) {
+	  if (v != field) {
+		field = v
+		notifyListeners(v)
+	  }
+	}
 }
 
 typealias ValProp<T> = ReadOnlyBindableProperty<T>

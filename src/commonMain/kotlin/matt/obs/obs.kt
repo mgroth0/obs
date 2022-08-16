@@ -1,5 +1,8 @@
 package matt.obs
 
+import matt.obs.prop.ReadOnlyBindableProperty
+import kotlin.reflect.KProperty
+
 @DslMarker
 annotation class ObservableDSL
 
@@ -12,7 +15,17 @@ sealed interface MObservable<L, B> {
 
 sealed interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean>
 sealed interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean>
-sealed interface MObservableVal<T>: MObservable<(T)->Unit, (T)->Boolean>
+sealed interface MObservableVal<T>: MObservable<(T)->Unit, (T)->Boolean> {
+  fun addBoundedProp(p: WritableMObservableVal<in T>)
+}
+
+interface NullableVal<T>: MObservableVal<T?> {
+  fun onNonNullChange(op: (T)->Unit) = apply {
+	onChange {
+	  if (it != null) op(it)
+	}
+  }
+}
 
 @ObservableDSL
 sealed class MObservableImpl<L, B>: MObservable<L, B> {
@@ -24,9 +37,9 @@ sealed class MObservableImpl<L, B>: MObservable<L, B> {
 }
 
 
-
-abstract class MObservableObjectImpl<T: MObservableObjectImpl<T>> internal constructor(): MObservableImpl<T.()->Unit, T.()->Boolean>(),
-																MObservableObject<T> {
+abstract class MObservableObjectImpl<T: MObservableObjectImpl<T>> internal constructor():
+  MObservableImpl<T.()->Unit, T.()->Boolean>(),
+  MObservableObject<T> {
   final override fun onChangeUntil(until: T.()->Boolean, listener: T.()->Unit) {
 	var realListener: (T.()->Unit)? = null
 	realListener = {
@@ -64,15 +77,33 @@ abstract class MObservableWithChangeObjectImpl<C> internal constructor(): MObser
   }
 }
 
-abstract class MObservableROValImpl<T> internal constructor(value: T): MObservableImpl<(T)->Unit, (T)->Boolean>(),
-																	   MObservableVal<T> {
-  open var value = value
-	protected set(v) {
-	  if (v != field) {
-		field = v
-		listeners.forEach { it(v) }
-	  }
-	}
+interface WritableMObservableVal<T>: MObservableVal<T> {
+
+  var value: T
+
+  fun bind(other: ReadOnlyBindableProperty<out T>) {
+	this.value = other.value
+	other.addBoundedProp(this)
+  }
+
+  fun bindBidirectional(other: WritableMObservableVal<T>) {
+	this.value = other.value
+	other.addBoundedProp(this)
+	addBoundedProp(other)
+  }
+
+  operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: T) {
+	value = newValue
+  }
+}
+
+abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>(),
+
+										MObservableVal<T> {
+
+  protected fun notifyListeners(v: T) = listeners.forEach { it(v) }
+
+  abstract val value: T
 
   final override fun onChangeUntil(until: (T)->Boolean, listener: (T)->Unit) {
 	var realListener: ((T)->Unit)? = null
@@ -84,15 +115,29 @@ abstract class MObservableROValImpl<T> internal constructor(value: T): MObservab
   }
 
   final override fun onChangeOnce(listener: T.()->Unit) = onChangeUntil({ true }, listener)
-}
 
-abstract class MObservableVarImpl<T> internal constructor(value: T): MObservableROValImpl<T>(value) {
-  final override var value = value
-	public set(v) {
-	  super.value = v
-	  if (v != field) {
-		field = v
-		listeners.forEach { it(v) }
+
+  private val boundedProps = mutableSetOf<WritableMObservableVal<in T>>()
+
+  fun removeListener(listener: (T)->Unit) {
+	listeners -= listener
+  }
+
+  override fun addBoundedProp(p: WritableMObservableVal<in T>) {
+	boundedProps += p
+  }
+
+  operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+	return value
+  }
+
+  override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
+
+  init {
+	onChange { v ->
+	  boundedProps.forEach {
+		if (it.value != v) it.value = v
 	  }
 	}
+  }
 }
