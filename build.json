@@ -4,7 +4,7 @@
   },
   "dependencies" : [
 	{
-	  "type" : "matt.mstruct.BuildJsonProjectDependency",
+	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
 	  "cfg" :  "commonMainImplementation",
 	  "path" : ":k:stream"
 	}
