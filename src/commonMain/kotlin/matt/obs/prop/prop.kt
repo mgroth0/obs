@@ -18,6 +18,7 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
 }
 
 open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T> {
+  override var boundTo: ReadOnlyBindableProperty<out T>? = null
   override var value = value
 	set(v) {
 	  if (v != field) {

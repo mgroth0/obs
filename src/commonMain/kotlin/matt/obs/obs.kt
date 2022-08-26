@@ -1,6 +1,8 @@
 package matt.obs
 
+import matt.obs.prop.BindableProperty
 import matt.obs.prop.ReadOnlyBindableProperty
+import matt.stream.recurse.recurse
 import kotlin.reflect.KProperty
 
 @DslMarker
@@ -17,6 +19,7 @@ sealed interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean>
 sealed interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean>
 sealed interface MObservableVal<T>: MObservable<(T)->Unit, (T)->Boolean> {
   fun addBoundedProp(p: WritableMObservableVal<in T>)
+  fun removeBoundedProp(p: WritableMObservableVal<in T>)
 }
 
 interface NullableVal<T>: MObservableVal<T?> {
@@ -81,9 +84,31 @@ interface WritableMObservableVal<T>: MObservableVal<T> {
 
   var value: T
 
+  var boundTo: ReadOnlyBindableProperty<out T>?
+
   fun bind(other: ReadOnlyBindableProperty<out T>) {
+	require(boundTo == null)
+
+	val recursiveDeps: List<WritableMObservableVal<*>> = (other as? BindableProperty<*>?)?.recurse {
+	  it.boundedProps.filterIsInstance<BindableProperty<*>>()
+	}?.toList() ?: listOf()
+
+
+	require(this !in recursiveDeps)
+
 	this.value = other.value
+	boundTo = other
 	other.addBoundedProp(this)
+  }
+
+  fun unbind() {
+	boundTo?.removeBoundedProp(this)
+	boundTo = null
+  }
+
+  fun unbindBidirectional() {
+	(boundTo as? WritableMObservableVal<*>)?.unbind()
+	unbind()
   }
 
   fun bindBidirectional(other: WritableMObservableVal<T>) {
@@ -117,7 +142,7 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
   final override fun onChangeOnce(listener: T.()->Unit) = onChangeUntil({ true }, listener)
 
 
-  private val boundedProps = mutableSetOf<WritableMObservableVal<in T>>()
+  internal val boundedProps = mutableSetOf<WritableMObservableVal<in T>>()
 
   fun removeListener(listener: (T)->Unit) {
 	listeners -= listener
@@ -125,6 +150,10 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
 
   override fun addBoundedProp(p: WritableMObservableVal<in T>) {
 	boundedProps += p
+  }
+
+  override fun removeBoundedProp(p: WritableMObservableVal<in T>) {
+	boundedProps -= p
   }
 
   operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
