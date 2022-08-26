@@ -1,7 +1,5 @@
 {
-  "modType" :      {
-	"type" : "matt.klib.mod.NO_NATIVE"
-  },
+  "type" :         "matt.mstruct.bj.NO_NATIVEModule",
   "dependencies" : [
 	{
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
