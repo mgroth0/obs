@@ -4,7 +4,9 @@ import matt.klib.lang.B
 import matt.obs.MObservableROValBase
 import matt.obs.WritableMObservableVal
 
+object MPropSerializer
 
+//@Serializable
 open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
 
   override var value = value
@@ -16,6 +18,7 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
 	}
 
 }
+
 
 open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T> {
   override var boundTo: ReadOnlyBindableProperty<out T>? = null
