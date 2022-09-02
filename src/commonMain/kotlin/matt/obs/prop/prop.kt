@@ -1,12 +1,16 @@
 package matt.obs.prop
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import matt.json.custom.int
+import matt.json.custom.string
+import matt.json.ser.JsonSerializer
 import matt.klib.lang.B
 import matt.obs.MObservableROValBase
 import matt.obs.WritableMObservableVal
 
-object MPropSerializer
 
-//@Serializable
 open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
 
   override var value = value
@@ -30,6 +34,20 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
 	  }
 	}
 }
+
+object IntMPropSerializer: JsonSerializer<IntegerBProperty>(IntegerBProperty::class) {
+  override fun deserialize(jsonElement: JsonElement) = IntegerBProperty(jsonElement.int)
+  override fun serialize(value: IntegerBProperty) = JsonPrimitive(value.value)
+}
+
+@Serializable(with = IntMPropSerializer::class) class IntegerBProperty(value: Int): BindableProperty<Int>(value)
+
+object StringMPropSerializer: JsonSerializer<StringBProperty>(StringBProperty::class) {
+  override fun deserialize(jsonElement: JsonElement) = StringBProperty(jsonElement.string)
+  override fun serialize(value: StringBProperty) = JsonPrimitive(value.value)
+}
+
+@Serializable(with = StringMPropSerializer::class) class StringBProperty(value: String): BindableProperty<String>(value)
 
 typealias ValProp<T> = ReadOnlyBindableProperty<T>
 typealias VarProp<T> = BindableProperty<T>
