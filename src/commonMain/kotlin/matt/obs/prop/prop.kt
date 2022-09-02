@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import matt.json.custom.int
+import matt.json.custom.nullOr
 import matt.json.custom.string
 import matt.json.ser.ser
 import matt.klib.lang.B
@@ -51,6 +52,14 @@ object StringMPropSerializer: ser<StringBProperty>(StringBProperty::class) {
 }
 
 @Serializable(with = StringMPropSerializer::class) class StringBProperty(value: String): BindableProperty<String>(value)
+
+object NStringMPropSerializer: ser<NStringBProperty>(NStringBProperty::class) {
+  override fun deserialize(jsonElement: JsonElement) = NStringBProperty(jsonElement.nullOr { string })
+  override fun serialize(value: NStringBProperty) = JsonPrimitive(value.value)
+}
+
+@Serializable(with = NStringMPropSerializer::class) class NStringBProperty(value: String?): BindableProperty<String?>(value)
+
 
 typealias ValProp<T> = ReadOnlyBindableProperty<T>
 typealias VarProp<T> = BindableProperty<T>
