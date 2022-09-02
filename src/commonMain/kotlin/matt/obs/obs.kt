@@ -1,5 +1,6 @@
 package matt.obs
 
+import matt.obs.col.CollectionChange
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ReadOnlyBindableProperty
 import matt.stream.recurse.recurse
@@ -169,4 +170,11 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
 	  }
 	}
   }
+}
+
+
+
+
+interface BasicObservableList<E>: MutableList<E>, MObservableWithChangeObject<CollectionChange<E>> {
+
 }

@@ -1,18 +1,18 @@
 package matt.obs.col
 
 import matt.obs.MObservableWithChangeObjectImpl
-import matt.obs.col.olist.BasicObservableList
+import matt.obs.col.olist.BasicObservableListImpl
 
-fun <E> Collection<E>.toBasicObservableList(): BasicObservableList<E> {
-  return BasicObservableList(this)
+fun <E> Collection<E>.toBasicObservableList(): BasicObservableListImpl<E> {
+  return BasicObservableListImpl(this)
 }
 
-fun <E> Iterable<E>.toBasicObservableList(): BasicObservableList<E> {
-  return BasicObservableList(this.toList())
+fun <E> Iterable<E>.toBasicObservableList(): BasicObservableListImpl<E> {
+  return BasicObservableListImpl(this.toList())
 }
 
-fun <E> Sequence<E>.toBasicObservableList(): BasicObservableList<E> {
-  return BasicObservableList(this.toList())
+fun <E> Sequence<E>.toBasicObservableList(): BasicObservableListImpl<E> {
+  return BasicObservableListImpl(this.toList())
 }
 
 

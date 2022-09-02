@@ -1,5 +1,6 @@
 package matt.obs.col.olist
 
+import matt.obs.BasicObservableList
 import matt.obs.col.AddAt
 import matt.obs.col.AddAtEnd
 import matt.obs.col.BasicObservableCollection
@@ -16,13 +17,14 @@ import matt.stream.itr.MutableIteratorWrapper
 import matt.stream.itr.MutableListIteratorWrapper
 
 
-inline fun <reified E, reified T: BasicObservableList<E>> T.withChangeListener(noinline listener: (CollectionChange<E>)->Unit): T {
+inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListener(noinline listener: (CollectionChange<E>)->Unit): T {
   onChange(listener)
   return this
 }
 
 
-class BasicObservableList<E>(c: Collection<E> = mutableListOf()): BasicObservableCollection<E>(), MutableList<E> {
+
+class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicObservableCollection<E>(), BasicObservableList<E> {
 
 
   private val list = c.toMutableList()
