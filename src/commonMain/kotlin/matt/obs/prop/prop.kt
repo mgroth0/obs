@@ -23,6 +23,9 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
 
 }
 
+infix fun <T> BindableProperty<T>.v(value: T) {
+  this.value = value
+}
 
 open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T> {
   override var boundTo: ReadOnlyBindableProperty<out T>? = null
