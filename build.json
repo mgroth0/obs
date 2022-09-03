@@ -5,11 +5,6 @@
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
 	  "cfg" :  "commonMainImplementation",
 	  "path" : ":k:stream"
-	},
-	{
-	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
-	  "cfg" :  "commonMainImplementation",
-	  "path" : ":k:json"
 	}
   ]
 }
