@@ -40,26 +40,7 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
 	}
 }
 
-object IntMPropSerializer: ser<IntegerBProperty>(IntegerBProperty::class) {
-  override fun deserialize(jsonElement: JsonElement) = IntegerBProperty(jsonElement.int)
-  override fun serialize(value: IntegerBProperty) = JsonPrimitive(value.value)
-}
 
-@Serializable(with = IntMPropSerializer::class) class IntegerBProperty(value: Int): BindableProperty<Int>(value)
-
-object StringMPropSerializer: ser<StringBProperty>(StringBProperty::class) {
-  override fun deserialize(jsonElement: JsonElement) = StringBProperty(jsonElement.string)
-  override fun serialize(value: StringBProperty) = JsonPrimitive(value.value)
-}
-
-@Serializable(with = StringMPropSerializer::class) class StringBProperty(value: String): BindableProperty<String>(value)
-
-object NStringMPropSerializer: ser<NStringBProperty>(NStringBProperty::class) {
-  override fun deserialize(jsonElement: JsonElement) = NStringBProperty(jsonElement.nullOr { string })
-  override fun serialize(value: NStringBProperty) = JsonPrimitive(value.value)
-}
-
-@Serializable(with = NStringMPropSerializer::class) class NStringBProperty(value: String?): BindableProperty<String?>(value)
 
 
 typealias ValProp<T> = ReadOnlyBindableProperty<T>
