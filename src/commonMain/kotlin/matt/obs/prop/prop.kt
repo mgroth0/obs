@@ -10,6 +10,7 @@ import matt.json.ser.ser
 import matt.lang.B
 import matt.obs.MObservableROValBase
 import matt.obs.WritableMObservableVal
+import kotlin.reflect.KProperty
 
 
 open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
@@ -89,3 +90,4 @@ interface MPropHolder: Changes {
 	props.forEach { it.onChange { op() } }
   }
 }
+
