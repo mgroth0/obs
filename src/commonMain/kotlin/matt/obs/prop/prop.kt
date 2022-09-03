@@ -1,16 +1,8 @@
 package matt.obs.prop
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
-import matt.json.custom.int
-import matt.json.custom.nullOr
-import matt.json.custom.string
-import matt.json.ser.ser
 import matt.lang.B
 import matt.obs.MObservableROValBase
 import matt.obs.WritableMObservableVal
-import kotlin.reflect.KProperty
 
 
 open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
