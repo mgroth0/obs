@@ -7,7 +7,7 @@ import matt.json.custom.int
 import matt.json.custom.nullOr
 import matt.json.custom.string
 import matt.json.ser.ser
-import matt.klib.lang.B
+import matt.lang.B
 import matt.obs.MObservableROValBase
 import matt.obs.WritableMObservableVal
 

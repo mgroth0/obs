@@ -1,6 +1,6 @@
 package matt.obs.bind
 
-import matt.klib.lang.go
+import matt.lang.go
 import matt.obs.MObservableObject
 import matt.obs.MObservableVal
 import matt.obs.col.BasicObservableCollection
