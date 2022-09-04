@@ -1,5 +1,7 @@
 package matt.obs.col.olist
 
+import matt.collect.itr.MutableIteratorWrapper
+import matt.collect.itr.MutableListIteratorWrapper
 import matt.obs.BasicObservableList
 import matt.obs.col.AddAt
 import matt.obs.col.AddAtEnd
@@ -13,8 +15,6 @@ import matt.obs.col.RemoveElement
 import matt.obs.col.RemoveElements
 import matt.obs.col.ReplaceAt
 import matt.obs.col.RetainAll
-import matt.stream.itr.MutableIteratorWrapper
-import matt.stream.itr.MutableListIteratorWrapper
 
 
 inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListener(noinline listener: (CollectionChange<E>)->Unit): T {
