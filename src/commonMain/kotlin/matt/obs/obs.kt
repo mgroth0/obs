@@ -21,6 +21,7 @@ sealed interface MObservable<L, B>: MObsBase {
   fun onChange(listener: L): L
   fun onChangeUntil(until: B, listener: L)
   fun onChangeOnce(listener: L)
+  fun removeListener(listener: L): Boolean
 
 }
 
@@ -71,6 +72,8 @@ sealed class MObservableImpl<L, B>: MObservable<L, B> {
 	listeners.add(listener)
 	return listener
   }
+
+  override fun removeListener(listener: L) = listeners.remove(listener)
 }
 
 
@@ -201,9 +204,8 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
 
   internal val boundedProps = mutableSetOf<WritableMObservableVal<in T>>()
 
-  fun removeListener(listener: ListenerType<T>) {
-	listeners -= listener
-  }
+  override fun removeListener(listener: ListenerType<T>) = listeners.remove(listener)
+
 
   override fun addBoundedProp(p: WritableMObservableVal<in T>) {
 	boundedProps += p
