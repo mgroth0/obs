@@ -10,7 +10,7 @@ import kotlin.reflect.KProperty
 annotation class ObservableDSL
 
 interface MObsBase {
-  fun onChangeSimple(listener: () -> Unit)
+  fun onChangeSimple(listener: ()->Unit)
 }
 
 @ObservableDSL
@@ -29,6 +29,7 @@ sealed interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean> {
 	}
   }
 }
+
 sealed interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean> {
   override fun onChangeSimple(listener: ()->Unit) {
 	onChange {
@@ -36,18 +37,17 @@ sealed interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boo
 	}
   }
 }
+
 sealed interface MObservableVal<T>: MObservable<(T)->Unit, (T)->Boolean> {
   fun addBoundedProp(p: WritableMObservableVal<in T>)
   fun removeBoundedProp(p: WritableMObservableVal<in T>)
 }
 
 
-
-interface MObsHolder: MObservable<() -> Unit, () -> Boolean> {
+interface MObsHolder: MObsBase {
   val props: List<MObsBase>
-  override fun onChange(listener: ()->Unit): ()->Unit {
+  override fun onChangeSimple(listener: ()->Unit) {
 	props.forEach { it.onChangeSimple { listener() } }
-	return listener
   }
 }
 
