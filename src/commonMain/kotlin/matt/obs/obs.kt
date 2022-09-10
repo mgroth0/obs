@@ -19,10 +19,16 @@ sealed interface MObservable<L, B>: MObsBase {
   fun onChange(listener: L): L
   fun onChangeUntil(until: B, listener: L)
   fun onChangeOnce(listener: L)
-  
+
 }
 
-sealed interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean>
+sealed interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean> {
+  override fun onChangeSimple(listener: ()->Unit) {
+	onChange {
+	  listener()
+	}
+  }
+}
 sealed interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean> {
   override fun onChangeSimple(listener: ()->Unit) {
 	onChange {
