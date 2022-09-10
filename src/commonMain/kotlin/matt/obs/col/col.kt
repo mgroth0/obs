@@ -2,6 +2,7 @@ package matt.obs.col
 
 import matt.obs.MObservableWithChangeObjectImpl
 import matt.obs.col.olist.BasicObservableListImpl
+import matt.obs.prop.VarProp
 
 fun <E> Collection<E>.toBasicObservableList(): BasicObservableListImpl<E> {
   return BasicObservableListImpl(this)
@@ -51,4 +52,12 @@ class ReplaceAt<E>(collection: Collection<E>, removed: E, added: E, val index: I
 class Clear<E>(override val collection: Collection<E>): CollectionChange<E>
 
 
-abstract class BasicObservableCollection<E>: MObservableWithChangeObjectImpl<CollectionChange<E>>(), Collection<E>
+abstract class BasicObservableCollection<E>: MObservableWithChangeObjectImpl<CollectionChange<E>>(), Collection<E> {
+  val isEmptyProp by lazy {
+	VarProp(isEmpty()).apply {
+	  onChange {
+		value = this@BasicObservableCollection.isEmpty()
+	  }
+	}
+  }
+}

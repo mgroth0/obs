@@ -1,14 +1,13 @@
-@file:OptIn(ExperimentalContracts::class)
-
 package matt.obs.bind
 
 import matt.obs.MObservableObject
 import matt.obs.MObservableObjectImpl
+import matt.obs.MObservableROValBase
 import matt.obs.MObservableVal
+import matt.obs.MObservableWithChangeObject
 import matt.obs.col.BasicObservableCollection
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
-import kotlin.contracts.ExperimentalContracts
 import kotlin.jvm.Synchronized
 
 private object NOT_CALCED
@@ -46,7 +45,7 @@ class MyBinding<T> internal constructor(private val calc: ()->T): MObservableObj
 
 }
 
-fun <T, R> ValProp<T>.lazyBinding(
+fun <T, R> MObservableROValBase<T>.lazyBinding(
   vararg dependencies: MObservableVal<*>,
   op: (T)->R,
 ): MyBinding<R> {
@@ -63,7 +62,7 @@ fun <T, R> ValProp<T>.lazyBinding(
   }
 }
 
-fun <T, R> ValProp<T>.binding(
+fun <T, R> MObservableROValBase<T>.binding(
   vararg dependencies: MObservableVal<*>,
   debug: Boolean = false,
   op: (T)->R,
@@ -201,9 +200,9 @@ fun <E, R> BasicObservableCollection<E>.lazyBinding(
   }
 }
 
-fun <E, R> BasicObservableCollection<E>.binding(
+inline fun <C, R, reified CC: MObservableWithChangeObject<C>> CC.binding(
   vararg dependencies: MObservableVal<*>,
-  op: (Collection<E>)->R,
+  crossinline op: (CC)->R,
 ): ValProp<R> {
   val prop = this
   return VarProp(op(prop)).apply {

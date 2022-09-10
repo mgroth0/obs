@@ -1,5 +1,7 @@
 package matt.obs
 
+import matt.obs.bind.binding
+import matt.obs.bindings.not
 import matt.obs.col.CollectionChange
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ReadOnlyBindableProperty
@@ -218,12 +220,35 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
   override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
 
   init {
-	onChange { v ->
+	onChangeSimple {
+	  val v = value
 	  boundedProps.forEach {
 		if (it.value != v) it.value = v
 	  }
 	}
   }
+
+
+  val isNull by lazy {
+	binding {
+	  it == null
+	}
+  }
+
+
+  infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
+	it == other.value
+  }
+
+  infix fun neq(other: ReadOnlyBindableProperty<*>) = eq(other).not()
+
+  infix fun eq(other: Any) = binding {
+	it == other
+  }
+
+  infix fun neq(other: Any) = eq(other).not()
+
+
 }
 
 
