@@ -1,5 +1,6 @@
 package matt.obs.bindings
 
+import matt.collect.weak.lazyWeakMap
 import matt.lang.B
 import matt.obs.bind.binding
 import matt.obs.col.BasicObservableCollection
