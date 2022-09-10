@@ -13,8 +13,9 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
   override var value = value
 	protected set(v) {
 	  if (v != field) {
+		val old = v
 		field = v
-		notifyListeners(v)
+		notifyListeners(old,v)
 	  }
 	}
 
@@ -45,8 +46,9 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
   override var value = value
 	set(v) {
 	  if (v != field) {
+		val old = v
 		field = v
-		notifyListeners(v)
+		notifyListeners(old,v)
 	  }
 	}
 }

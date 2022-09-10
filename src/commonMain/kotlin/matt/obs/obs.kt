@@ -30,7 +30,7 @@ sealed interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean> {
   }
 }
 
- interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean> {
+interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean> {
   override fun onChangeSimple(listener: ()->Unit) {
 	onChange {
 	  listener()
@@ -38,9 +38,10 @@ sealed interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean> {
   }
 }
 
-sealed interface MObservableVal<T>: MObservable<(T)->Unit, (T)->Boolean> {
+sealed interface MObservableVal<T>: MObservable<ListenerType<T>, (T)->Boolean> {
   fun addBoundedProp(p: WritableMObservableVal<in T>)
   fun removeBoundedProp(p: WritableMObservableVal<in T>)
+  fun onChange(op: (T)->Unit) = onChange(NewListener { op(it) })
 }
 
 
@@ -157,6 +158,7 @@ sealed interface ListenerType<T>
 fun interface NewListener<T>: ListenerType<T> {
   fun invoke(new: T)
 }
+
 fun interface OldAndNewListener<T>: ListenerType<T> {
   fun invoke(old: T, new: T)
 }
@@ -165,27 +167,34 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
 
 										MObservableVal<T> {
 
-  protected fun notifyListeners(old: T, new: T) = listeners.forEach { it(v) }
+  protected fun notifyListeners(old: T, new: T) = listeners.forEach {
+	it.invokeWith(old, new)
+  }
+
+  fun ListenerType<T>.invokeWith(old: T, new: T) = when (this) {
+	is NewListener<T>       -> invoke(new)
+	is OldAndNewListener<T> -> invoke(old, new)
+  }
 
 
   abstract val value: T
 
   final override fun onChangeSimple(listener: ()->Unit) {
-	onChange {
+	onChange(NewListener {
 	  listener()
-	}
+	})
   }
 
   final override fun onChangeUntil(until: (T)->Boolean, listener: ListenerType<T>) {
-	var realListener: ((T)->Unit)? = null
-	realListener = { t: T ->
-	  listener(t)
+	var realListener: ListenerType<T>? = null
+	realListener = OldAndNewListener { old, t: T ->
+	  listener.invokeWith(old, t)
 	  if (until(t)) listeners -= realListener!!
 	}
 	listeners += realListener
   }
 
-  final override fun onChangeOnce(listener: T.()->Unit) = onChangeUntil({ true }, listener)
+  final override fun onChangeOnce(listener: ListenerType<T>) = onChangeUntil({ true }, listener)
 
 
   internal val boundedProps = mutableSetOf<WritableMObservableVal<in T>>()
