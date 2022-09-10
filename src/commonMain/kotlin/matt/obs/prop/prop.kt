@@ -51,16 +51,3 @@ fun ValProp<B>.whenTrueOnce(op: ()->Unit) {
 	}
   }
 }
-
-interface Changes {
-  fun onAnyChange(op: ()->Unit)/*: ListenerSetKey*/
-  //  fun removeChangeListener(key: ListenerSetKey) = key.unListen()
-}
-
-interface MPropHolder: Changes {
-  val props: List<BindableProperty<*>>
-  override fun onAnyChange(op: ()->Unit) {
-	props.forEach { it.onChange { op() } }
-  }
-}
-

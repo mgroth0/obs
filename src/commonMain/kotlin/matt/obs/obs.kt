@@ -9,8 +9,13 @@ import kotlin.reflect.KProperty
 @DslMarker
 annotation class ObservableDSL
 
+interface MObsBase {
+  fun onChangeSimple(listener: () -> Unit)
+}
+
 @ObservableDSL
-sealed interface MObservable<L, B> {
+sealed interface MObservable<L, B>: MObsBase {
+
   fun onChange(listener: L): L
   fun onChangeUntil(until: B, listener: L)
   fun onChangeOnce(listener: L)
@@ -23,6 +28,17 @@ sealed interface MObservableVal<T>: MObservable<(T)->Unit, (T)->Boolean> {
   fun removeBoundedProp(p: WritableMObservableVal<in T>)
 }
 
+
+
+interface MObsHolder: MObservable<() -> Unit, () -> Boolean> {
+  val props: List<MObsBase>
+  override fun onChange(listener: ()->Unit): ()->Unit {
+	props.forEach { it.onChangeSimple { listener() } }
+	return listener
+  }
+}
+
+
 interface NullableVal<T>: MObservableVal<T?> {
   fun onNonNullChange(op: (T)->Unit) = apply {
 	onChange {
@@ -34,6 +50,7 @@ interface NullableVal<T>: MObservableVal<T?> {
 @ObservableDSL
 sealed class MObservableImpl<L, B>: MObservable<L, B> {
   internal val listeners = mutableListOf<L>()
+
   final override fun onChange(listener: L): L {
 	listeners.add(listener)
 	return listener
@@ -131,6 +148,12 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
 
   abstract val value: T
 
+  final override fun onChangeSimple(listener: ()->Unit) {
+	onChange {
+	  listener()
+	}
+  }
+
   final override fun onChangeUntil(until: (T)->Boolean, listener: (T)->Unit) {
 	var realListener: ((T)->Unit)? = null
 	realListener = { t: T ->
@@ -173,8 +196,4 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
 }
 
 
-
-
-interface BasicObservableList<E>: MutableList<E>, MObservableWithChangeObject<CollectionChange<E>> {
-
-}
+interface BasicObservableList<E>: MutableList<E>, MObservableWithChangeObject<CollectionChange<E>>
