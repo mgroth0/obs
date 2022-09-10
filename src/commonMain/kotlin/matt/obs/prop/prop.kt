@@ -5,6 +5,9 @@ import matt.obs.MObservableROValBase
 import matt.obs.WritableMObservableVal
 
 
+
+
+
 open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
 
   override var value = value
@@ -21,6 +24,22 @@ infix fun <T> BindableProperty<T>.v(value: T) {
   this.value = value
 }
 
+infix fun <T> BindableProperty<T>.eqNow(value: T): Boolean {
+  return this.value == value
+}
+
+infix fun <T> BindableProperty<T>.eqNow(value: MObservableROValBase<T>): Boolean {
+  return this.value == value.value
+}
+
+infix fun <T> BindableProperty<T>.notEqNow(value: T): Boolean {
+  return this.value != value
+}
+
+infix fun <T> BindableProperty<T>.notEqNow(value: MObservableROValBase<T>): Boolean {
+  return this.value != value.value
+}
+
 open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T> {
   override var boundTo: ReadOnlyBindableProperty<out T>? = null
   override var value = value
@@ -31,8 +50,6 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
 	  }
 	}
 }
-
-
 
 
 typealias ValProp<T> = ReadOnlyBindableProperty<T>

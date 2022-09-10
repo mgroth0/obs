@@ -159,6 +159,7 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
 
   protected fun notifyListeners(v: T) = listeners.forEach { it(v) }
 
+
   abstract val value: T
 
   final override fun onChangeSimple(listener: ()->Unit) {
