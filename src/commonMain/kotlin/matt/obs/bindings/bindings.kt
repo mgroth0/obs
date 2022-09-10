@@ -11,6 +11,7 @@ private val notProps = lazyWeakMap<BindableProperty<Boolean>, ReadOnlyBindablePr
 	!it
   }
 }
+
 fun MObservableROValBase<Boolean>.not() = notProps[this]!!
 
 
@@ -23,6 +24,25 @@ infix fun MObservableROValBase<Boolean>.or(other: ReadOnlyBindableProperty<Boole
 }
 
 
+fun MObservableROValBase<String>.length() = binding {
+  value.length
+}
 
+
+infix fun <T: Comparable<T>> MObservableROValBase<T>.ge(other: ReadOnlyBindableProperty<T>) = binding(other) {
+  it >= other.value
+}
+
+infix fun <T: Comparable<T>> MObservableROValBase<T>.le(other: ReadOnlyBindableProperty<T>) = binding(other) {
+  it <= other.value
+}
+
+infix fun <T: Comparable<T>> MObservableROValBase<T>.lt(other: ReadOnlyBindableProperty<T>) = binding(other) {
+  it < other.value
+}
+
+infix fun <T: Comparable<T>> MObservableROValBase<T>.gt(other: ReadOnlyBindableProperty<T>) = binding(other) {
+  it > other.value
+}
 
 
