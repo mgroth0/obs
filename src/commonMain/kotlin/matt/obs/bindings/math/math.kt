@@ -25,6 +25,12 @@ operator fun MObservableROValBase<Double>.div(other: ReadOnlyBindableProperty<Do
 	it/other.value
   }
 
+private operator fun Number.plus(n: Number) = toDouble() + n.toDouble()
+private operator fun Number.times(n: Number) = toDouble()*n.toDouble()
+private operator fun Number.minus(n: Number) = toDouble() - n.toDouble()
+private operator fun Number.div(n: Number) = toDouble()/n.toDouble()
+
+
 operator fun MObservableROValBase<Double>.times(other: Number): ValProp<Double> = binding {
   it*other
 }
