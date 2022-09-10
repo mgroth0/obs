@@ -24,11 +24,11 @@ inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListen
 }
 
 fun <E> basicROObservableList(vararg elements: E): BasicROObservableList<E> = BasicObservableListImpl(elements.toList())
-fun <E> basicMutableObservableList(vararg elements: E): BasicWritableObservableList<E> = BasicObservableListImpl(elements.toList())
+fun <E> basicMutableObservableList(vararg elements: E): BasicWritableObservableList<E> =
+  BasicObservableListImpl(elements.toList())
 
 class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicROObservableCollection<E>(),
 																	  BasicWritableObservableList<E> {
-
 
 
   private val list = c.toMutableList()
@@ -90,8 +90,9 @@ class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicROObs
   }
 
   override fun clear() {
+	val removed = list.toList()
 	list.clear()
-	emitChange(Clear(list))
+	emitChange(Clear(list, removed = removed))
   }
 
 

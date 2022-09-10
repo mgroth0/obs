@@ -68,8 +68,9 @@ class BasicObservableSet<E>(c: Collection<E> = mutableSetOf()): BasicROObservabl
 
   override fun clear() {
 	//        println("BasicObservableSet.clear")
+	val removed = theSet.toSet()
 	theSet.clear()
-	emitChange(Clear(theSet))
+	emitChange(Clear(theSet,removed=removed))
   }
 
   override fun remove(element: E): Boolean {
