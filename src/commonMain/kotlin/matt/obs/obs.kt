@@ -153,11 +153,19 @@ interface WritableMObservableVal<T>: MObservableVal<T> {
   }
 }
 
-abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>(),
+sealed interface ListenerType<T>
+fun interface NewListener<T>: ListenerType<T> {
+  fun invoke(new: T)
+}
+fun interface OldAndNewListener<T>: ListenerType<T> {
+  fun invoke(old: T, new: T)
+}
+
+abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Boolean>(),
 
 										MObservableVal<T> {
 
-  protected fun notifyListeners(v: T) = listeners.forEach { it(v) }
+  protected fun notifyListeners(old: T, new: T) = listeners.forEach { it(v) }
 
 
   abstract val value: T
@@ -168,7 +176,7 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
 	}
   }
 
-  final override fun onChangeUntil(until: (T)->Boolean, listener: (T)->Unit) {
+  final override fun onChangeUntil(until: (T)->Boolean, listener: ListenerType<T>) {
 	var realListener: ((T)->Unit)? = null
 	realListener = { t: T ->
 	  listener(t)
@@ -182,7 +190,7 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
 
   internal val boundedProps = mutableSetOf<WritableMObservableVal<in T>>()
 
-  fun removeListener(listener: (T)->Unit) {
+  fun removeListener(listener: ListenerType<T>) {
 	listeners -= listener
   }
 
