@@ -209,4 +209,4 @@ abstract class MObservableROValBase<T>: MObservableImpl<(T)->Unit, (T)->Boolean>
 }
 
 
-interface BasicObservableList<E>: MutableList<E>, MObservableWithChangeObject<CollectionChange<E>>
+interface BasicObservableList<E>: List<E>, MObservableWithChangeObject<CollectionChange<E>>
