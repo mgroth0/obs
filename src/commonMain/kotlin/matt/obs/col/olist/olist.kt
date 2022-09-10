@@ -2,10 +2,11 @@ package matt.obs.col.olist
 
 import matt.collect.itr.MutableIteratorWrapper
 import matt.collect.itr.MutableListIteratorWrapper
-import matt.obs.BasicObservableList
+import matt.obs.BasicROObservableList
+import matt.obs.BasicWritableObservableList
 import matt.obs.col.AddAt
 import matt.obs.col.AddAtEnd
-import matt.obs.col.BasicObservableCollection
+import matt.obs.col.BasicROObservableCollection
 import matt.obs.col.Clear
 import matt.obs.col.CollectionChange
 import matt.obs.col.MultiAddAt
@@ -22,9 +23,12 @@ inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListen
   return this
 }
 
+fun <E> basicROObservableList(vararg elements: E): BasicROObservableList<E> = BasicObservableListImpl(elements.toList())
+fun <E> basicMutableObservableList(vararg elements: E): BasicWritableObservableList<E> = BasicObservableListImpl(elements.toList())
 
+class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicROObservableCollection<E>(),
+																	  BasicWritableObservableList<E> {
 
-class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicObservableCollection<E>(), BasicObservableList<E>, MutableList<E> {
 
 
   private val list = c.toMutableList()
@@ -152,10 +156,6 @@ class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicObser
   }
 
 }
-
-
-
-
 
 
 open class MutableIteratorWithSomeMemory<E>(list: MutableCollection<E>):

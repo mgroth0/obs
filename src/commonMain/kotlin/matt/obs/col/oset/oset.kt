@@ -1,7 +1,7 @@
 package matt.obs.col.oset
 
 import matt.obs.col.AddAtEnd
-import matt.obs.col.BasicObservableCollection
+import matt.obs.col.BasicROObservableCollection
 import matt.obs.col.Clear
 import matt.obs.col.MultiAddAtEnd
 import matt.obs.col.RemoveElement
@@ -22,7 +22,7 @@ fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> {
   return BasicObservableSet(this.toSet())
 }
 
-class BasicObservableSet<E>(c: Collection<E> = mutableSetOf()): BasicObservableCollection<E>(), MutableSet<E> {
+class BasicObservableSet<E>(c: Collection<E> = mutableSetOf()): BasicROObservableCollection<E>(), MutableSet<E> {
 
   private val theSet = c.toMutableSet()
 

@@ -254,4 +254,5 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
 }
 
 
-interface BasicObservableList<E>: List<E>, MObservableWithChangeObject<CollectionChange<E>>
+interface BasicROObservableList<E>: List<E>, MObservableWithChangeObject<CollectionChange<E>>
+interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>

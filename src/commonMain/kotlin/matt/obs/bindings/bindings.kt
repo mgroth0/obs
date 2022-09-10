@@ -28,6 +28,13 @@ fun MObservableROValBase<String>.length() = binding {
   value.length
 }
 
+fun MObservableROValBase<String>.isEmpty() = binding {
+  value.isEmpty()
+}
+fun MObservableROValBase<String>.isNotEmpty() = binding {
+  value.isNotEmpty()
+}
+
 
 infix fun <T: Comparable<T>> MObservableROValBase<T>.ge(other: ReadOnlyBindableProperty<T>) = binding(other) {
   it >= other.value
