@@ -30,7 +30,7 @@ sealed interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean> {
   }
 }
 
-sealed interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean> {
+ interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean> {
   override fun onChangeSimple(listener: ()->Unit) {
 	onChange {
 	  listener()
