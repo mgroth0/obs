@@ -2,10 +2,8 @@ package matt.obs.prop
 
 import matt.lang.B
 import matt.obs.MObservableROValBase
+import matt.obs.NewListener
 import matt.obs.WritableMObservableVal
-
-
-
 
 
 open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
@@ -15,7 +13,7 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T>() {
 	  if (v != field) {
 		val old = v
 		field = v
-		notifyListeners(old,v)
+		notifyListeners(old, v)
 	  }
 	}
 
@@ -48,7 +46,7 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
 	  if (v != field) {
 		val old = v
 		field = v
-		notifyListeners(old,v)
+		notifyListeners(old, v)
 	  }
 	}
 }
@@ -65,8 +63,8 @@ fun iProp(i: Int) = BindableProperty(i)
 fun ValProp<B>.whenTrueOnce(op: ()->Unit) {
   if (value) op()
   else {
-	onChangeUntil({ it }) {
+	onChangeUntil({ it }, NewListener {
 	  if (it) op()
-	}
+	})
   }
 }
