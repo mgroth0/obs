@@ -47,3 +47,51 @@ operator fun MObservableROValBase<Double>.div(other: Number): ValProp<Double> = 
   it/other
 }
 
+operator fun Number.times(other: MObservableROValBase<Double>): ValProp<Double> = other.binding {
+  it*this
+}
+
+operator fun Number.minus(other: MObservableROValBase<Double>): ValProp<Double> = other.binding {
+  it - this
+}
+
+operator fun Number.plus(other: MObservableROValBase<Double>): ValProp<Double> = other.binding {
+  it + this
+}
+
+operator fun Number.div(other: MObservableROValBase<Double>): ValProp<Double> = other.binding {
+  it/this
+}
+
+fun min(vararg values: MObservableROValBase<Double>): MObservableROValBase<Double> {
+  require(values.size > 0)
+  if (values.size == 1) return values[0]
+  else return values[0].binding(*values.drop(1).toTypedArray()) {
+	values.minOf { it.value }
+  }
+}
+
+fun max(vararg values: MObservableROValBase<Double>): MObservableROValBase<Double> {
+  require(values.size > 0)
+  if (values.size == 1) return values[0]
+  else return values[0].binding(*values.drop(1).toTypedArray()) {
+	values.maxOf { it.value }
+  }
+}
+
+fun mean(vararg values: MObservableROValBase<Double>): MObservableROValBase<Double> {
+  require(values.size > 0)
+  if (values.size == 1) return values[0]
+  else return values[0].binding(*values.drop(1).toTypedArray()) {
+	values.sumOf { it.value }/values.size
+  }
+}
+
+fun sum(vararg values: MObservableROValBase<Double>): MObservableROValBase<Double> {
+  require(values.size > 0)
+  if (values.size == 1) return values[0]
+  else return values[0].binding(*values.drop(1).toTypedArray()) {
+	values.sumOf { it.value }
+  }
+}
+
