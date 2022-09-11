@@ -28,6 +28,7 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>): ObservableCollec
 
 
   constructor(c: Collection<E>): this(c.requireNotObservable().toMutableSet())
+  constructor(): this(emptySet())
 
 
   override val size: Int
