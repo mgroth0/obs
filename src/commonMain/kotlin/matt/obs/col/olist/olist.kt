@@ -6,6 +6,7 @@ import matt.collect.itr.MutableListIteratorWithSomeMemory
 import matt.lang.setAll
 import matt.lang.weak.WeakRef
 import matt.lang.weak.getValue
+import matt.obs.MObservable
 import matt.obs.col.BasicOCollection
 import matt.obs.col.ObservableCollectionImpl
 import matt.obs.col.change.AddAt
@@ -22,6 +23,7 @@ import matt.obs.col.change.RetainAll
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.filtered.BasicFilteredList
 import matt.obs.col.olist.sorted.BasicSortedList
+import matt.obs.prop.ValProp
 import matt.obs.requireNotObservable
 import kotlin.contracts.ExperimentalContracts
 import kotlin.jvm.Synchronized
@@ -33,24 +35,32 @@ interface BasicROObservableList<E>: BasicOCollection<E> {
 interface ListThatCanBind<E> {
   fun unbind()
   fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E)
+  fun <S> bind(source: ValProp<S>, converter: (S)->List<E>)
 }
 
 
 class ListBindingHelper<E>(private val list: MutableList<E>): ListThatCanBind<E> {
   private var theBind: TheBind<*>? = null
 
-  @Synchronized
-  override fun unbind() {
+  @Synchronized override fun unbind() {
 	theBind?.cut()
 	theBind = null
   }
 
-  @Synchronized
-  override fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E) {
+  @Synchronized override fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E) {
 	unbind()
 	list.setAll(source.map(converter))
 	val listener = source.onChange {
 	  list.mirror(it, converter)
+	}
+	theBind = TheBind(source = source, listener = listener)
+  }
+
+  @Synchronized override fun <S> bind(source: ValProp<S>, converter: (S)->List<E>) {
+	unbind()
+	list.setAll(converter(source.value))
+	val listener = source.onChange {
+	  list.setAll(converter(it))
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
@@ -64,9 +74,8 @@ abstract class BaseBasicWritableOList<E>(list: MutableList<E>): ObservableCollec
 																BasicWritableObservableList<E>,
 																ListThatCanBind<E> by ListBindingHelper(list)
 
-private class TheBind<S>(
-  source: BasicObservableListImpl<S>,
-  private val listener: (CollectionChange<S>)->Unit
+private class TheBind<L>(
+  source: MObservable<L, *>, private val listener: L
 ) {
   val source by WeakRef(source)
   fun cut() = source?.removeListener(listener)
@@ -92,8 +101,8 @@ fun <E> basicROObservableListOf(vararg elements: E): BasicROObservableList<E> =
 fun <E> basicMutableObservableListOf(vararg elements: E): BasicWritableObservableList<E> =
   BasicObservableListImpl(elements.toList())
 
-class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>):
-  BaseBasicWritableOList<E>(list), List<E> by list {
+class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>): BaseBasicWritableOList<E>(list),
+																						List<E> by list {
 
   constructor(c: Collection<E>): this(c.requireNotObservable().toMutableList())
 
