@@ -123,9 +123,9 @@ interface WritableMObservableVal<T>: MObservableVal<T> {
 
   var value: T
 
-  var boundTo: ReadOnlyBindableProperty<out T>?
+  var boundTo: MObservableROValBase<out T>?
 
-  fun bind(other: ReadOnlyBindableProperty<out T>) {
+  fun bind(other: MObservableROValBase<out T>) {
 	require(boundTo == null)
 
 	val recursiveDeps: List<WritableMObservableVal<*>> = (other as? BindableProperty<*>?)?.recurse {
