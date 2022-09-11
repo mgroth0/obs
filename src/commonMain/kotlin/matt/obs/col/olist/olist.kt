@@ -34,7 +34,7 @@ fun <E> basicROObservableListOf(vararg elements: E): BasicROObservableList<E> =
 fun <E> basicMutableObservableListOf(vararg elements: E): BasicWritableObservableList<E> =
   BasicObservableListImpl(elements.toList())
 
-class BasicObservableListImpl<E> private constructor(private val list: MutableList<E> = mutableListOf()):
+class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>):
   BasicROObservableCollection<E>(), BasicWritableObservableList<E>, List<E> by list {
 
   constructor(c: Collection<E>): this(c.apply {
@@ -44,6 +44,8 @@ class BasicObservableListImpl<E> private constructor(private val list: MutableLi
 	  }
 	}
   }.toMutableList())
+
+  constructor(): this(mutableListOf())
 
   override fun iterator(): MutableIterator<E> = listIterator()
 
