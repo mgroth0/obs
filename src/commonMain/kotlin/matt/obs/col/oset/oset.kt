@@ -1,5 +1,6 @@
 package matt.obs.col.oset
 
+import matt.collect.itr.MutableIteratorWithSomeMemory
 import matt.obs.col.AddAtEnd
 import matt.obs.col.BasicROObservableCollection
 import matt.obs.col.Clear
@@ -7,7 +8,6 @@ import matt.obs.col.MultiAddAtEnd
 import matt.obs.col.RemoveElement
 import matt.obs.col.RemoveElements
 import matt.obs.col.RetainAll
-import matt.obs.col.olist.MutableIteratorWithSomeMemory
 
 
 fun <E> Collection<E>.toBasicObservableSet(): BasicObservableSet<E> {
