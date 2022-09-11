@@ -1,5 +1,7 @@
 package matt.obs
 
+import matt.lang.reflect.classForName
+import matt.log.warn
 import matt.obs.bind.binding
 import matt.obs.bindings.not
 import matt.obs.col.CollectionChange
@@ -183,8 +185,11 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
 
 										MObservableVal<T> {
 
-  protected fun notifyListeners(old: T, new: T) = listeners.forEach {
-	it.invokeWith(old, new)
+  protected fun notifyListeners(old: T, new: T) {
+	/*gotta make a new list to prevent concurrent mod error if listeners list is edited in a listener*/
+	listeners.toList().forEach {
+	  it.invokeWith(old, new)
+	}
   }
 
   fun ListenerType<T>.invokeWith(old: T, new: T) = when (this) {
@@ -260,7 +265,6 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
   infix fun neq(other: Any) = eq(other).not()
 
 
-
 }
 
 
@@ -270,3 +274,11 @@ interface BasicROObservableList<E>: List<E>, MObservableWithChangeObject<Collect
 
 fun <E: Comparable<E>> BasicROObservableList<E>.sorted() = BasicSortedList(this)
 interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
+
+
+internal val JAVAFX_OBSERVABLE_CLASS by lazy {
+  classForName("javafx.beans.Observable") ?: run {
+	warn("observableClass is null")
+	null
+  }
+}

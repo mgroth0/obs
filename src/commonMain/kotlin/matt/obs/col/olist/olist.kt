@@ -1,9 +1,16 @@
+@file:OptIn(ExperimentalContracts::class)
+
 package matt.obs.col.olist
 
-import matt.collect.itr.MutableIteratorWrapper
-import matt.collect.itr.MutableListIteratorWrapper
+import matt.collect.itr.MutableListIteratorWithSomeMemory
+import matt.lang.go
+import matt.lang.reflect.isSubTypeOf
+import matt.lang.setAll
+import matt.lang.weak.WeakRef
+import matt.lang.weak.getValue
 import matt.obs.BasicROObservableList
 import matt.obs.BasicWritableObservableList
+import matt.obs.JAVAFX_OBSERVABLE_CLASS
 import matt.obs.col.AddAt
 import matt.obs.col.AddAtEnd
 import matt.obs.col.BasicROObservableCollection
@@ -16,51 +23,29 @@ import matt.obs.col.RemoveElement
 import matt.obs.col.RemoveElements
 import matt.obs.col.ReplaceAt
 import matt.obs.col.RetainAll
+import matt.obs.col.mirror
+import kotlin.contracts.ExperimentalContracts
+import kotlin.jvm.Synchronized
 
 
-inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListener(noinline listener: (CollectionChange<E>)->Unit): T {
-  onChange(listener)
-  return this
-}
-fun <E> basicROObservableListOf(vararg elements: E): BasicROObservableList<E> = BasicObservableListImpl(elements.toList())
+fun <E> basicROObservableListOf(vararg elements: E): BasicROObservableList<E> =
+  BasicObservableListImpl(elements.toList())
+
 fun <E> basicMutableObservableListOf(vararg elements: E): BasicWritableObservableList<E> =
   BasicObservableListImpl(elements.toList())
 
-class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicROObservableCollection<E>(),
-																	  BasicWritableObservableList<E> {
+class BasicObservableListImpl<E> private constructor(private val list: MutableList<E> = mutableListOf()):
+  BasicROObservableCollection<E>(), BasicWritableObservableList<E>, List<E> by list {
 
-
-  private val list = c.toMutableList()
-
-
-  override val size: Int
-	get() = list.size
-
-  override fun contains(element: E): Boolean {
-	return list.contains(element)
-  }
-
-  override fun containsAll(elements: Collection<E>): Boolean {
-	return list.containsAll(elements)
-  }
-
-  override fun get(index: Int): E {
-	return list[index]
-  }
-
-  override fun indexOf(element: E): Int {
-	return list.indexOf(element)
-  }
-
-  override fun isEmpty(): Boolean {
-	return list.isEmpty()
-  }
+  constructor(c: Collection<E>): this(c.apply {
+	JAVAFX_OBSERVABLE_CLASS?.go {
+	  require(!c::class.isSubTypeOf(it)) {
+		"this is the wrong way to make a BasicObservableList from an ObservableList if you want them to be synced"
+	  }
+	}
+  }.toMutableList())
 
   override fun iterator(): MutableIterator<E> = listIterator()
-
-  override fun lastIndexOf(element: E): Int {
-	return list.lastIndexOf(element)
-  }
 
   override fun add(element: E): Boolean {
 	val b = list.add(element)
@@ -101,11 +86,8 @@ class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicROObs
   private fun lItr(index: Int? = null) = object: MutableListIteratorWithSomeMemory<E>(list, index) {
 
 	override fun remove() {
-	  println("${hashCode()} in remove 1")
 	  super.remove()
-	  println("${hashCode()} in remove 2")
 	  emitChange(RemoveAt(list, lastReturned!!, lastIndex))
-	  println("${hashCode()} in remove 3")
 	}
 
 	override fun add(element: E) {
@@ -155,31 +137,38 @@ class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicROObs
 	return list.subList(fromIndex, toIndex)
   }
 
-}
+
+  private var theBind: TheBind<*>? = null
 
 
-open class MutableIteratorWithSomeMemory<E>(list: MutableCollection<E>):
-  MutableIteratorWrapper<E>(list) {
-  var hadFirstReturn = false
-  var lastReturned: E? = null
-  override val itrWrapper: (()->E)->E = {
-	val r = it()
-	hadFirstReturn = true
-	lastReturned = r
-	r
+  @Synchronized
+  fun unbind() {
+	theBind?.cut()
+	theBind = null
+  }
+
+  @Synchronized
+  fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E) {
+	unbind()
+	setAll(source.map(converter))
+	val listener = source.onChange {
+	  mirror(it, converter)
+	}
+	theBind = TheBind(source = source, listener = listener)
   }
 }
 
-open class MutableListIteratorWithSomeMemory<E>(list: MutableList<E>, index: Int? = null):
-  MutableListIteratorWrapper<E>(
-	list, index = index
-  ) {
-  var hadFirstReturn = false
-  var lastReturned: E? = null
-  override val itrWrapper: (()->E)->E = {
-	val r = it()
-	hadFirstReturn = true
-	lastReturned = r
-	r
-  }
+private class TheBind<S>(
+  source: BasicObservableListImpl<S>,
+  private val listener: (CollectionChange<S>)->Unit
+) {
+  val source by WeakRef(source)
+  fun cut() = source?.removeListener(listener)
 }
+
+
+inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListener(noinline listener: (CollectionChange<E>)->Unit): T {
+  onChange(listener)
+  return this
+}
+

@@ -51,7 +51,7 @@ sealed class Removal<E>(override val collection: Collection<E>, val removed: E):
 
 class RemoveElement<E>(collection: Collection<E>, removed: E): Removal<E>(collection, removed)
 class RemoveAt<E>(collection: Collection<E>, removed: E, val index: Int): Removal<E>(collection, removed)
-class RemoveFirst<E>(collection: Collection<E>, removed: E): Removal<E>(collection, removed)
+//class RemoveFirst<E>(collection: Collection<E>, removed: E): Removal<E>(collection, removed)
 
 sealed class MultiRemoval<E>(override val collection: Collection<E>, val removed: Collection<E>): RemovalBase<E> {
   override val removedElements get() = removed.toList()
@@ -68,13 +68,41 @@ sealed class Replacement<E>(override val collection: Collection<E>, val removed:
   override val removedElements get() = listOf(removed)
 }
 
-class ReplaceElement<E>(collection: Collection<E>, removed: E, added: E): Replacement<E>(collection, removed, added)
-
 class ReplaceAt<E>(collection: Collection<E>, removed: E, added: E, val index: Int):
   Replacement<E>(collection, removed, added)
 
 class Clear<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<E>(collection, removed)
 
+
+fun <E> MutableList<E>.mirror(c: CollectionChange<E>) {
+  when (c) {
+	is AddAt          -> add(index = c.index, element = c.added)
+	is AddAtEnd       -> add(c.added)
+	is MultiAddAt     -> addAll(index = c.index, elements = c.added)
+	is MultiAddAtEnd  -> addAll(c.added)
+	is ReplaceAt      -> set(index = c.index, c.added)
+	is Clear          -> clear()
+	is RemoveElements -> removeAll(c.removed)
+	is RetainAll      -> retainAll(c.retained)
+	is RemoveAt       -> removeAt(c.index)
+	is RemoveElement  -> remove(c.removed)
+  }
+}
+
+fun <S, T> MutableList<T>.mirror(c: CollectionChange<S>, convert: (S)->T) {
+  when (c) {
+	is AddAt          -> add(index = c.index, element = convert(c.added))
+	is AddAtEnd       -> add(convert(c.added))
+	is MultiAddAt     -> addAll(index = c.index, elements = c.added.map(convert))
+	is MultiAddAtEnd  -> addAll(c.added.map(convert))
+	is ReplaceAt      -> set(index = c.index, convert(c.added))
+	is Clear          -> clear()
+	is RemoveElements -> removeAll(c.removed.map(convert))
+	is RetainAll      -> retainAll(c.retained.map(convert))
+	is RemoveAt       -> removeAt(c.index)
+	is RemoveElement  -> remove(convert(c.removed))
+  }
+}
 
 abstract class BasicROObservableCollection<E>: MObservableWithChangeObjectImpl<CollectionChange<E>>(), Collection<E> {
   val isEmptyProp by lazy {
