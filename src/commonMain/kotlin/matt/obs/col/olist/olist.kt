@@ -57,7 +57,7 @@ class ListBindingHelper<E>(private val list: MutableList<E>): ListThatCanBind<E>
 }
 
 fun <E: Comparable<E>> BasicROObservableList<E>.sorted() = BasicSortedList(this)
-sealed interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
+interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
 
 
 abstract class BaseBasicWritableOList<E>(list: MutableList<E>): ObservableCollectionImpl<E>(), BasicROObservableList<E>,
