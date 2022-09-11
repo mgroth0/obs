@@ -22,9 +22,8 @@ inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListen
   onChange(listener)
   return this
 }
-
-fun <E> basicROObservableList(vararg elements: E): BasicROObservableList<E> = BasicObservableListImpl(elements.toList())
-fun <E> basicMutableObservableList(vararg elements: E): BasicWritableObservableList<E> =
+fun <E> basicROObservableListOf(vararg elements: E): BasicROObservableList<E> = BasicObservableListImpl(elements.toList())
+fun <E> basicMutableObservableListOf(vararg elements: E): BasicWritableObservableList<E> =
   BasicObservableListImpl(elements.toList())
 
 class BasicObservableListImpl<E>(c: Collection<E> = mutableListOf()): BasicROObservableCollection<E>(),

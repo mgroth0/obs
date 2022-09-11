@@ -3,6 +3,8 @@ package matt.obs
 import matt.obs.bind.binding
 import matt.obs.bindings.not
 import matt.obs.col.CollectionChange
+import matt.obs.col.olist.filtered.BasicFilteredList
+import matt.obs.col.olist.sorted.BasicSortedList
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ReadOnlyBindableProperty
 import matt.stream.recurse.recurse
@@ -254,5 +256,9 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
 }
 
 
-interface BasicROObservableList<E>: List<E>, MObservableWithChangeObject<CollectionChange<E>>
+interface BasicROObservableList<E>: List<E>, MObservableWithChangeObject<CollectionChange<E>> {
+  fun filtered(filter: (E)->Boolean) = BasicFilteredList(this, filter)
+}
+
+fun <E: Comparable<E>> BasicROObservableList<E>.sorted() = BasicSortedList(this)
 interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>

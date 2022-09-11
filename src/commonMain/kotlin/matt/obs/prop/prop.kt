@@ -68,3 +68,8 @@ fun ValProp<B>.whenTrueOnce(op: ()->Unit) {
 	})
   }
 }
+
+
+fun VarProp<Boolean>.toggle() {
+  value = !value
+}
