@@ -5,6 +5,9 @@ import matt.obs.bind.binding
 import matt.obs.prop.ReadOnlyBindableProperty
 import matt.obs.prop.ValProp
 
+operator fun MObservableROValBase<Double>.unaryPlus(): ValProp<Double> = binding { it }
+operator fun MObservableROValBase<Double>.unaryMinus(): ValProp<Double> = binding { -it }
+
 operator fun MObservableROValBase<Double>.times(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
   binding(other) {
 	it*other.value
