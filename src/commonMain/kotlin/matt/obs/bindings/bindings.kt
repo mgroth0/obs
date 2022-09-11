@@ -1,9 +1,9 @@
 package matt.obs.bindings
 
 import matt.collect.weak.lazyWeakMap
-import matt.obs.MObservableROValBase
 import matt.obs.bind.binding
 import matt.obs.prop.BindableProperty
+import matt.obs.prop.MObservableROValBase
 import matt.obs.prop.ReadOnlyBindableProperty
 
 private val notProps = lazyWeakMap<BindableProperty<Boolean>, ReadOnlyBindableProperty<Boolean>> { prop ->

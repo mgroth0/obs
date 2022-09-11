@@ -1,8 +1,8 @@
 package matt.obs.col.olist.filtered
 
 import matt.lang.setAll
-import matt.obs.BasicROObservableList
 import matt.obs.col.olist.BasicObservableListImpl
+import matt.obs.col.olist.BasicROObservableList
 import matt.obs.col.olist.basicROObservableListOf
 
 class BasicFilteredList<E> private constructor(

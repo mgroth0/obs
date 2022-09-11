@@ -3,8 +3,8 @@
 package matt.obs.prop.cast
 
 import matt.model.recursionblocker.RecursionBlocker
-import matt.obs.WritableMObservableVal
 import matt.obs.prop.BindableProperty
+import matt.obs.prop.WritableMObservableVal
 
 class CastedWritableProp<S, C>(source: WritableMObservableVal<S>): BindableProperty<C>(source.value as C) {
   init {
