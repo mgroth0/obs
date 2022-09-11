@@ -1,8 +1,10 @@
 package matt.obs.col.oset
 
 import matt.collect.itr.MutableIteratorWithSomeMemory
+import matt.obs.BasicOCollection
 import matt.obs.col.AddAtEnd
-import matt.obs.col.BasicROObservableCollection
+import matt.obs.col.BasicROObservableCollectionBindings
+import matt.obs.col.BasicROObservableCollectionBindingsImpl
 import matt.obs.col.Clear
 import matt.obs.col.MultiAddAtEnd
 import matt.obs.col.RemoveElement
@@ -22,7 +24,12 @@ fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> {
   return BasicObservableSet(this.toSet())
 }
 
-class BasicObservableSet<E>(c: Collection<E> = mutableSetOf()): BasicROObservableCollection<E>(), MutableSet<E> {
+class BasicObservableSet<E>(private val theSet: Set<E>): BasicOCollection<E>,
+																BasicROObservableCollectionBindings<E> by BasicROObservableCollectionBindingsImpl<E>(
+																  theSet
+																),
+																MutableSet<E> {
+
 
   private val theSet = c.toMutableSet()
 
@@ -70,7 +77,7 @@ class BasicObservableSet<E>(c: Collection<E> = mutableSetOf()): BasicROObservabl
 	//        println("BasicObservableSet.clear")
 	val removed = theSet.toSet()
 	theSet.clear()
-	emitChange(Clear(theSet,removed=removed))
+	emitChange(Clear(theSet, removed = removed))
   }
 
   override fun remove(element: E): Boolean {

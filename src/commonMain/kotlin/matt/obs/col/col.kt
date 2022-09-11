@@ -1,8 +1,6 @@
 package matt.obs.col
 
-import matt.obs.MObservableWithChangeObjectImpl
 import matt.obs.col.olist.BasicObservableListImpl
-import matt.obs.prop.VarProp
 
 fun <E> Collection<E>.toBasicObservableList(): BasicObservableListImpl<E> {
   return BasicObservableListImpl(this)
@@ -101,15 +99,5 @@ fun <S, T> MutableList<T>.mirror(c: CollectionChange<S>, convert: (S)->T) {
 	is RetainAll      -> retainAll(c.retained.map(convert))
 	is RemoveAt       -> removeAt(c.index)
 	is RemoveElement  -> remove(convert(c.removed))
-  }
-}
-
-abstract class BasicROObservableCollection<E>: MObservableWithChangeObjectImpl<CollectionChange<E>>(), Collection<E> {
-  val isEmptyProp by lazy {
-	VarProp(isEmpty()).apply {
-	  onChange {
-		value = this@BasicROObservableCollection.isEmpty()
-	  }
-	}
   }
 }

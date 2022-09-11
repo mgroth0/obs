@@ -1,26 +1,34 @@
 package matt.obs
 
 import matt.lang.reflect.classForName
+import matt.lang.setAll
+import matt.lang.weak.WeakRef
+import matt.lang.weak.getValue
 import matt.log.warn
 import matt.obs.bind.binding
 import matt.obs.bindings.not
 import matt.obs.col.CollectionChange
+import matt.obs.col.mirror
+import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.col.olist.filtered.BasicFilteredList
 import matt.obs.col.olist.sorted.BasicSortedList
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ReadOnlyBindableProperty
+import matt.obs.prop.VarProp
 import matt.obs.prop.cast.CastedWritableProp
 import matt.stream.recurse.recurse
+import kotlin.jvm.Synchronized
 import kotlin.reflect.KProperty
 
 @DslMarker
 annotation class ObservableDSL
 
+@ObservableDSL
 interface MObsBase {
   fun onChangeSimple(listener: ()->Unit)
 }
 
-@ObservableDSL
+
 sealed interface MObservable<L, B>: MObsBase {
 
   fun onChange(listener: L): L
@@ -109,8 +117,9 @@ abstract class MObservableObjectImpl<T: MObservableObjectImpl<T>> internal const
   }
 }
 
-abstract class MObservableWithChangeObjectImpl<C> internal constructor(): MObservableImpl<(C)->Unit, (C)->Boolean>(),
-																		  MObservableWithChangeObject<C> {
+abstract class InternalBackedMObservableWithChangeObject<C> internal constructor():
+  MObservableImpl<(C)->Unit, (C)->Boolean>(),
+  MObservableWithChangeObject<C> {
   final override fun onChangeUntil(until: (C)->Boolean, listener: (C)->Unit) {
 	var realListener: ((C)->Unit)? = null
 	realListener = { t: C ->
@@ -267,13 +276,52 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
 
 }
 
+interface BasicOCollection<E>: Collection<E>, MObservableWithChangeObject<CollectionChange<E>>
 
-interface BasicROObservableList<E>: List<E>, MObservableWithChangeObject<CollectionChange<E>> {
+interface BasicROObservableList<E>: BasicOCollection<E> {
   fun filtered(filter: (E)->Boolean) = BasicFilteredList(this, filter)
 }
 
 fun <E: Comparable<E>> BasicROObservableList<E>.sorted() = BasicSortedList(this)
-interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
+sealed interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
+
+abstract class BaseBasicWritableOList<E>: BasicROObservableList<E>,
+										  BasicWritableObservableList<E> {
+
+  val isEmptyProp by lazy {
+	VarProp(this.isEmpty()).apply {
+	  onChange {
+		value = this@BaseBasicWritableOList.isEmpty()
+	  }
+	}
+  }
+
+  private var theBind: TheBind<*>? = null
+
+  @Synchronized
+  fun unbind() {
+	theBind?.cut()
+	theBind = null
+  }
+
+  @Synchronized
+  fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E) {
+	unbind()
+	setAll(source.map(converter))
+	val listener = source.onChange {
+	  mirror(it, converter)
+	}
+	theBind = TheBind(source = source, listener = listener)
+  }
+}
+
+private class TheBind<S>(
+  source: BasicObservableListImpl<S>,
+  private val listener: (CollectionChange<S>)->Unit
+) {
+  val source by WeakRef(source)
+  fun cut() = source?.removeListener(listener)
+}
 
 
 internal val JAVAFX_OBSERVABLE_CLASS by lazy {
