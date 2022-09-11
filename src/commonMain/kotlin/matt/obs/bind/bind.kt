@@ -1,11 +1,11 @@
 package matt.obs.bind
 
+import matt.obs.BaseBasicWritableOList
 import matt.obs.MObservableObject
 import matt.obs.MObservableObjectImpl
 import matt.obs.MObservableROValBase
 import matt.obs.MObservableVal
 import matt.obs.MObservableWithChangeObject
-import matt.obs.col.BasicROObservableCollectionBindingsImpl
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 import kotlin.jvm.Synchronized
@@ -184,7 +184,7 @@ fun <T: MObservableObject<T>, R> MObservableObject<T>.binding(
 //  }
 //}
 
-fun <E, R> BasicROObservableCollectionBindingsImpl<E>.lazyBinding(
+fun <E, R> BaseBasicWritableOList<E>.lazyBinding(
   vararg dependencies: MObservableVal<*>,
   op: (Collection<E>)->R,
 ): MyBinding<R> {

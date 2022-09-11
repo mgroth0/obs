@@ -285,8 +285,8 @@ interface BasicROObservableList<E>: BasicOCollection<E> {
 fun <E: Comparable<E>> BasicROObservableList<E>.sorted() = BasicSortedList(this)
 sealed interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
 
-abstract class BaseBasicWritableOList<E>: BasicROObservableList<E>,
-										  BasicWritableObservableList<E> {
+abstract class BaseBasicWritableOList<E>: InternalBackedMObservableWithChangeObject<CollectionChange<E>>(), BasicROObservableList<E>,
+  BasicWritableObservableList<E> {
 
   val isEmptyProp by lazy {
 	VarProp(this.isEmpty()).apply {
