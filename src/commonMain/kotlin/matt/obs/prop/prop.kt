@@ -40,7 +40,7 @@ infix fun <T> BindableProperty<T>.notEqNow(value: MObservableROValBase<T>): Bool
 }
 
 open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T> {
-  override var boundTo: ReadOnlyBindableProperty<out T>? = null
+  override var boundTo: MObservableROValBase<out T>? = null
   override var value = value
 	set(v) {
 	  if (v != field) {
