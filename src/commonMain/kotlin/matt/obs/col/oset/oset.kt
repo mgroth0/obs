@@ -1,15 +1,14 @@
 package matt.obs.col.oset
 
 import matt.collect.itr.MutableIteratorWithSomeMemory
-import matt.obs.BasicOCollection
-import matt.obs.col.AddAtEnd
-import matt.obs.col.BasicROObservableCollectionBindings
-import matt.obs.col.BasicROObservableCollectionBindingsImpl
-import matt.obs.col.Clear
-import matt.obs.col.MultiAddAtEnd
-import matt.obs.col.RemoveElement
-import matt.obs.col.RemoveElements
-import matt.obs.col.RetainAll
+import matt.obs.col.ObservableCollectionImpl
+import matt.obs.col.change.AddAtEnd
+import matt.obs.col.change.Clear
+import matt.obs.col.change.MultiAddAtEnd
+import matt.obs.col.change.RemoveElement
+import matt.obs.col.change.RemoveElements
+import matt.obs.col.change.RetainAll
+import matt.obs.requireNotObservable
 
 
 fun <E> Collection<E>.toBasicObservableSet(): BasicObservableSet<E> {
@@ -24,14 +23,12 @@ fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> {
   return BasicObservableSet(this.toSet())
 }
 
-class BasicObservableSet<E>(private val theSet: Set<E>): BasicOCollection<E>,
-																BasicROObservableCollectionBindings<E> by BasicROObservableCollectionBindingsImpl<E>(
-																  theSet
-																),
-																MutableSet<E> {
+class BasicObservableSet<E>(private val theSet: MutableSet<E>): ObservableCollectionImpl<E>(),
+														 MutableSet<E> {
 
 
-  private val theSet = c.toMutableSet()
+  constructor(c: Collection<E>): this(c.requireNotObservable().toMutableSet())
+
 
   override val size: Int
 	get() = theSet.size

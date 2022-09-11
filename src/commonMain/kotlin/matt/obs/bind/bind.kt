@@ -1,11 +1,11 @@
 package matt.obs.bind
 
-import matt.obs.BaseBasicWritableOList
-import matt.obs.MObservableObject
-import matt.obs.MObservableObjectImpl
-import matt.obs.MObservableROValBase
-import matt.obs.MObservableVal
-import matt.obs.MObservableWithChangeObject
+import matt.obs.col.MObservableWithChangeObject
+import matt.obs.col.olist.BaseBasicWritableOList
+import matt.obs.oobj.MObservableObject
+import matt.obs.oobj.MObservableObjectImpl
+import matt.obs.prop.MObservableROValBase
+import matt.obs.prop.MObservableVal
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 import kotlin.jvm.Synchronized

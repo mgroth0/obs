@@ -3,24 +3,87 @@
 package matt.obs.col.olist
 
 import matt.collect.itr.MutableListIteratorWithSomeMemory
-import matt.lang.go
-import matt.lang.reflect.isSubTypeOf
-import matt.obs.BaseBasicWritableOList
-import matt.obs.BasicROObservableList
-import matt.obs.BasicWritableObservableList
-import matt.obs.JAVAFX_OBSERVABLE_CLASS
-import matt.obs.col.AddAt
-import matt.obs.col.AddAtEnd
-import matt.obs.col.Clear
-import matt.obs.col.CollectionChange
-import matt.obs.col.MultiAddAt
-import matt.obs.col.MultiAddAtEnd
-import matt.obs.col.RemoveAt
-import matt.obs.col.RemoveElement
-import matt.obs.col.RemoveElements
-import matt.obs.col.ReplaceAt
-import matt.obs.col.RetainAll
+import matt.lang.setAll
+import matt.lang.weak.WeakRef
+import matt.lang.weak.getValue
+import matt.obs.col.BasicOCollection
+import matt.obs.col.ObservableCollectionImpl
+import matt.obs.col.change.AddAt
+import matt.obs.col.change.AddAtEnd
+import matt.obs.col.change.Clear
+import matt.obs.col.change.CollectionChange
+import matt.obs.col.change.MultiAddAt
+import matt.obs.col.change.MultiAddAtEnd
+import matt.obs.col.change.RemoveAt
+import matt.obs.col.change.RemoveElement
+import matt.obs.col.change.RemoveElements
+import matt.obs.col.change.ReplaceAt
+import matt.obs.col.change.RetainAll
+import matt.obs.col.change.mirror
+import matt.obs.col.olist.filtered.BasicFilteredList
+import matt.obs.col.olist.sorted.BasicSortedList
+import matt.obs.requireNotObservable
 import kotlin.contracts.ExperimentalContracts
+import kotlin.jvm.Synchronized
+
+interface BasicROObservableList<E>: BasicOCollection<E> {
+  fun filtered(filter: (E)->Boolean) = BasicFilteredList(this, filter)
+}
+
+interface ListThatCanBind<E> {
+  fun unbind()
+  fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E)
+}
+
+
+class ListBindingHelper<E>(private val list: MutableList<E>): ListThatCanBind<E> {
+  private var theBind: TheBind<*>? = null
+
+  @Synchronized
+  override fun unbind() {
+	theBind?.cut()
+	theBind = null
+  }
+
+  @Synchronized
+  override fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E) {
+	unbind()
+	list.setAll(source.map(converter))
+	val listener = source.onChange {
+	  list.mirror(it, converter)
+	}
+	theBind = TheBind(source = source, listener = listener)
+  }
+}
+
+fun <E: Comparable<E>> BasicROObservableList<E>.sorted() = BasicSortedList(this)
+sealed interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
+
+
+abstract class BaseBasicWritableOList<E>(list: MutableList<E>): ObservableCollectionImpl<E>(), BasicROObservableList<E>,
+																BasicWritableObservableList<E>,
+																ListThatCanBind<E> by ListBindingHelper(list)
+
+private class TheBind<S>(
+  source: BasicObservableListImpl<S>,
+  private val listener: (CollectionChange<S>)->Unit
+) {
+  val source by WeakRef(source)
+  fun cut() = source?.removeListener(listener)
+}
+
+
+fun <E> Collection<E>.toBasicObservableList(): BasicObservableListImpl<E> {
+  return BasicObservableListImpl(this)
+}
+
+fun <E> Iterable<E>.toBasicObservableList(): BasicObservableListImpl<E> {
+  return BasicObservableListImpl(this.toList())
+}
+
+fun <E> Sequence<E>.toBasicObservableList(): BasicObservableListImpl<E> {
+  return BasicObservableListImpl(this.toList())
+}
 
 
 fun <E> basicROObservableListOf(vararg elements: E): BasicROObservableList<E> =
@@ -30,15 +93,9 @@ fun <E> basicMutableObservableListOf(vararg elements: E): BasicWritableObservabl
   BasicObservableListImpl(elements.toList())
 
 class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>):
-  BaseBasicWritableOList<E>(), List<E> by list {
+  BaseBasicWritableOList<E>(list), List<E> by list {
 
-  constructor(c: Collection<E>): this(c.apply {
-	JAVAFX_OBSERVABLE_CLASS?.go {
-	  require(!c::class.isSubTypeOf(it)) {
-		"this is the wrong way to make a BasicObservableList from an ObservableList if you want them to be synced"
-	  }
-	}
-  }.toMutableList())
+  constructor(c: Collection<E>): this(c.requireNotObservable().toMutableList())
 
   constructor(): this(mutableListOf())
 

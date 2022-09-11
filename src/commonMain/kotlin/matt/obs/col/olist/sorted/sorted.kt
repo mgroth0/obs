@@ -1,8 +1,8 @@
 package matt.obs.col.olist.sorted
 
 import matt.lang.setAll
-import matt.obs.BasicROObservableList
 import matt.obs.col.olist.BasicObservableListImpl
+import matt.obs.col.olist.BasicROObservableList
 import matt.obs.col.olist.basicROObservableListOf
 
 private fun <E: Comparable<E>> BasicObservableListImpl<E>.getSortedFrom(blist: BasicROObservableList<E>): BasicObservableListImpl<E> {
