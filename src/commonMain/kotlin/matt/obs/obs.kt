@@ -7,6 +7,7 @@ import matt.obs.col.olist.filtered.BasicFilteredList
 import matt.obs.col.olist.sorted.BasicSortedList
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ReadOnlyBindableProperty
+import matt.obs.prop.cast.CastedWritableProp
 import matt.stream.recurse.recurse
 import kotlin.reflect.KProperty
 
@@ -44,9 +45,14 @@ interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean> {
 }
 
 sealed interface MObservableVal<T>: MObservable<ListenerType<T>, (T)->Boolean> {
+  val value: T
   fun addBoundedProp(p: WritableMObservableVal<in T>)
   fun removeBoundedProp(p: WritableMObservableVal<in T>)
   fun onChange(op: (T)->Unit) = onChange(NewListener { op(it) })
+  fun <R> cast() = binding {
+	@Suppress("UNCHECKED_CAST")
+	it as R
+  }
 }
 
 
@@ -121,7 +127,7 @@ abstract class MObservableWithChangeObjectImpl<C> internal constructor(): MObser
 
 interface WritableMObservableVal<T>: MObservableVal<T> {
 
-  var value: T
+  override var value: T
 
   var boundTo: MObservableROValBase<out T>?
 
@@ -159,6 +165,9 @@ interface WritableMObservableVal<T>: MObservableVal<T> {
   operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: T) {
 	value = newValue
   }
+
+
+  override fun <R> cast() = CastedWritableProp<T, R>(this)
 }
 
 sealed interface ListenerType<T>
@@ -183,8 +192,6 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
 	is OldAndNewListener<T> -> invoke(old, new)
   }
 
-
-  abstract val value: T
 
   final override fun onChangeSimple(listener: ()->Unit) {
 	onChange(NewListener {
@@ -251,6 +258,7 @@ abstract class MObservableROValBase<T>: MObservableImpl<ListenerType<T>, (T)->Bo
   }
 
   infix fun neq(other: Any) = eq(other).not()
+
 
 
 }

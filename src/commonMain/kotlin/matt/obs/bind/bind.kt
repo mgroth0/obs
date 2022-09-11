@@ -62,7 +62,10 @@ fun <T, R> MObservableROValBase<T>.lazyBinding(
   }
 }
 
-fun <T, R> MObservableROValBase<T>.binding(
+
+
+
+fun <T, R> MObservableVal<T>.binding(
   vararg dependencies: MObservableVal<*>,
   debug: Boolean = false,
   op: (T)->R,

@@ -49,6 +49,8 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
 		notifyListeners(old, v)
 	  }
 	}
+
+
 }
 
 
