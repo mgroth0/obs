@@ -34,7 +34,7 @@ interface BasicROObservableList<E>: BasicOCollection<E> {
 
 interface ListThatCanBind<E> {
   fun unbind()
-  fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E)
+  fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E)
   fun <S> bind(source: ValProp<S>, converter: (S)->List<E>)
 }
 
@@ -47,7 +47,7 @@ class ListBindingHelper<E>(private val list: MutableList<E>): ListThatCanBind<E>
 	theBind = null
   }
 
-  @Synchronized override fun <S> bind(source: BasicObservableListImpl<S>, converter: (S)->E) {
+  @Synchronized override fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E) {
 	unbind()
 	list.setAll(source.map(converter))
 	val listener = source.onChange {
