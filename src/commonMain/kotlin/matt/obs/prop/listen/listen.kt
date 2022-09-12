@@ -9,8 +9,10 @@ sealed interface ListenerType<T> {
 
 fun interface NewListener<T>: ListenerType<T> {
   fun invoke(new: T)
+  override fun invokeWith(old: T, new: T) = super.invokeWith(old = old, new = new) /*keep this because of internal kotlin runtime bug? ... yup*/
 }
 
 fun interface OldAndNewListener<T>: ListenerType<T> {
   fun invoke(old: T, new: T)
+  override fun invokeWith(old: T, new: T) = super.invokeWith(old = old, new = new) /*keep this because of internal kotlin runtime bug? ... yup*/
 }
