@@ -17,7 +17,8 @@ sealed interface MObservableVal<T, L: ListenerType<T>>: MObservable<L, (T)->Bool
   fun addBoundedProp(p: WritableMObservableVal<in T>)
   fun removeBoundedProp(p: WritableMObservableVal<in T>)
   fun <R> cast() = binding {
-	@Suppress("UNCHECKED_CAST") it as R
+	@Suppress("UNCHECKED_CAST")
+	it as R
   }
 
   fun onChange(listener: (T)->Unit): NewListener<T>
@@ -31,7 +32,7 @@ interface MObservableValNewAndOld<T>: MObservable<ListenerType<T>, (T)->Boolean>
 
 interface MObservableValNewOnly<T>: MObservable<NewListener<T>, (T)->Boolean>,
 									MObservableVal<T, NewListener<T>> { //  fun onChange(op: (T)->Unit) = onChange(matt.obs.prop.listen.NewListener { op(it) })
-  override fun onChange(listener: (T)->Unit) = onChange(NewListener { listener(it) }) as NewListener<T>
+  override fun onChange(listener: (T)->Unit) = onChange(NewListener { listener(it) })
 } //
 //@Suppress("UNCHECKED_CAST")
 //inline fun <reified T, reified L: matt.obs.prop.listen.ListenerType<T>, P: MObservableVal<T, L>> P.onChange(listener: matt.obs.prop.listen.NewListener<T>) =
