@@ -1,34 +1,39 @@
 package matt.obs.bind
 
+import matt.log.todo
 import matt.obs.col.MObservableWithChangeObject
 import matt.obs.col.olist.BaseBasicWritableOList
 import matt.obs.oobj.MObservableObject
-import matt.obs.oobj.MObservableObjectImpl
+import matt.obs.prop.MObservableROPropBase
 import matt.obs.prop.MObservableROValBase
 import matt.obs.prop.MObservableVal
+import matt.obs.prop.MObservableValNewOnly
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
+import matt.obs.prop.listen.NewListener
 import kotlin.jvm.Synchronized
 
 private object NOT_CALCED
-class MyBinding<T> internal constructor(private val calc: ()->T): MObservableObjectImpl<MyBinding<T>>() {
+class MyBinding<T>(private val calc: ()->T): MObservableROValBase<T, NewListener<T>>(), MObservableValNewOnly<T> {
 
   private var valid = false
 
-  @Synchronized
-  internal fun invalidate() {
+  @Synchronized fun invalidate() {
+	todo(
+	  "now i know why there are invalidation listeners! because sometimes i don't need to calculate the new result. Need listener types with conditions for cancelling, invalidation listeners, different params, and filters, etc!"
+	)
 	valid = false
-	listeners.forEach { it.invoke(this) }
-	//	notifyListeners()
+	if (listeners.isNotEmpty()) {
+	  val v = value
+	  listeners.forEach { it.invoke(v) }    //	notifyListeners()
+	}
   }
 
   private var lastCalculated: Any? = NOT_CALCED
 
-  val value: T
-	@Synchronized
-	get() {
-	  @Suppress("UNCHECKED_CAST")
-	  if (valid) return lastCalculated as T
+  override val value: T
+	@Synchronized get() {
+	  @Suppress("UNCHECKED_CAST") if (valid) return lastCalculated as T
 	  else {
 		lastCalculated = calc()
 		valid = true
@@ -36,17 +41,21 @@ class MyBinding<T> internal constructor(private val calc: ()->T): MObservableObj
 	  }
 	}
 
-  //	protected set(v) {
-  //	  if (v != field) {
-  //		field = v
-  //		notifyListeners(v)
-  //	  }
-  //	}
+
+  override fun onChangeUntil(until: (T)->Boolean, listener: NewListener<T>) {
+	var realListener: NewListener<T>? = null
+	realListener = NewListener { t: T ->
+	  listener.invoke(t)
+	  if (until(t)) listeners -= realListener!!
+	}
+	listeners += realListener
+  }
+
 
 }
 
-fun <T, R> MObservableROValBase<T>.lazyBinding(
-  vararg dependencies: MObservableVal<*>,
+fun <T, R> MObservableROPropBase<T>.lazyBinding(
+  vararg dependencies: MObservableVal<*, *>,
   op: (T)->R,
 ): MyBinding<R> {
   val prop = this
@@ -63,10 +72,8 @@ fun <T, R> MObservableROValBase<T>.lazyBinding(
 }
 
 
-
-
-fun <T, R> MObservableVal<T>.binding(
-  vararg dependencies: MObservableVal<*>,
+fun <T, R> MObservableVal<T, *>.binding(
+  vararg dependencies: MObservableVal<*, *>,
   debug: Boolean = false,
   op: (T)->R,
 ): ValProp<R> {
@@ -86,7 +93,7 @@ fun <T, R> MObservableVal<T>.binding(
 }
 
 fun <T: MObservableObject<T>, R> MObservableObject<T>.lazyBinding(
-  vararg dependencies: MObservableVal<*>,
+  vararg dependencies: MObservableVal<*, *>,
   op: T.()->R,
 ): MyBinding<R> {
   @Suppress("UNCHECKED_CAST") val prop = this as T
@@ -103,12 +110,11 @@ fun <T: MObservableObject<T>, R> MObservableObject<T>.lazyBinding(
 }
 
 fun <T: MObservableObject<T>, R> MObservableObject<T>.binding(
-  vararg dependencies: MObservableVal<T>,
+  vararg dependencies: MObservableVal<T, *>,
   debug: Boolean = false,
   op: T.()->R,
 ): ValProp<R> {
-  @Suppress("UNCHECKED_CAST")
-  val prop = this as T
+  @Suppress("UNCHECKED_CAST") val prop = this as T
   return VarProp(prop.op()).apply {
 	val b = this
 	prop.onChange {
@@ -185,26 +191,24 @@ fun <T: MObservableObject<T>, R> MObservableObject<T>.binding(
 //}
 
 fun <E, R> BaseBasicWritableOList<E>.lazyBinding(
-  vararg dependencies: MObservableVal<*>,
+  vararg dependencies: MObservableVal<*, *>,
   op: (Collection<E>)->R,
 ): MyBinding<R> {
   val prop = this
   return MyBinding { op(prop) }.apply {
 	prop.onChange {
-	  invalidate()
-	  //	  value = op(prop)
+	  invalidate()    //	  value = op(prop)
 	}
 	dependencies.forEach {
 	  it.onChange {
-		invalidate()
-		//		value = op(prop)
+		invalidate()        //		value = op(prop)
 	  }
 	}
   }
 }
 
 inline fun <C, R, reified CC: MObservableWithChangeObject<C>> CC.binding(
-  vararg dependencies: MObservableVal<*>,
+  vararg dependencies: MObservableVal<*, *>,
   crossinline op: (CC)->R,
 ): ValProp<R> {
   val prop = this

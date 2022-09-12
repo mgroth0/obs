@@ -1,29 +1,29 @@
 package matt.obs.bindings.math
 
 import matt.obs.bind.binding
-import matt.obs.prop.MObservableROValBase
+import matt.obs.prop.MObservableROPropBase
 import matt.obs.prop.ReadOnlyBindableProperty
 import matt.obs.prop.ValProp
 
-operator fun MObservableROValBase<Double>.unaryPlus(): ValProp<Double> = binding { it }
-operator fun MObservableROValBase<Double>.unaryMinus(): ValProp<Double> = binding { -it }
+operator fun MObservableROPropBase<Double>.unaryPlus(): ValProp<Double> = binding { it }
+operator fun MObservableROPropBase<Double>.unaryMinus(): ValProp<Double> = binding { -it }
 
-operator fun MObservableROValBase<Double>.times(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
+operator fun MObservableROPropBase<Double>.times(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
   binding(other) {
 	it*other.value
   }
 
-operator fun MObservableROValBase<Double>.minus(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
+operator fun MObservableROPropBase<Double>.minus(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
   binding(other) {
 	it - other.value
   }
 
-operator fun MObservableROValBase<Double>.plus(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
+operator fun MObservableROPropBase<Double>.plus(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
   binding(other) {
 	it + other.value
   }
 
-operator fun MObservableROValBase<Double>.div(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
+operator fun MObservableROPropBase<Double>.div(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
   binding(other) {
 	it/other.value
   }
@@ -34,39 +34,39 @@ private operator fun Number.minus(n: Number) = toDouble() - n.toDouble()
 private operator fun Number.div(n: Number) = toDouble()/n.toDouble()
 
 
-operator fun MObservableROValBase<Double>.times(other: Number): ValProp<Double> = binding {
+operator fun MObservableROPropBase<Double>.times(other: Number): ValProp<Double> = binding {
   it*other
 }
 
-operator fun MObservableROValBase<Double>.minus(other: Number): ValProp<Double> = binding {
+operator fun MObservableROPropBase<Double>.minus(other: Number): ValProp<Double> = binding {
   it - other
 }
 
-operator fun MObservableROValBase<Double>.plus(other: Number): ValProp<Double> = binding {
+operator fun MObservableROPropBase<Double>.plus(other: Number): ValProp<Double> = binding {
   it + other
 }
 
-operator fun MObservableROValBase<Double>.div(other: Number): ValProp<Double> = binding {
+operator fun MObservableROPropBase<Double>.div(other: Number): ValProp<Double> = binding {
   it/other
 }
 
-operator fun Number.times(other: MObservableROValBase<Double>): ValProp<Double> = other.binding {
+operator fun Number.times(other: MObservableROPropBase<Double>): ValProp<Double> = other.binding {
   it*this
 }
 
-operator fun Number.minus(other: MObservableROValBase<Double>): ValProp<Double> = other.binding {
+operator fun Number.minus(other: MObservableROPropBase<Double>): ValProp<Double> = other.binding {
   it - this
 }
 
-operator fun Number.plus(other: MObservableROValBase<Double>): ValProp<Double> = other.binding {
+operator fun Number.plus(other: MObservableROPropBase<Double>): ValProp<Double> = other.binding {
   it + this
 }
 
-operator fun Number.div(other: MObservableROValBase<Double>): ValProp<Double> = other.binding {
+operator fun Number.div(other: MObservableROPropBase<Double>): ValProp<Double> = other.binding {
   it/this
 }
 
-fun min(vararg values: MObservableROValBase<Double>): MObservableROValBase<Double> {
+fun min(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Double> {
   require(values.size > 0)
   if (values.size == 1) return values[0]
   else return values[0].binding(*values.drop(1).toTypedArray()) {
@@ -74,7 +74,7 @@ fun min(vararg values: MObservableROValBase<Double>): MObservableROValBase<Doubl
   }
 }
 
-fun max(vararg values: MObservableROValBase<Double>): MObservableROValBase<Double> {
+fun max(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Double> {
   require(values.size > 0)
   if (values.size == 1) return values[0]
   else return values[0].binding(*values.drop(1).toTypedArray()) {
@@ -82,7 +82,7 @@ fun max(vararg values: MObservableROValBase<Double>): MObservableROValBase<Doubl
   }
 }
 
-fun mean(vararg values: MObservableROValBase<Double>): MObservableROValBase<Double> {
+fun mean(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Double> {
   require(values.size > 0)
   if (values.size == 1) return values[0]
   else return values[0].binding(*values.drop(1).toTypedArray()) {
@@ -90,7 +90,7 @@ fun mean(vararg values: MObservableROValBase<Double>): MObservableROValBase<Doub
   }
 }
 
-fun sum(vararg values: MObservableROValBase<Double>): MObservableROValBase<Double> {
+fun sum(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Double> {
   require(values.size > 0)
   if (values.size == 1) return values[0]
   else return values[0].binding(*values.drop(1).toTypedArray()) {
