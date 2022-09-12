@@ -7,13 +7,13 @@ import matt.obs.MObservableImpl
 import matt.obs.bind.binding
 import matt.obs.bindings.bool.not
 import matt.obs.prop.cast.CastedWritableProp
-import matt.obs.prop.listen.ListenerType
+import matt.obs.prop.listen.ValueListener
 import matt.obs.prop.listen.NewListener
 import matt.obs.prop.listen.OldAndNewListener
 import matt.stream.recurse.recurse
 import kotlin.reflect.KProperty
 
-sealed interface MObservableVal<T, L: ListenerType<T>>: MObservable<L, (T)->Boolean> {
+sealed interface MObservableVal<T, L: ValueListener<T>>: MObservable<L, (T)->Boolean> {
   val value: T
   fun addBoundedProp(p: WritableMObservableVal<in T>)
   fun removeBoundedProp(p: WritableMObservableVal<in T>)
@@ -28,8 +28,10 @@ sealed interface MObservableVal<T, L: ListenerType<T>>: MObservable<L, (T)->Bool
 }
 
 
-interface MObservableValNewAndOld<T>: MObservable<ListenerType<T>, (T)->Boolean>,
-									  MObservableVal<T, ListenerType<T>> { //  fun onChange(op: (T)->Unit) = onChange(matt.obs.prop.listen.NewListener { op(it) })
+interface MObservableValNewAndOld<T>: MObservable<ValueListener<T>, (T)->Boolean>,
+									  MObservableVal<T, ValueListener<T>> {
+
+  //  fun onChange(op: (T)->Unit) = onChange(matt.obs.prop.listen.NewListener { op(it) })
   override fun onChange(listener: (T)->Unit) = onChange(NewListener { listener(it) }) as NewListener<T>
 
   fun onChangeWithWeak(o: Any, op: (T)->Unit) = apply {
@@ -124,20 +126,16 @@ interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
 }
 
 
-abstract class MObservableROValBase<T, L: ListenerType<T>>: MObservableImpl<L, (T)->Boolean>(),
+abstract class MObservableROValBase<T, L: ValueListener<T>>: MObservableImpl<L, (T)->Boolean>(),
 
 
-															MObservableVal<T, L> {
-  val isNull by lazy {
-	binding {
-	  it == null
-	}
-  }
+															 MObservableVal<T, L> {
 
 
   infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
 	it == other.value
   }
+
 
   infix fun neq(other: ReadOnlyBindableProperty<*>) = eq(other).not()
 
@@ -146,6 +144,10 @@ abstract class MObservableROValBase<T, L: ListenerType<T>>: MObservableImpl<L, (
   }
 
   infix fun neq(other: Any?) = eq(other).not()
+
+  val isNull by lazy { eq(null) }
+  val notNull by lazy { isNull.not() }
+
 
   override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
 
@@ -182,7 +184,7 @@ abstract class MObservableROValBase<T, L: ListenerType<T>>: MObservableImpl<L, (
 }
 
 
-abstract class MObservableROPropBase<T>: MObservableROValBase<T, ListenerType<T>>(), MObservableValNewAndOld<T> {
+abstract class MObservableROPropBase<T>: MObservableROValBase<T, ValueListener<T>>(), MObservableValNewAndOld<T> {
 
   protected fun notifyListeners(old: T, new: T) {
 	/*gotta make a new list to prevent concurrent mod error if listeners list is edited in a listener*/
@@ -192,8 +194,8 @@ abstract class MObservableROPropBase<T>: MObservableROValBase<T, ListenerType<T>
   }
 
 
-  final override fun onChangeUntil(until: (T)->Boolean, listener: ListenerType<T>) {
-	var realListener: ListenerType<T>? = null
+  final override fun onChangeUntil(until: (T)->Boolean, listener: ValueListener<T>) {
+	var realListener: ValueListener<T>? = null
 	realListener = OldAndNewListener { old, t: T ->
 	  listener.invokeWith(old, t)
 	  if (until(t)) listeners -= realListener!!

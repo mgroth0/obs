@@ -1,18 +1,51 @@
 package matt.obs.prop.listen
 
-sealed interface ListenerType<T> {
+import matt.lang.ifTrue
+import matt.obs.MObservable
+
+sealed class MyListener {
+
+  var removeCondition: (()->Boolean)? = null
+  var removeAfterInvocation: Boolean = false
+
+  internal var currentObservable: MObservable<*>? = null
+  internal fun removeListener() = currentObservable!!.removeListener(this)
+  internal fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
+
+
+  internal fun preInvocation(): Boolean {
+	var r = true
+	removeCondition?.invoke()?.ifTrue {
+	  removeListener()
+	  r = false
+	}
+	return r
+  }
+
+  internal fun postInvocation() {
+	if (removeAfterInvocation) {
+	  removeListener()
+	} else removeCondition?.invoke()?.ifTrue {
+	  removeListener()
+	}
+  }
+}
+
+internal fun <L: MyListener> L.moveTo(o: MObservable<L>) {
+  tryRemovingListener()
+  o.addListener(this)
+}
+
+
+sealed class ValueListener<T>: MyListener() {
   fun invokeWith(old: T, new: T) = when (this) {
 	is NewListener<T>       -> invoke(new)
 	is OldAndNewListener<T> -> invoke(old, new)
   }
 }
 
-fun interface NewListener<T>: ListenerType<T> {
-  fun invoke(new: T)
-  override fun invokeWith(old: T, new: T) = super.invokeWith(old = old, new = new) /*keep this because of internal kotlin runtime bug? ... yup*/
-}
+class NewListener<T>(internal val invoke: NewListener<T>.(new: T)->Unit):
+  ValueListener<T>()
 
-fun interface OldAndNewListener<T>: ListenerType<T> {
-  fun invoke(old: T, new: T)
-  override fun invokeWith(old: T, new: T) = super.invokeWith(old = old, new = new) /*keep this because of internal kotlin runtime bug? ... yup*/
-}
+class OldAndNewListener<T>(internal val invoke: OldAndNewListener<T>.(old: T, new: T)->Unit):
+  ValueListener<T>()

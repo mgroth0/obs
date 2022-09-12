@@ -7,10 +7,13 @@ import matt.obs.oobj.MObservableObject
 import matt.obs.prop.MObservableROPropBase
 import matt.obs.prop.MObservableROValBase
 import matt.obs.prop.MObservableVal
+import matt.obs.prop.MObservableValNewAndOld
 import matt.obs.prop.MObservableValNewOnly
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
+import matt.obs.prop.listen.ValueListener
 import matt.obs.prop.listen.NewListener
+import matt.obs.prop.listen.OldAndNewListener
 import kotlin.jvm.Synchronized
 
 private object NOT_CALCED
@@ -131,64 +134,29 @@ fun <T: MObservableObject<T>, R> MObservableObject<T>.binding(
 }
 
 
-//fun <T, R, TT: ValProp<R?>> ValProp<T>.lazyChainBinding(
-//  op: (T)->TT?,
-//): MyBinding<R?> {
-//
-//  val prop = this
-//
-//  var tt = op(value)
-//
-//  return MyBinding({tt?.value}).apply {
-//	println("initial value = $value")
-//	var listener = tt?.onChange {
-//	  invalidate()
-////	  value = tt?.value
-//	  println("value2=${value}")
-//	}
-//	prop.onChange {
-//	  tt = op(it)
-//	  invalidate()
-////	  value = tt?.value
-//	  println("value3=${value}")
-//	  listener?.go {
-//
-//		removeListener(it) }
-//	  listener = tt?.onChange {
-//		value = tt?.value
-//		println("value4=${value}")
-//	  }
-//	}
-//  }
-//}
-//
-//
-//fun <T, R, TT: ValProp<R?>> ValProp<T>.chainBinding(
-//  op: (T)->TT?,
-//): ValProp<R?> {
-//
-//  val prop = this
-//
-//  var tt = op(value)
-//
-//  return BindableProperty(tt?.value).apply {
-//	println("initial value = $value")
-//	var listener = tt?.onChange {
-//	  value = tt?.value
-//	  println("value2=${value}")
-//	}
-//	prop.onChange {
-//	  tt = op(it)
-//	  value = tt?.value
-//	  println("value3=${value}")
-//	  listener?.go { removeListener(it) }
-//	  listener = tt?.onChange {
-//		value = tt?.value
-//		println("value4=${value}")
-//	  }
-//	}
-//  }
-//}
+fun <T, L: ValueListener<T>> MObservableValNewAndOld<MObservableVal<T, L>?>.deepOnChange(listener: L) {
+  value?.onChange(listener)
+  onChange(OldAndNewListener { old, new ->
+	old?.removeListener(listener)
+	new?.onChange(listener)
+  })
+}
+
+fun <T, R> MObservableValNewAndOld<MObservableVal<T, NewListener<T>>?>.deepBinding(
+  vararg dependencies: MObservableVal<*, *>,
+  op: (T)->R
+): MObservableROPropBase<R?> {
+  val r = VarProp(value?.value?.let(op))
+  deepOnChange(NewListener {
+	r.value = op(it)
+  })
+  dependencies.forEach {
+	it.onChange {
+	  r.value = value?.value?.let(op)
+	}
+  }
+  return r
+}
 
 fun <E, R> BaseBasicWritableOList<E>.lazyBinding(
   vararg dependencies: MObservableVal<*, *>,
