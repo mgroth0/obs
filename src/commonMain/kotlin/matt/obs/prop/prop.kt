@@ -5,7 +5,7 @@ import matt.lang.weak.WeakRef
 import matt.obs.MObservable
 import matt.obs.MObservableImpl
 import matt.obs.bind.binding
-import matt.obs.bindings.not
+import matt.obs.bindings.bool.not
 import matt.obs.prop.cast.CastedWritableProp
 import matt.obs.prop.listen.ListenerType
 import matt.obs.prop.listen.NewListener
