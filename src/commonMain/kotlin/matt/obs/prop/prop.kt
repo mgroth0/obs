@@ -141,11 +141,11 @@ abstract class MObservableROValBase<T, L: ListenerType<T>>: MObservableImpl<L, (
 
   infix fun neq(other: ReadOnlyBindableProperty<*>) = eq(other).not()
 
-  infix fun eq(other: Any) = binding {
+  infix fun eq(other: Any?) = binding {
 	it == other
   }
 
-  infix fun neq(other: Any) = eq(other).not()
+  infix fun neq(other: Any?) = eq(other).not()
 
   override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
 
