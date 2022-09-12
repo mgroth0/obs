@@ -25,7 +25,6 @@ sealed interface MObservableVal<T, L: ListenerType<T>>: MObservable<L, (T)->Bool
   fun onChange(listener: (T)->Unit): NewListener<T>
 
 
-
 }
 
 
@@ -33,7 +32,7 @@ interface MObservableValNewAndOld<T>: MObservable<ListenerType<T>, (T)->Boolean>
 									  MObservableVal<T, ListenerType<T>> { //  fun onChange(op: (T)->Unit) = onChange(matt.obs.prop.listen.NewListener { op(it) })
   override fun onChange(listener: (T)->Unit) = onChange(NewListener { listener(it) }) as NewListener<T>
 
-  fun onChangeWithWeak(o: Any, op: (T) -> Unit) = apply {
+  fun onChangeWithWeak(o: Any, op: (T)->Unit) = apply {
 	var listener: NewListener<T>? = null
 	val weakRef = WeakRef(o)
 	listener = NewListener { new ->
@@ -68,7 +67,6 @@ interface NullableVal<T>: MObservableValNewAndOld<T?> {
 
 
 interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
-
 
 
   override var value: T
@@ -208,23 +206,23 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROPropBase<T>() {
 
 }
 
-infix fun <T> BindableProperty<T>.v(value: T) {
+infix fun <T> WritableMObservableVal<T>.v(value: T) {
   this.value = value
 }
 
-infix fun <T> BindableProperty<T>.eqNow(value: T): Boolean {
+infix fun <T> WritableMObservableVal<T>.eqNow(value: T): Boolean {
   return this.value == value
 }
 
-infix fun <T> BindableProperty<T>.eqNow(value: MObservableROPropBase<T>): Boolean {
+infix fun <T> WritableMObservableVal<T>.eqNow(value: MObservableROPropBase<T>): Boolean {
   return this.value == value.value
 }
 
-infix fun <T> BindableProperty<T>.notEqNow(value: T): Boolean {
+infix fun <T> WritableMObservableVal<T>.notEqNow(value: T): Boolean {
   return this.value != value
 }
 
-infix fun <T> BindableProperty<T>.notEqNow(value: MObservableROPropBase<T>): Boolean {
+infix fun <T> WritableMObservableVal<T>.notEqNow(value: MObservableROPropBase<T>): Boolean {
   return this.value != value.value
 }
 
