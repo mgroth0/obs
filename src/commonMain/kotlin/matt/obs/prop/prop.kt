@@ -32,6 +32,18 @@ sealed interface MObservableVal<T, L: ListenerType<T>>: MObservable<L, (T)->Bool
 interface MObservableValNewAndOld<T>: MObservable<ListenerType<T>, (T)->Boolean>,
 									  MObservableVal<T, ListenerType<T>> { //  fun onChange(op: (T)->Unit) = onChange(matt.obs.prop.listen.NewListener { op(it) })
   override fun onChange(listener: (T)->Unit) = onChange(NewListener { listener(it) }) as NewListener<T>
+
+  fun onChangeWithWeak(o: Any, op: (T) -> Unit) = apply {
+	var listener: NewListener<T>? = null
+	val weakRef = WeakRef(o)
+	listener = NewListener { new ->
+	  if (weakRef.deref() == null) {
+		removeListener(listener!!)
+	  }
+	  op(new)
+	}
+	onChange(listener)
+  }
 }
 
 interface MObservableValNewOnly<T>: MObservable<NewListener<T>, (T)->Boolean>,
@@ -57,17 +69,7 @@ interface NullableVal<T>: MObservableValNewAndOld<T?> {
 
 interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
 
-  fun onChangeWithWeak(o: Any, op: (T) -> Unit) = apply {
-	var listener: NewListener<T>? = null
-	val weakRef = WeakRef(o)
-	listener = NewListener { new ->
-	  if (weakRef.deref() == null) {
-		removeListener(listener!!)
-	  }
-	  op(new)
-	}
-	onChange(listener)
-  }
+
 
   override var value: T
 
