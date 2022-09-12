@@ -58,7 +58,7 @@ interface MObservableValNewOnly<T>: MObservable<NewListener<T>, (T)->Boolean>,
 //  }
 
 interface NullableVal<T>: MObservableValNewAndOld<T?> {
-  fun onNonNullChange(op: (T)->Unit) = apply {
+  fun onNonNullChange(op: (T & Any)->Unit) = apply {
 	onChange {
 	  if (it != null) op(it)
 	}
