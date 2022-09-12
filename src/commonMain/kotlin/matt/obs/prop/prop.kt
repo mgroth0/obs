@@ -66,6 +66,10 @@ interface NullableVal<T>: MObservableValNewAndOld<T?> {
 }
 
 
+interface FXBackedPropBase {
+  val isFXBound: Boolean
+}
+
 interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
 
 
@@ -77,8 +81,11 @@ interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
 	unbind()
 	bind(other)
   }
+
+  val isBound get() = boundTo != null
   fun bind(other: MObservableROPropBase<out T>) {
-	require(boundTo == null)
+	require(!isBound)
+	require((this as? FXBackedPropBase)?.isFXBound != true)
 
 	val recursiveDeps: List<WritableMObservableVal<*>> = (other as? BindableProperty<*>?)?.recurse {
 	  it.boundedProps.filterIsInstance<BindableProperty<*>>()
