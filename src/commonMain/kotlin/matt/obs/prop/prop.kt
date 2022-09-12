@@ -73,6 +73,10 @@ interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
 
   var boundTo: MObservableROPropBase<out T>?
 
+  fun cleanBind(other: MObservableROPropBase<out T>) {
+	unbind()
+	bind(other)
+  }
   fun bind(other: MObservableROPropBase<out T>) {
 	require(boundTo == null)
 
