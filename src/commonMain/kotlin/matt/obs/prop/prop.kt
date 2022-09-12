@@ -1,6 +1,7 @@
 package matt.obs.prop
 
 import matt.lang.B
+import matt.lang.weak.WeakRef
 import matt.obs.MObservable
 import matt.obs.MObservableImpl
 import matt.obs.bind.binding
@@ -22,6 +23,9 @@ sealed interface MObservableVal<T, L: ListenerType<T>>: MObservable<L, (T)->Bool
   }
 
   fun onChange(listener: (T)->Unit): NewListener<T>
+
+
+
 }
 
 
@@ -52,6 +56,18 @@ interface NullableVal<T>: MObservableValNewAndOld<T?> {
 
 
 interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
+
+  fun onChangeWithWeak(o: Any, op: (T) -> Unit) = apply {
+	var listener: NewListener<T>? = null
+	val weakRef = WeakRef(o)
+	listener = NewListener { new ->
+	  if (weakRef.deref() == null) {
+		removeListener(listener!!)
+	  }
+	  op(new)
+	}
+	onChange(listener)
+  }
 
   override var value: T
 
