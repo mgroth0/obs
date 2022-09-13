@@ -4,6 +4,7 @@ import matt.lang.go
 import matt.lang.setAll
 import matt.model.delegate.SimpleGetter
 import matt.obs.MObservable
+import matt.obs.col.change.CollectionChange
 import matt.obs.col.olist.BasicROObservableList
 import matt.obs.col.olist.BasicWritableObservableList
 import matt.obs.col.olist.basicMutableObservableListOf
@@ -67,13 +68,13 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
 	}
   }
 
-  inner class RegisteredMutableList<E: Any>(private vararg val default: E, private val listener: (()->Unit)? = null) {
+  inner class RegisteredMutableList<E: Any>(private vararg val default: E, private val listener: ((CollectionChange<E>)->Unit)? = null) {
 	operator fun provideDelegate(
 	  thisRef: ObservableHolderImpl, prop: KProperty<*>
 	): SimpleGetter<Any, BasicWritableObservableList<E>> {
 	  val fx = basicMutableObservableListOf(*default).also {
 		if (listener != null) it.onChange {
-		  listener.invoke()
+		  listener.invoke(it)
 		}
 	  }
 	  _observables[prop.name] = fx

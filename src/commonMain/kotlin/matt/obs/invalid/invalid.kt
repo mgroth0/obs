@@ -9,6 +9,7 @@ interface UpdatesFromOutside: MObservable {
 	  it.invalidate(this)
 	}
   }
+
   fun bind(o: MObservable) = o.invalidate(this)
 }
 
@@ -17,6 +18,20 @@ fun <O: MObservable, UFO: UpdatesFromOutside> UFO.invalidateDeeplyFrom(o: O, dee
   o.observe {
 	deepListener?.tryRemovingListener()
 	deepListener = o.deepGetter()?.invalidate(this)
+  }
+  return this
+}
+
+fun <O: MObservable, UFO: UpdatesFromOutside> UFO.invalidateDeeplyFromList(
+  o: O,
+  deepGetter: O.()->List<MObservable>?
+): UFO {
+  var deepListeners = o.deepGetter()?.map { it.invalidate(this) }
+  o.observe {
+	deepListeners?.forEach {
+	  it.tryRemovingListener()
+	}
+	deepListeners = o.deepGetter()?.map { it.invalidate(this) }
   }
   return this
 }
