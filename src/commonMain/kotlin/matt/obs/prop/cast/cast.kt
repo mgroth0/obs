@@ -4,9 +4,9 @@ package matt.obs.prop.cast
 
 import matt.model.recursionblocker.RecursionBlocker
 import matt.obs.prop.BindableProperty
-import matt.obs.prop.WritableMObservableVal
+import matt.obs.prop.Var
 
-class CastedWritableProp<S, C>(source: WritableMObservableVal<S>): BindableProperty<C>(source.value as C) {
+class CastedWritableProp<S, C>(source: Var<S>): BindableProperty<C>(source.value as C) {
   init {
 	val rBlocker = RecursionBlocker()
 	onChange {

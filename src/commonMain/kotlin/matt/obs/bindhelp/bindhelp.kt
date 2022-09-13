@@ -128,7 +128,7 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	wProp setCorrectlyTo { converter.convertToA(source.value) }
 
 	val rBlocker = RecursionBlocker()
-	val sourceListener = source.onChaobservenge {
+	val sourceListener = source.observe {
 	  rBlocker.with {
 		wProp setCorrectlyTo { converter.convertToA(source.value) }
 	  }
