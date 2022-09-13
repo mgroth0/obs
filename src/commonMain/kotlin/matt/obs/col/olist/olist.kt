@@ -1,6 +1,7 @@
 package matt.obs.col.olist
 
 import matt.collect.itr.MutableListIteratorWithSomeMemory
+import matt.lang.weak.WeakRef
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableList
 import matt.obs.bindhelp.BindableListImpl
@@ -22,8 +23,18 @@ import matt.obs.col.olist.sorted.BasicSortedList
 import matt.obs.fx.requireNotObservable
 import matt.obs.prop.MObservableVal
 
-interface BasicROObservableList<E>: BasicOCollection<E> {
+interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
   fun filtered(filter: (E)->Boolean) = BasicFilteredList(this, filter)
+  fun onChangeWithWeak(
+	o: Any, op: ()->Unit
+  ) = run {
+	val weakRef = WeakRef(o)
+	onChange {
+	  op()
+	}.apply {
+	  removeCondition = { weakRef.deref() == null }
+	}
+  }
 }
 
 

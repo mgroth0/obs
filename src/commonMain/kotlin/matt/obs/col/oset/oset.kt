@@ -1,7 +1,6 @@
 package matt.obs.col.oset
 
 import matt.collect.itr.MutableIteratorWithSomeMemory
-import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.AddAtEnd
 import matt.obs.col.change.Clear

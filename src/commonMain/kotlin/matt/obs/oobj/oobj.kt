@@ -55,9 +55,8 @@ interface MObservableObject<T>: MObservable<ContextListener<T>> {
   }
 }
 
-class ObservableObject<T: ObservableObject<T>> internal constructor():
-  MObservableImpl<ContextUpdate, ContextListener<T>>(),
-  MObservableObject<T> {
+abstract class ObservableObject<T: ObservableObject<T>>: MObservableImpl<ContextUpdate, ContextListener<T>>(),
+													 MObservableObject<T> {
 
   fun invalidate() {
 	notifyListeners(ContextUpdate)

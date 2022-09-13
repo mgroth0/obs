@@ -8,6 +8,7 @@ import matt.obs.MObservable
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicROObservableList
 import matt.obs.listen.MyListener
+import matt.obs.prop.FXBackedPropBase
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ValProp
 import matt.obs.prop.WritableMObservableVal
@@ -20,15 +21,16 @@ sealed interface Bindable {
 }
 
 sealed class BindableImpl: Bindable {
-  override val bindManager = this
+  override val bindManager get() = this
   override var theBind: ABind? = null
   @Synchronized override fun unbind() {
+	require(this !is FXBackedPropBase || !isFXBound)
 	theBind?.cut()
 	theBind = null
   }
 }
 
- interface BindableList<E>: Bindable {
+interface BindableList<E>: Bindable {
   fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E)
   fun <S> bind(source: ValProp<S>, converter: (S)->List<E>)
 }
@@ -55,12 +57,13 @@ class BindableListImpl<E>(private val list: MutableList<E>): BindableImpl(), Bin
 }
 
 interface BindableValue<T>: Bindable {
-  fun bind(source: MObservableVal<T,*, *>)
+  fun bind(source: MObservableVal<T, *, *>)
   fun bindBidirectional(source: WritableMObservableVal<T>)
 }
 
 class BindableValueHelper<T>(private val wProp: WritableMObservableVal<T>): BindableImpl(), BindableValue<T> {
-  @Synchronized override fun bind(source: MObservableVal<T,*, *>) {
+  @Synchronized override fun bind(source: MObservableVal<T, *, *>) {
+	require(this !is FXBackedPropBase || !isFXBound)
 	unbind()
 	wProp.value = source.value
 	val listener = source.onChange {
@@ -70,6 +73,7 @@ class BindableValueHelper<T>(private val wProp: WritableMObservableVal<T>): Bind
   }
 
   @Synchronized override fun bindBidirectional(source: WritableMObservableVal<T>) {
+	require(this !is FXBackedPropBase || !isFXBound)
 	unbind()
 	source.unbind()
 
@@ -91,7 +95,8 @@ class BindableValueHelper<T>(private val wProp: WritableMObservableVal<T>): Bind
 	  }
 	}
 
-	theBind = BiTheBind(source = source, target = wProp, sourceListener = sourceListener, targetListener = targetListener)
+	theBind =
+	  BiTheBind(source = source, target = wProp, sourceListener = sourceListener, targetListener = targetListener)
 	source.theBind = theBind
   }
 
