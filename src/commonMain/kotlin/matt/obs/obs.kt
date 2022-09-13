@@ -11,6 +11,17 @@ import kotlin.jvm.Synchronized
   fun removeListener(listener: MyListener<*>): Boolean
 }
 
+interface UpdatesFromOutside: MObservable {
+  fun invalidate()
+  fun setupDependencies(vararg obs: MObservable) {
+	obs.forEach {
+	  it.observe {
+		invalidate()
+	  }
+	}
+  }
+}
+
 @ObservableDSL interface MListenable<L: MyListener<*>>: MObservable {
   fun addListener(listener: L): L
 }

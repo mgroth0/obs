@@ -5,6 +5,7 @@ import matt.model.Converter
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.MyBinding
+import matt.obs.bind.binding
 import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.bindings.bool.ObsB
@@ -53,31 +54,7 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 	this.until = { until(it.new) }
   }
 
-  fun <R> binding(
-	vararg dependencies: MObservableVal<*, *, *>,
-	op: (T)->R,
-  ): MyBinding<R> {
-	val b = MyBinding { op(value) }
-	observe { b.invalidate() }
-	dependencies.forEach { it.observe { b.invalidate() } }
-	return b
-  }
 
-  fun <R> deepBinding(propGetter: (T)->MObservableVal<R, *, *>) {
-	val b = MyBinding<R> {
-	  propGetter(value).value
-	}
-	var lastSubListener = propGetter(value).observe {
-	  b.invalidate()
-	}
-	onChange {
-	  lastSubListener.tryRemovingListener()
-	  b.invalidate()
-	  lastSubListener = propGetter(value).observe {
-		b.invalidate()
-	  }
-	}
-  }
 
   operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
 	return value
@@ -201,7 +178,6 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>
   override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
 
 
-
 }
 
 
@@ -275,7 +251,9 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
   final override val bindManager = BindableValueHelper(this)
   override fun bind(source: MObservableVal<T, *, *>) = bindManager.bind(source)
   override fun bindBidirectional(source: WritableMObservableVal<T>) = bindManager.bindBidirectional(source)
-  override fun <S> bindBidirectional(source: WritableMObservableVal<S>, converter: Converter<T,S>) = bindManager.bindBidirectional(source,converter)
+  override fun <S> bindBidirectional(source: WritableMObservableVal<S>, converter: Converter<T, S>) =
+	bindManager.bindBidirectional(source, converter)
+
   override var theBind by bindManager::theBind
   override fun unbind() = bindManager.unbind()
 }

@@ -2,13 +2,12 @@ package matt.obs.oobj
 
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
-import matt.obs.bind.MyBinding
+import matt.obs.UpdatesFromOutside
 import matt.obs.listen.ContextListener
 import matt.obs.listen.update.ContextUpdate
-import matt.obs.prop.MObservableVal
 
 
-interface MObservableObject<T>: MListenable<ContextListener<T>> {
+interface MObservableObject<T>: MListenable<ContextListener<T>>, UpdatesFromOutside {
 
   @Suppress("UNCHECKED_CAST") val uncheckedThis get() = this as T
 
@@ -17,22 +16,13 @@ interface MObservableObject<T>: MListenable<ContextListener<T>> {
 	op()
   })
 
-  fun <R> binding(
-	vararg dependencies: MObservableVal<T, *, *>,
-	debug: Boolean = false,
-	op: T.()->R,
-  ): MyBinding<R> {
-	val b = MyBinding { uncheckedThis.op() }
-	observe { b.invalidate() }
-	dependencies.forEach { observe { b.invalidate() } }
-	return b
-  }
+
 }
 
 abstract class ObservableObject<T: ObservableObject<T>>: MObservableImpl<ContextUpdate, ContextListener<T>>(),
 														 MObservableObject<T> {
 
-  fun invalidate() {
+  override fun invalidate() {
 	notifyListeners(ContextUpdate)
   }
 

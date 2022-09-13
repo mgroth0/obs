@@ -1,19 +1,62 @@
 package matt.obs.bind
 
+import matt.obs.MObservable
+import matt.obs.UpdatesFromOutside
+import matt.obs.col.BasicOCollection
 import matt.obs.listen.NewListener
 import matt.obs.listen.update.LazyNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
+import matt.obs.oobj.MObservableObject
 import matt.obs.prop.MObservableROValBase
 import matt.obs.prop.MObservableValNewOnly
+import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
 
+
+fun <T, R> MObservableObject<T>.binding(
+  vararg dependencies: MObservable,
+  op: T.()->R
+): MyBinding<R> = MyBinding(this, *dependencies) { uncheckedThis.op() }
+
+fun <T, R> ObsVal<T>.binding(
+  vararg dependencies: MObservable,
+  op: (T)->R,
+) = MyBinding(this, *dependencies) { op(value) }
+
+fun <T, R> ObsVal<T>.deepBinding(propGetter: (T)->ObsVal<R>) {
+  val b = MyBinding {
+	propGetter(value).value
+  }
+  var lastSubListener = propGetter(value).observe {
+	b.invalidate()
+  }
+  onChange {
+	lastSubListener.tryRemovingListener()
+	b.invalidate()
+	lastSubListener = propGetter(value).observe {
+	  b.invalidate()
+	}
+  }
+}
+
+fun <E, R> BasicOCollection<E>.binding(
+  vararg dependencies: MObservable,
+  op: (BasicOCollection<E>)->R,
+): MyBinding<R> = MyBinding(this, *dependencies) { op(this) }
+
 private object NOT_CALCED
-class MyBinding<T>(private val calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
-											 MObservableValNewOnly<T> {
+class MyBinding<T>(vararg dependencies: MObservable, private val calc: ()->T):
+  MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
+  MObservableValNewOnly<T>,
+  UpdatesFromOutside {
+
+  init {
+	setupDependencies(*dependencies)
+  }
 
   private var valid = false
 
-  @Synchronized fun invalidate() {
+  @Synchronized override fun invalidate() {
 	valid = false
 	notifyListeners(LazyNewValueUpdate { value })
   }
