@@ -1,37 +1,75 @@
 package matt.obs.invalid
 
+import matt.lang.go
 import matt.obs.MObservable
+import matt.obs.listen.Listener
+import kotlin.contracts.ExperimentalContracts
+import kotlin.jvm.Synchronized
 
-interface UpdatesFromOutside: MObservable {
+interface CustomInvalidations: MObservable {
   fun markInvalid()
-  fun setupDependencies(vararg obs: MObservable) {
+}
+
+interface CustomDependencies: CustomInvalidations {
+
+  fun addDependencies(vararg obs: MObservable) {
 	obs.forEach {
-	  it.invalidate(this)
+	  addDependency(it)
 	}
   }
 
-  fun bind(o: MObservable) = o.invalidate(this)
+  fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable)
+  fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>)
+  fun removeDependency(o: MObservable)
+
+
 }
 
-fun <O: MObservable, UFO: UpdatesFromOutside> UFO.invalidateDeeplyFrom(o: O, deepGetter: O.()->MObservable?): UFO {
-  var deepListener = o.deepGetter()?.invalidate(this)
-  o.observe {
-	deepListener?.tryRemovingListener()
-	deepListener = o.deepGetter()?.invalidate(this)
-  }
-  return this
-}
+@OptIn(ExperimentalContracts::class) class DependencyHelper(main: CustomInvalidations): CustomDependencies,
+																						CustomInvalidations by main {
+  private val deps = mutableMapOf<MObservable, Listener>()
+  private val subDeps = mutableMapOf<MObservable, List<Listener>>()
 
-fun <O: MObservable, UFO: UpdatesFromOutside> UFO.invalidateDeeplyFromList(
-  o: O,
-  deepGetter: O.()->List<MObservable>?
-): UFO {
-  var deepListeners = o.deepGetter()?.map { it.invalidate(this) }
-  o.observe {
-	deepListeners?.forEach {
-	  it.tryRemovingListener()
+  @Synchronized override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable) {
+	require(o !in deps)
+	subDeps[o] = deepDependencies.map {
+	  it(o).observe {
+		markInvalid()
+	  }
 	}
-	deepListeners = o.deepGetter()?.map { it.invalidate(this) }
+	deps[o] = o.observe {
+	  subEvent(o, deepDependencies.map { it(o) })
+	}
   }
-  return this
+
+  @Synchronized override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) {
+	require(o !in deps)
+	subDeps[o] = deepDependencies(o).map {
+	  it.observe {
+		markInvalid()
+	  }
+	}
+	deps[o] = o.observe {
+	  subEvent(o, deepDependencies(o))
+	}
+  }
+
+  @Synchronized private fun <O: MObservable> subEvent(o: O, deepDependencies: List<MObservable>) {
+	markInvalid()
+	subDeps[o]!!.forEach { it.tryRemovingListener() }
+	subDeps[o] = deepDependencies.map {
+	  it.observe {
+		markInvalid()
+	  }
+	}
+  }
+
+  @Synchronized override fun removeDependency(o: MObservable) {
+	deps.remove(o)?.go { l ->
+	  removeListener(l)
+	  subDeps[o]!!.forEach {
+		it.tryRemovingListener()
+	  }
+	}
+  }
 }

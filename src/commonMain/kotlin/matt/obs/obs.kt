@@ -1,6 +1,6 @@
 package matt.obs
 
-import matt.obs.invalid.UpdatesFromOutside
+import matt.collect.snapshotToPreventConcurrentModification
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Update
 import kotlin.jvm.Synchronized
@@ -10,7 +10,6 @@ import kotlin.jvm.Synchronized
 @ObservableDSL interface MObservable {
   fun observe(op: ()->Unit): MyListener<*>
   fun removeListener(listener: MyListener<*>): Boolean
-  fun invalidate(uo: UpdatesFromOutside) = observe { uo.markInvalid() }
 }
 
 
@@ -32,8 +31,7 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 
   @Synchronized
   protected fun notifyListeners(update: U) {
-	/*gotta make a new list to prevent concurrent mod error if listeners list is edited in a listener*/
-	listeners.toList().forEach {
+	listeners.snapshotToPreventConcurrentModification().forEach {
 	  if (it.preInvocation()) {
 		it.notify(update)
 		it.postInvocation()
@@ -48,7 +46,8 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 	return b
   }
 
-
 }
+
+
 
 

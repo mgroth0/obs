@@ -16,6 +16,7 @@ import matt.obs.map.change.MapChange
 @DslMarker
 annotation class ListenerDSL
 
+typealias Listener = MyListener<*>
 @ListenerDSL
 sealed class MyListener<U: Update> {
 
@@ -77,9 +78,10 @@ class CollectionListener<E>(internal val invoke: CollectionListener<E>.(change: 
   MyListener<CollectionUpdate<E>>() {
   override fun notify(update: CollectionUpdate<E>) = invoke(update.change)
 }
-class MapListener<K,V>(internal val invoke: MapListener<K,V>.(change: MapChange<K,V>)->Unit):
-  MyListener<MapUpdate<K,V>>() {
-  override fun notify(update: MapUpdate<K,V>) = invoke(update.change)
+
+class MapListener<K, V>(internal val invoke: MapListener<K, V>.(change: MapChange<K, V>)->Unit):
+  MyListener<MapUpdate<K, V>>() {
+  override fun notify(update: MapUpdate<K, V>) = invoke(update.change)
 }
 
 class ContextListener<C>(private val obj: C, private val invocation: C.()->Unit): MyListener<ContextUpdate>() {

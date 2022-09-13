@@ -6,8 +6,8 @@ import matt.model.lazy.DependentValue
 import matt.obs.MObservable
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.col.BasicOCollection
-import matt.obs.invalid.UpdatesFromOutside
-import matt.obs.invalid.invalidateDeeplyFrom
+import matt.obs.invalid.CustomDependencies
+import matt.obs.invalid.DependencyHelper
 import matt.obs.listen.NewListener
 import matt.obs.listen.update.LazyNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
@@ -38,28 +38,42 @@ fun <E, R> BasicOCollection<E>.binding(
 
 fun <T, R> ObsVal<T>.deepBinding(propGetter: (T)->ObsVal<R>) = MyBinding(this) {
   propGetter(value).value
-}.invalidateDeeplyFrom(this) { propGetter(value) }
+}.apply {
+  addDependency(this@deepBinding, { propGetter(it.value) })
+}
 
-interface MyBindingBase<T>: MObservableValNewOnly<T>, UpdatesFromOutside
+interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
 abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
-												  MyBindingBase<T> {
+												  MyBindingBase<T>, CustomDependencies {
   protected val cval = DependentValue(calc)
 
   @Synchronized override fun markInvalid() {
 	cval.markInvalid()
 	notifyListeners(LazyNewValueUpdate { value })
   }
+
+  private val depHelper by lazy { DependencyHelper(this) }
+
+  override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable) =
+	depHelper.addDependency(o, *deepDependencies)
+
+  override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =
+	depHelper.addDependencyWithDeepList(o, deepDependencies)
+
+  override fun removeDependency(o: MObservable) = depHelper.removeDependency(o)
+
 }
 
 class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T):
   MyBindingBaseImpl<T>(calc) {
 
   init {
-	setupDependencies(*dependencies)
+	addDependencies(*dependencies)
   }
 
   override val value: T @Synchronized get() = cval.get()
+
 }
 
 
