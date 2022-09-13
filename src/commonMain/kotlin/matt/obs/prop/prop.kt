@@ -1,12 +1,12 @@
 package matt.obs.prop
 
-import matt.lang.B
 import matt.lang.weak.WeakRef
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
+import matt.obs.bindings.bool.ObsB
 import matt.obs.bindings.bool.not
 import matt.obs.listen.NewListener
 import matt.obs.listen.OldAndNewListener
@@ -76,6 +76,10 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 		b.invalidate()
 	  }
 	}
+  }
+
+  operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+	return value
   }
 
 }
@@ -195,9 +199,7 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>
 
   override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
 
-  operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
-	return value
-  }
+
 
 }
 
@@ -285,10 +287,9 @@ fun sProp(s: String) = BindableProperty(s)
 fun iProp(i: Int) = BindableProperty(i)
 
 
-fun ValProp<B>.whenTrueOnce(op: ()->Unit) {
+fun ObsB.whenTrueOnce(op: ()->Unit) {
   if (value) op()
   else {
-	onChange { op() }
 	onChangeUntil({ it }, {
 	  if (it) op()
 	})

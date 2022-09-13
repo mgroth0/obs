@@ -6,8 +6,6 @@ import matt.obs.bind.MyBinding
 import matt.obs.listen.ContextListener
 import matt.obs.listen.update.ContextUpdate
 import matt.obs.prop.MObservableVal
-import matt.obs.prop.ValProp
-import matt.obs.prop.VarProp
 
 
 interface MObservableObject<T>: MListenable<ContextListener<T>> {
