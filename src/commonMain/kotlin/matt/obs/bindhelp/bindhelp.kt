@@ -43,7 +43,7 @@ interface BindableList<E>: Bindable, List<E> {
 }
 
 /*todo: lazily evaluated bound lists!*/
-class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), BindableList<E>, List<E> by target {
+class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), BindableList<E> {
 
   @Synchronized override fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E) {
 	unbind()
