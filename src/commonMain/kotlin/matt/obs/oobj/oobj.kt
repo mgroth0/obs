@@ -14,6 +14,7 @@ interface MObservableObject<T>: MListenable<ContextListener<T>> {
 
   @Suppress("UNCHECKED_CAST") val uncheckedThis get() = this as T
 
+  override fun observe(op: ()->Unit) = onChange { op() }
   fun onChange(op: T.()->Unit) = addListener(ContextListener<T>(uncheckedThis) {
 	op()
   })
