@@ -70,6 +70,22 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 	}
   }
 
+  fun <R> deepBinding(propGetter: (T)->MObservableVal<R, *, *>) {
+	val b = MyBinding<R> {
+	  propGetter(value).value
+	}
+	var lastSubListener = propGetter(value).onChange {
+	  b.invalidate()
+	}
+	onChange {
+	  lastSubListener.tryRemovingListener()
+	  b.invalidate()
+	  lastSubListener = propGetter(value).onChange {
+		b.invalidate()
+	  }
+	}
+  }
+
 }
 
 
@@ -77,6 +93,8 @@ interface MObservableValNewAndOld<T>: MObservableVal<T, ValueChange<T>, OldAndNe
   override fun onChange(op: (T)->Unit) = addListener(OldAndNewListener { _, new ->
 	op(new)
   })
+
+
 }
 
 interface MObservableValNewOnly<T>: MObservableVal<T, ValueUpdate<T>, NewListener<T>> {
