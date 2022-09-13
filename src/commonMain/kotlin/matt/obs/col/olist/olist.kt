@@ -25,7 +25,7 @@ import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
 import matt.obs.prop.MObservableVal
 
-interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
+interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E>, List<E> {
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
 
   fun sorted(comparator: Comparator<in E>? = null): BasicSortedList<E> = DynamicList(this, comparator = comparator)

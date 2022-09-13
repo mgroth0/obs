@@ -37,7 +37,7 @@ sealed class BindableImpl: Bindable {
 
 }
 
-interface BindableList<E>: Bindable, List<E> {
+interface BindableList<E>: Bindable {
   fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E)
   fun <S> bind(source: ValProp<S>, converter: (S)->List<E>)
 }
