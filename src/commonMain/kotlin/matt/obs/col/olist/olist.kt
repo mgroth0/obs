@@ -94,6 +94,11 @@ fun <E> basicROObservableListOf(vararg elements: E): BasicROObservableList<E> =
 fun <E> basicMutableObservableListOf(vararg elements: E): BasicWritableObservableList<E> =
   BasicObservableListImpl(elements.toList())
 
+
+
+
+
+
 class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>): BaseBasicWritableOList<E>(list),
 																						List<E> by list {
 
