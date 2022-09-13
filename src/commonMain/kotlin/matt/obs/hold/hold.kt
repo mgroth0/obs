@@ -5,8 +5,8 @@ import matt.lang.setAll
 import matt.model.delegate.SimpleGetter
 import matt.obs.MObservable
 import matt.obs.col.change.CollectionChange
-import matt.obs.col.olist.BasicROObservableList
-import matt.obs.col.olist.BasicWritableObservableList
+import matt.obs.col.olist.ObsList
+import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.col.olist.basicROObservableListOf
 import matt.obs.listen.MyListener
@@ -71,7 +71,7 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
   inner class RegisteredMutableList<E: Any>(private vararg val default: E, private val listener: ((CollectionChange<E>)->Unit)? = null) {
 	operator fun provideDelegate(
 	  thisRef: ObservableHolderImpl, prop: KProperty<*>
-	): SimpleGetter<Any, BasicWritableObservableList<E>> {
+	): SimpleGetter<Any, MutableObsList<E>> {
 	  val fx = basicMutableObservableListOf(*default).also {
 		if (listener != null) it.onChange {
 		  listener.invoke(it)
@@ -86,7 +86,7 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
   inner class RegisteredList<E: Any>(private vararg val default: E, private val listener: (()->Unit)? = null) {
 	operator fun provideDelegate(
 	  thisRef: ObservableHolderImpl, prop: KProperty<*>
-	): SimpleGetter<Any, BasicROObservableList<E>> {
+	): SimpleGetter<Any, ObsList<E>> {
 	  val fx = basicROObservableListOf(*default).also {
 		if (listener != null) it.onChange {
 		  listener.invoke()

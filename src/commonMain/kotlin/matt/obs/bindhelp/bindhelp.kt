@@ -9,7 +9,7 @@ import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.mirror
-import matt.obs.col.olist.BasicROObservableList
+import matt.obs.col.olist.ObsList
 import matt.obs.listen.MyListener
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.FXBackedPropBase
@@ -38,14 +38,14 @@ sealed class BindableImpl: Bindable {
 }
 
 interface BindableList<E>: Bindable {
-  fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E)
+  fun <S> bind(source: ObsList<S>, converter: (S)->E)
   fun <S> bind(source: ValProp<S>, converter: (S)->List<E>)
 }
 
 /*todo: lazily evaluated bound lists!*/
 class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), BindableList<E> {
 
-  @Synchronized override fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E) {
+  @Synchronized override fun <S> bind(source: ObsList<S>, converter: (S)->E) {
 	unbind()
 	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
 	target.setAll(source.map(converter))

@@ -25,7 +25,7 @@ import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
 import matt.obs.prop.MObservableVal
 
-interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E>, List<E> {
+interface ObsList<E>: BasicOCollection<E>, BindableList<E>, List<E> {
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
 
   fun sorted(comparator: Comparator<in E>? = null): BasicSortedList<E> = DynamicList(this, comparator = comparator)
@@ -45,16 +45,16 @@ interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E>, List<E
 }
 
 
-fun <E: Comparable<E>> BasicROObservableList<E>.sorted(): BasicSortedList<E> =
+fun <E: Comparable<E>> ObsList<E>.sorted(): BasicSortedList<E> =
   DynamicList(this, comparator = comparableComparator())
 
 
-interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
+interface MutableObsList<E>: MutableList<E>, ObsList<E>
 
 
 abstract class BaseBasicWritableOList<E>(list: MutableList<E>): InternallyBackedOCollection<E>(),
-																BasicROObservableList<E>,
-																BasicWritableObservableList<E>,
+																ObsList<E>,
+																MutableObsList<E>,
 																BindableList<E> by BindableListImpl(list) {
   fun <R> lazyBinding(
 	vararg dependencies: MObservableVal<*, *, *>,
@@ -88,10 +88,10 @@ fun <E> Sequence<E>.toBasicObservableList(): BasicObservableListImpl<E> {
 }
 
 
-fun <E> basicROObservableListOf(vararg elements: E): BasicROObservableList<E> =
+fun <E> basicROObservableListOf(vararg elements: E): ObsList<E> =
   BasicObservableListImpl(elements.toList())
 
-fun <E> basicMutableObservableListOf(vararg elements: E): BasicWritableObservableList<E> =
+fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
   BasicObservableListImpl(elements.toList())
 
 

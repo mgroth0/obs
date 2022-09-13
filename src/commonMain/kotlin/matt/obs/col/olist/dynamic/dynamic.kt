@@ -2,28 +2,28 @@ package matt.obs.col.olist.dynamic
 
 import matt.lang.setAll
 import matt.obs.MObservable
-import matt.obs.col.olist.BasicROObservableList
-import matt.obs.col.olist.BasicWritableObservableList
+import matt.obs.col.olist.ObsList
+import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.CustomInvalidations
 import matt.obs.invalid.DependencyHelper
 import matt.obs.prop.BindableProperty
 
-interface BasicFilteredList<E>: BasicROObservableList<E>, CustomInvalidations, List<E> {
+interface BasicFilteredList<E>: ObsList<E>, CustomInvalidations, List<E> {
   val filter: BindableProperty<((E)->Boolean)?>
 }
 
-interface BasicSortedList<E>: BasicROObservableList<E>, CustomInvalidations, List<E> {
+interface BasicSortedList<E>: ObsList<E>, CustomInvalidations, List<E> {
   val comparator: BindableProperty<Comparator<in E>?>
 }
 
 class DynamicList<E>(
-  private val source: BasicROObservableList<E>,
+  private val source: ObsList<E>,
   filter: ((E)->Boolean)? = null,
   comparator: Comparator<in E>? = null,
-  private val target: BasicWritableObservableList<E> = basicMutableObservableListOf()
-): BasicROObservableList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies {
+  private val target: MutableObsList<E> = basicMutableObservableListOf()
+): ObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies {
 
 
   override val filter = BindableProperty(filter)

@@ -7,11 +7,11 @@ import matt.obs.col.change.MultiAddition
 import matt.obs.col.change.MultiRemoval
 import matt.obs.col.change.Removal
 import matt.obs.col.change.Replacement
-import matt.obs.col.olist.BasicROObservableList
+import matt.obs.col.olist.ObsList
 import matt.obs.map.BasicOMap
 import matt.obs.map.BasicOMutableMapImpl
 
-fun <V, K> BasicROObservableList<V>.toMappedMap(keySelectorFun: (V)->K): BasicOMap<K, V> {
+fun <V, K> ObsList<V>.toMappedMap(keySelectorFun: (V)->K): BasicOMap<K, V> {
   warn("this must be limited to sets to work as expected...")
   val map = BasicOMutableMapImpl<K, V>()
   onChange {
