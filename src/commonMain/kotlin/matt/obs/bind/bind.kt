@@ -63,9 +63,11 @@ class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T):
 }
 
 
-class WritableBinding<T>(
+class LazyBindableProp<T>(
   calc: ()->T
 ): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewListener<T>> {
+
+  constructor(t: T): this({ t })
 
   private val bindWritePass = KeyPass()
   override var value: T
@@ -83,9 +85,16 @@ class WritableBinding<T>(
 	}
   }
 
-  internal fun setFromBinding(newCalc: ()->T) {
+  fun setLazily(newCalc: ()->T) {
+	require(!this.isBound || bindWritePass.isHeld)
 	cval.op = newCalc
 	markInvalid()
+  }
+
+  internal fun setFromBinding(newCalc: ()->T) {
+	bindWritePass.with {
+	  setLazily(newCalc)
+	}
   }
 
   override val bindManager by lazy { BindableValueHelper(this) }

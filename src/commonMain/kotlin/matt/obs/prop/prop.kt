@@ -111,6 +111,8 @@ interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: 
 	this.value = value
   }
 
+  fun readOnly() = binding { it }
+
 
 }
 

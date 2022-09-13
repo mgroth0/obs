@@ -6,7 +6,7 @@ import matt.lang.weak.getValue
 import matt.model.Converter
 import matt.model.recursionblocker.RecursionBlocker
 import matt.obs.MListenable
-import matt.obs.bind.WritableBinding
+import matt.obs.bind.LazyBindableProp
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicROObservableList
@@ -83,7 +83,7 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
   infix fun <TT> Var<TT>.setCorrectlyTo(new: ()->TT) {
 	when (this) {
 	  is BindableProperty<TT> -> setFromBinding(new())
-	  is WritableBinding<TT>  -> setFromBinding(new)
+	  is LazyBindableProp<TT> -> setFromBinding(new)
 	  else                    -> {
 		value = new()
 	  }
