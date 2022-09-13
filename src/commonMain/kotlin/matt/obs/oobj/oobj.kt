@@ -19,45 +19,19 @@ interface MObservableObject<T>: MListenable<ContextListener<T>> {
 	op()
   })
 
-  fun <R> lazyBinding(
-	vararg dependencies: MObservableVal<*, *, *>,
-	op: T.()->R,
-  ): MyBinding<R> {
-	return MyBinding { uncheckedThis.op() }.apply {
-	  this@MObservableObject.onChange {
-		invalidate()
-	  }
-	  dependencies.forEach {
-		it.onChange {
-		  invalidate()
-		}
-	  }
-	}
-  }
-
   fun <R> binding(
 	vararg dependencies: MObservableVal<T, *, *>,
 	debug: Boolean = false,
 	op: T.()->R,
-  ): ValProp<R> {
-	return VarProp(uncheckedThis.op()).apply {
-	  val b = this
-	  this@MObservableObject.onChange {
-		if (debug) println("MObservableObject changed: ${this@MObservableObject}")
-		b.value = this@MObservableObject.uncheckedThis.op()
-	  }
-	  dependencies.forEach {
-		it.onChange {
-		  if (debug) println("dep changed: $it")
-		  b.value = this@MObservableObject.uncheckedThis.op()
-		}
-	  }
-	}
+  ): MyBinding<R> {
+	val b = MyBinding { uncheckedThis.op() }
+	observe { b.invalidate() }
+	dependencies.forEach { observe { b.invalidate() } }
   }
 }
 
 abstract class ObservableObject<T: ObservableObject<T>>: MObservableImpl<ContextUpdate, ContextListener<T>>(),
-													 MObservableObject<T> {
+														 MObservableObject<T> {
 
   fun invalidate() {
 	notifyListeners(ContextUpdate)

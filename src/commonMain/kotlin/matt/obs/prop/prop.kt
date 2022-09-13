@@ -16,10 +16,12 @@ import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import kotlin.reflect.KProperty
 
+typealias ObsVal<T> = MObservableVal<T, *, *>
+
 sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L> {
   val value: T
 
-  fun <R> cast() = binding {
+  fun <R> cast(): MObservableVal<R, *, *> = binding {
 	@Suppress("UNCHECKED_CAST")
 	it as R
   }
@@ -52,35 +54,25 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 
   fun <R> binding(
 	vararg dependencies: MObservableVal<*, *, *>,
-	debug: Boolean = false,
 	op: (T)->R,
-  ): ValProp<R> {
-	val prop = this
-	return VarProp(op(value)).apply {
-	  prop.onChange {
-		if (debug) println("prop changed: $it")
-		value = op(it)
-	  }
-	  dependencies.forEach {
-		it.onChange {
-		  if (debug) println("dep changed: $it")
-		  value = op(prop.value)
-		}
-	  }
-	}
+  ): MyBinding<R> {
+	val b = MyBinding { op(value) }
+	observe { b.invalidate() }
+	dependencies.forEach { it.observe { b.invalidate() } }
+	return b
   }
 
   fun <R> deepBinding(propGetter: (T)->MObservableVal<R, *, *>) {
 	val b = MyBinding<R> {
 	  propGetter(value).value
 	}
-	var lastSubListener = propGetter(value).onChange {
+	var lastSubListener = propGetter(value).observe {
 	  b.invalidate()
 	}
 	onChange {
 	  lastSubListener.tryRemovingListener()
 	  b.invalidate()
-	  lastSubListener = propGetter(value).onChange {
+	  lastSubListener = propGetter(value).observe {
 		b.invalidate()
 	  }
 	}

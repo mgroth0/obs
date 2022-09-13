@@ -2,6 +2,7 @@ package matt.obs.col
 
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
+import matt.obs.bind.MyBinding
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.CollectionListener
 import matt.obs.listen.update.CollectionUpdate
@@ -15,18 +16,11 @@ interface BasicOCollection<E>: Collection<E>, MListenable<CollectionListener<E>>
   fun <R> binding(
 	vararg dependencies: MObservableVal<*, *, *>,
 	op: (BasicOCollection<E>)->R,
-  ): ValProp<R> {
-	val prop = this
-	return VarProp(op(prop)).apply {
-	  prop.onChange {
-		value = op(prop)
-	  }
-	  dependencies.forEach {
-		it.onChange {
-		  value = op(prop)
-		}
-	  }
-	}
+  ): MyBinding<R> {
+	val b = MyBinding { op(this) }
+	observe { b.invalidate() }
+	dependencies.forEach { it.observe { b.invalidate() } }
+	return b
   }
 }
 

@@ -1,22 +1,22 @@
 package matt.obs.bindings.bool
 
 import matt.collect.weak.lazyWeakMap
-import matt.obs.prop.BindableProperty
-import matt.obs.prop.MObservableROPropBase
-import matt.obs.prop.ReadOnlyBindableProperty
-private val notProps = lazyWeakMap<BindableProperty<Boolean>, ReadOnlyBindableProperty<Boolean>> { prop ->
+import matt.lang.B
+import matt.obs.prop.ObsVal
+
+private val notProps = lazyWeakMap<ObsVal<B>, ObsVal<B>> { prop ->
   prop.binding {
 	!it
   }
 }
 
-fun MObservableROPropBase<Boolean>.not() = notProps[this]!!
+fun ObsVal<B>.not() = notProps[this]
 
 
-infix fun MObservableROPropBase<Boolean>.and(other: ReadOnlyBindableProperty<Boolean>) = binding(other) {
+infix fun ObsVal<B>.and(other: ObsVal<B>) = binding(other) {
   it && other.value
 }
 
-infix fun MObservableROPropBase<Boolean>.or(other: ReadOnlyBindableProperty<Boolean>) = binding(other) {
+infix fun ObsVal<B>.or(other: ObsVal<B>) = binding(other) {
   it || other.value
 }
