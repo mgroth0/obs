@@ -15,13 +15,13 @@ interface BasicFilteredList<E>: BasicROObservableList<E>, CustomInvalidations {
 }
 
 interface BasicSortedList<E>: BasicROObservableList<E>, CustomInvalidations {
-  val comparator: BindableProperty<Comparator<E>?>
+  val comparator: BindableProperty<Comparator<in E>?>
 }
 
 class DynamicList<E>(
   private val source: BasicROObservableList<E>,
   filter: ((E)->Boolean)? = null,
-  comparator: Comparator<E>? = null,
+  comparator: Comparator<in E>? = null,
   private val target: BasicWritableObservableList<E> = basicMutableObservableListOf()
 ): BasicROObservableList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies {
 

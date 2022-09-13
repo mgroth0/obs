@@ -27,6 +27,9 @@ import matt.obs.prop.MObservableVal
 
 interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
+
+  fun sorted(comparator: Comparator<in E>? = null): BasicSortedList<E> = DynamicList(this, comparator = comparator)
+
   fun onChangeWithWeak(
 	o: Any, op: ()->Unit
   ) = run {
