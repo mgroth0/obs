@@ -8,7 +8,6 @@ import kotlin.jvm.Synchronized
 
 @ObservableDSL interface MObservable<L: MyListener<*>> {
 
-  fun onChange(op: () -> Unit): L
   fun addListener(listener: L): L
   fun removeListener(listener: MyListener<*>): Boolean
 
