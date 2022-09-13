@@ -1,8 +1,13 @@
 package matt.obs.bind
 
+import matt.model.Converter
+import matt.model.keypass.KeyPass
+import matt.model.lazy.DependentValue
 import matt.obs.MObservable
-import matt.obs.UpdatesFromOutside
+import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.col.BasicOCollection
+import matt.obs.invalid.UpdatesFromOutside
+import matt.obs.invalid.invalidateDeeplyFrom
 import matt.obs.listen.NewListener
 import matt.obs.listen.update.LazyNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
@@ -10,6 +15,8 @@ import matt.obs.oobj.MObservableObject
 import matt.obs.prop.MObservableROValBase
 import matt.obs.prop.MObservableValNewOnly
 import matt.obs.prop.ObsVal
+import matt.obs.prop.Var
+import matt.obs.prop.WritableMObservableVal
 import kotlin.jvm.Synchronized
 
 
@@ -23,85 +30,71 @@ fun <T, R> ObsVal<T>.binding(
   op: (T)->R,
 ) = MyBinding(this, *dependencies) { op(value) }
 
-fun <T, R> ObsVal<T>.deepBinding(propGetter: (T)->ObsVal<R>) {
-  val b = MyBinding {
-	propGetter(value).value
-  }
-  var lastSubListener = propGetter(value).observe {
-	b.invalidate()
-  }
-  onChange {
-	lastSubListener.tryRemovingListener()
-	b.invalidate()
-	lastSubListener = propGetter(value).observe {
-	  b.invalidate()
-	}
-  }
-}
 
 fun <E, R> BasicOCollection<E>.binding(
   vararg dependencies: MObservable,
   op: (BasicOCollection<E>)->R,
 ): MyBinding<R> = MyBinding(this, *dependencies) { op(this) }
 
-private object NOT_CALCED
-class MyBinding<T>(vararg dependencies: MObservable, private val calc: ()->T):
-  MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
-  MObservableValNewOnly<T>,
-  UpdatesFromOutside {
+fun <T, R> ObsVal<T>.deepBinding(propGetter: (T)->ObsVal<R>) = MyBinding(this) {
+  propGetter(value).value
+}.invalidateDeeplyFrom(this) { propGetter(value) }
+
+interface MyBindingBase<T>: MObservableValNewOnly<T>, UpdatesFromOutside
+
+abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
+												  MyBindingBase<T> {
+  protected val cval = DependentValue(calc)
+
+  @Synchronized override fun markInvalid() {
+	cval.markInvalid()
+	notifyListeners(LazyNewValueUpdate { value })
+  }
+}
+
+class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T):
+  MyBindingBaseImpl<T>(calc) {
 
   init {
 	setupDependencies(*dependencies)
   }
 
-  private var valid = false
-
-  @Synchronized override fun invalidate() {
-	valid = false
-	notifyListeners(LazyNewValueUpdate { value })
-  }
-
-  private var lastCalculated: Any? = NOT_CALCED
-
-  override val value: T
-	@Synchronized get() {
-	  @Suppress("UNCHECKED_CAST") if (valid) return lastCalculated as T
-	  else {
-		lastCalculated = calc()
-		valid = true
-		return lastCalculated as T
-	  }
-	}
-
-
+  override val value: T @Synchronized get() = cval.get()
 }
 
 
-//fun <T, U: ValueUpdate<T>, L: ValueListener<T, U>> MObservableValNewAndOld<MObservableVal<T, U, L>?>.deepOnChange(op: (T)->Unit) {
-//  var subListener: L? = value?.onChange(op)
-//  addListener(OldAndNewListener { _, new ->
-//	if (new != null) {
-//	  subListener?.moveTo(new) ?: run {
-//		subListener = value?.onChange(op)
-//	  }
-//	}
-//  })
-//}
-//
-//fun <T, R> MObservableValNewAndOld<MObservableVal<T, ValueUpdate<T>, NewListener<T>>?>.deepBinding(
-//  vararg dependencies: MObservableVal<*, *, *>,
-//  op: (T)->R
-//): MObservableROPropBase<R?> {
-//  val r = VarProp(value?.value?.let(op))
-//  deepOnChange {
-//	r.value = op(it)
-//  }
-//  dependencies.forEach {
-//	it.onChange {
-//	  r.value = value?.value?.let(op)
-//	}
-//  }
-//  return r
-//}
+class WritableBinding<T>(
+  calc: ()->T
+): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewListener<T>> {
 
+  private val bindWritePass = KeyPass()
+  override var value: T
+	@Synchronized get() = cval.get()
+	set(value) {
+	  require(!this.isBound || bindWritePass.isHeld)
+	  cval.op = { value }
+	  markInvalid()
+	}
 
+  @Suppress("unused")
+  internal fun setFromBinding(new: T) {
+	bindWritePass.with {
+	  value = new
+	}
+  }
+
+  internal fun setFromBinding(newCalc: ()->T) {
+	cval.op = newCalc
+	markInvalid()
+  }
+
+  override val bindManager by lazy { BindableValueHelper(this) }
+  override fun bind(source: ObsVal<T>) = bindManager.bind(source)
+  override fun bindBidirectional(source: Var<T>) = bindManager.bindBidirectional(source)
+  override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
+	bindManager.bindBidirectional(source, converter)
+
+  override var theBind by bindManager::theBind
+  override fun unbind() = bindManager.unbind()
+
+}

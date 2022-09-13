@@ -1,7 +1,9 @@
 package matt.obs.col
 
+import matt.model.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
+import matt.obs.bindhelp.BindableList
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.CollectionListener
 import matt.obs.listen.update.CollectionUpdate
@@ -23,7 +25,9 @@ abstract class InternallyBackedOCollection<E> internal constructor():
 	})
   }
 
+  internal val bindWritePass = KeyPass()
   protected fun emitChange(change: CollectionChange<E>) {
+	require (this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)
 	notifyListeners(CollectionUpdate((change)))
   }
 

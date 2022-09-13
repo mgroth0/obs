@@ -2,7 +2,7 @@ package matt.obs.oobj
 
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
-import matt.obs.UpdatesFromOutside
+import matt.obs.invalid.UpdatesFromOutside
 import matt.obs.listen.ContextListener
 import matt.obs.listen.update.ContextUpdate
 
@@ -22,7 +22,7 @@ interface MObservableObject<T>: MListenable<ContextListener<T>>, UpdatesFromOuts
 abstract class ObservableObject<T: ObservableObject<T>>: MObservableImpl<ContextUpdate, ContextListener<T>>(),
 														 MObservableObject<T> {
 
-  override fun invalidate() {
+  override fun markInvalid() {
 	notifyListeners(ContextUpdate)
   }
 

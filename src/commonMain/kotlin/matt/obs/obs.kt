@@ -1,5 +1,6 @@
 package matt.obs
 
+import matt.obs.invalid.UpdatesFromOutside
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Update
 import kotlin.jvm.Synchronized
@@ -9,18 +10,9 @@ import kotlin.jvm.Synchronized
 @ObservableDSL interface MObservable {
   fun observe(op: ()->Unit): MyListener<*>
   fun removeListener(listener: MyListener<*>): Boolean
+  fun invalidate(uo: UpdatesFromOutside) = observe { uo.markInvalid() }
 }
 
-interface UpdatesFromOutside: MObservable {
-  fun invalidate()
-  fun setupDependencies(vararg obs: MObservable) {
-	obs.forEach {
-	  it.observe {
-		invalidate()
-	  }
-	}
-  }
-}
 
 @ObservableDSL interface MListenable<L: MyListener<*>>: MObservable {
   fun addListener(listener: L): L

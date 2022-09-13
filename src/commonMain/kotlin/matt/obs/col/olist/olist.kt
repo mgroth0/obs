@@ -22,8 +22,6 @@ import matt.obs.col.olist.filtered.BasicFilteredList
 import matt.obs.col.olist.sorted.BasicSortedList
 import matt.obs.fx.requireNotObservable
 import matt.obs.prop.MObservableVal
-import matt.obs.prop.ValProp
-import matt.obs.prop.VarProp
 
 interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
   fun filtered(filter: (E)->Boolean) = BasicFilteredList(this, filter)
@@ -57,11 +55,11 @@ abstract class BaseBasicWritableOList<E>(list: MutableList<E>): InternallyBacked
 	val prop = this
 	return MyBinding { op(prop) }.apply {
 	  prop.onChange {
-		invalidate()    //	  value = op(prop)
+		markInvalid()    //	  value = op(prop)
 	  }
 	  dependencies.forEach {
 		it.onChange {
-		  invalidate()        //		value = op(prop)
+		  markInvalid()        //		value = op(prop)
 		}
 	  }
 	}

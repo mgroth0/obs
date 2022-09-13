@@ -2,9 +2,9 @@ package matt.obs.prop
 
 import matt.lang.weak.WeakRef
 import matt.model.Converter
+import matt.model.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
-import matt.obs.bind.MyBinding
 import matt.obs.bind.binding
 import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
@@ -55,10 +55,18 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
   }
 
 
-
   operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
 	return value
   }
+
+  infix fun <T> eqNow(value: T) = this.value == value
+
+  infix fun <T> eqNow(value: ObsVal<T>) = this.value == value.value
+
+  infix fun <T> notEqNow(value: T) = this.value != value
+
+  infix fun <T> notEqNow(value: ObsVal<T>) = this.value != value.value
+
 
 }
 
@@ -77,73 +85,19 @@ interface MObservableValNewOnly<T>: MObservableVal<T, ValueUpdate<T>, NewListene
   })
 }
 
-//interface NullableVal<T>: MObservableValNewAndOld<T?> {
-//  fun onNonNullChange(op: (T & Any)->Unit) = apply {
-//	onChange {
-//	  if (it != null) op(it)
-//	}
-//  }
-//}
-
 
 interface FXBackedPropBase {
   val isFXBound: Boolean
 }
 
-interface WritableMObservableVal<T>: MObservableValNewAndOld<T>, BindableValue<T> {
+typealias Var<T> = WritableMObservableVal<T, *, *>
+
+interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableVal<T, U, L>,
+																				BindableValue<T> {
 
 
   override var value: T
 
-  //  var boundTo: MObservableROPropBase<out T>?
-
-  //  fun cleanBind(other: MObservableROPropBase<out T>) {
-  //	unbind()
-  //	bind(other)
-  //  }
-
-  //  val isBound get() = boundTo != null
-
-  //
-  //  fun bind(other: MObservableROPropBase<out T>) {
-  //	require(!isBound)
-  //	require((this as? FXBackedPropBase)?.isFXBound != true)
-  //
-  //
-  //	val recursiveDeps: List<WritableMObservableVal<*>> = (other as? WritableMObservableVal<*>?)?.chain {
-  //	  (it as? WritableMObservableVal<*>)?.boundTo as? WritableMObservableVal<*>
-  //	}?.toList() ?: listOf()
-  //
-  //
-  //	require(this !in recursiveDeps)
-  //
-  //	value = other.value
-  //
-  //
-  //	other.onChange {
-  //	  value = it
-  //	}
-  //
-  //	other.addBoundedProp(this)
-  //
-  //	boundTo = other
-  //  }
-  //
-  //  fun unbind() {
-  //	boundTo?.removeBoundedProp(this)
-  //	boundTo = null
-  //  }
-  //
-  //  fun unbindBidirectional() {
-  //	(boundTo as? WritableMObservableVal<*>)?.unbind()
-  //	unbind()
-  //  }
-  //
-  //  fun bindBidirectional(other: WritableMObservableVal<T>) {
-  //	this.value = other.value
-  //	other.addBoundedProp(this)
-  //	addBoundedProp(other)
-  //  }
 
   operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: T) {
 	value = newValue
@@ -151,6 +105,13 @@ interface WritableMObservableVal<T>: MObservableValNewAndOld<T>, BindableValue<T
 
 
   override fun <R> cast() = CastedWritableProp<T, R>(this)
+
+
+  infix fun v(value: T) {
+	this.value = value
+  }
+
+
 }
 
 
@@ -180,30 +141,10 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>
 
 }
 
+typealias ValProp<T> = ReadOnlyBindableProperty<T>
 
-abstract class MObservableROPropBase<T>: MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T>>(),
-										 MObservableValNewAndOld<T> {
-
-
-  fun <R> lazyBinding(
-	vararg dependencies: MObservableVal<*, *, *>,
-	op: (T)->R,
-  ): MyBinding<R> {
-	val prop = this
-	return MyBinding { op(value) }.apply {
-	  prop.onChange {
-		invalidate()
-	  }
-	  dependencies.forEach {
-		it.onChange {
-		  invalidate()
-		}
-	  }
-	}
-  }
-}
-
-open class ReadOnlyBindableProperty<T>(value: T): MObservableROPropBase<T>() {
+open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T>>(),
+												  MObservableValNewAndOld<T> {
 
   override var value = value
 	protected set(v) {
@@ -216,31 +157,18 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROPropBase<T>() {
 
 }
 
-infix fun <T> WritableMObservableVal<T>.v(value: T) {
-  this.value = value
-}
 
-infix fun <T> WritableMObservableVal<T>.eqNow(value: T): Boolean {
-  return this.value == value
-}
+typealias VarProp<T> = BindableProperty<T>
 
-infix fun <T> WritableMObservableVal<T>.eqNow(value: MObservableROPropBase<T>): Boolean {
-  return this.value == value.value
-}
-
-infix fun <T> WritableMObservableVal<T>.notEqNow(value: T): Boolean {
-  return this.value != value
-}
-
-infix fun <T> WritableMObservableVal<T>.notEqNow(value: MObservableROPropBase<T>): Boolean {
-  return this.value != value.value
-}
-
-
-open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T>,
+open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
+										  WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T>>,
 										  BindableValue<T> {
+
+
+  private val bindWritePass = KeyPass()
   override var value = value
 	set(v) {
+	  require(!this.isBound || bindWritePass.isHeld)
 	  if (v != field) {
 		val old = v
 		field = v
@@ -248,24 +176,21 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
 	  }
 	}
 
-  final override val bindManager = BindableValueHelper(this)
-  override fun bind(source: MObservableVal<T, *, *>) = bindManager.bind(source)
-  override fun bindBidirectional(source: WritableMObservableVal<T>) = bindManager.bindBidirectional(source)
-  override fun <S> bindBidirectional(source: WritableMObservableVal<S>, converter: Converter<T, S>) =
+  internal fun setFromBinding(new: T) {
+	bindWritePass.with {
+	  value = new
+	}
+  }
+
+  final override val bindManager by lazy { BindableValueHelper(this) }
+  override fun bind(source: ObsVal<T>) = bindManager.bind(source)
+  override fun bindBidirectional(source: Var<T>) = bindManager.bindBidirectional(source)
+  override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
 	bindManager.bindBidirectional(source, converter)
 
   override var theBind by bindManager::theBind
   override fun unbind() = bindManager.unbind()
 }
-
-
-typealias ValProp<T> = ReadOnlyBindableProperty<T>
-typealias VarProp<T> = BindableProperty<T>
-
-fun bProp(b: Boolean) = BindableProperty(b)
-fun sProp(s: String) = BindableProperty(s)
-fun iProp(i: Int) = BindableProperty(i)
-
 
 fun ObsB.whenTrueOnce(op: ()->Unit) {
   if (value) op()
@@ -277,6 +202,6 @@ fun ObsB.whenTrueOnce(op: ()->Unit) {
 }
 
 
-fun VarProp<Boolean>.toggle() {
+fun Var<Boolean>.toggle() {
   value = !value
 }
