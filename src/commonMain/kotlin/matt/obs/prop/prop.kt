@@ -28,6 +28,11 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 
   fun onChange(op: (T)->Unit): L
 
+  fun onNonNullChange(op: (T & Any)->Unit) = onChange {
+	if (it != null) op(it)
+  }
+
+
   fun onChangeOnce(op: (T)->Unit) = onChange(op).apply {
 	removeAfterInvocation = true
   }
