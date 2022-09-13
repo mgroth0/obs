@@ -8,7 +8,7 @@ import matt.obs.prop.MObservableValNewOnly
 import kotlin.jvm.Synchronized
 
 private object NOT_CALCED
-class MyBinding<T> internal constructor(private val calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
+class MyBinding<T>(private val calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
 											 MObservableValNewOnly<T> {
 
   private var valid = false
