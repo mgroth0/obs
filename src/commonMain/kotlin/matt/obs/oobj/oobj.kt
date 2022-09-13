@@ -27,6 +27,7 @@ interface MObservableObject<T>: MListenable<ContextListener<T>> {
 	val b = MyBinding { uncheckedThis.op() }
 	observe { b.invalidate() }
 	dependencies.forEach { observe { b.invalidate() } }
+	return b
   }
 }
 
