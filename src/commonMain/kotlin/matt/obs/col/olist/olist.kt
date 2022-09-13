@@ -22,6 +22,8 @@ import matt.obs.col.olist.filtered.BasicFilteredList
 import matt.obs.col.olist.sorted.BasicSortedList
 import matt.obs.fx.requireNotObservable
 import matt.obs.prop.MObservableVal
+import matt.obs.prop.ValProp
+import matt.obs.prop.VarProp
 
 interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
   fun filtered(filter: (E)->Boolean) = BasicFilteredList(this, filter)
@@ -33,6 +35,23 @@ interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
 	  op()
 	}.apply {
 	  removeCondition = { weakRef.deref() == null }
+	}
+  }
+
+  fun <R> binding(
+	vararg dependencies: MObservableVal<*, *, *>,
+	op: (BasicROObservableList<E>)->R,
+  ): ValProp<R> {
+	val prop = this
+	return VarProp(op(prop)).apply {
+	  prop.onChange {
+		value = op(prop)
+	  }
+	  dependencies.forEach {
+		it.onChange {
+		  value = op(prop)
+		}
+	  }
 	}
   }
 }
