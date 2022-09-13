@@ -37,36 +37,36 @@ sealed class BindableImpl: Bindable {
 
 }
 
-interface BindableList<E>: Bindable {
+interface BindableList<E>: Bindable, List<E> {
   fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E)
   fun <S> bind(source: ValProp<S>, converter: (S)->List<E>)
 }
 
 /*todo: lazily evaluated bound lists!*/
-class BindableListImpl<E>(private val list: MutableList<E>): BindableImpl(), BindableList<E> {
+class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), BindableList<E>, List<E> by target {
 
   @Synchronized override fun <S> bind(source: BasicROObservableList<S>, converter: (S)->E) {
 	unbind()
-	(list as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
-	list.setAll(source.map(converter))
-	(list as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	target.setAll(source.map(converter))
+	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
 	val listener = source.onChange {
-	  (list as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
-	  list.mirror(it, converter)
-	  (list as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	  target.mirror(it, converter)
+	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
 
   @Synchronized override fun <S> bind(source: ValProp<S>, converter: (S)->List<E>) {
 	unbind()
-	(list as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
-	list.setAll(converter(source.value))
-	(list as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	target.setAll(converter(source.value))
+	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
 	val listener = source.onChange {
-	  (list as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
-	  list.setAll(converter(it))
-	  (list as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	  target.setAll(converter(it))
+	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
