@@ -20,7 +20,8 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
   val value: T
 
   fun <R> cast() = binding {
-	@Suppress("UNCHECKED_CAST") it as R
+	@Suppress("UNCHECKED_CAST")
+	it as R
   }
 
   fun onChange(op: (T)->Unit): L

@@ -43,7 +43,7 @@ class MyBinding<T>(private val calc: ()->T): MObservableROValBase<T, ValueUpdate
 
 fun <T, U: ValueUpdate<T>, L: ValueListener<T, U>> MObservableValNewAndOld<MObservableVal<T, U, L>?>.deepOnChange(op: (T)->Unit) {
   var subListener: L? = value?.onChange(op)
-  addListener(OldAndNewListener { old, new ->
+  addListener(OldAndNewListener { _, new ->
 	if (new != null) {
 	  subListener?.moveTo(new) ?: run {
 		subListener = value?.onChange(op)
