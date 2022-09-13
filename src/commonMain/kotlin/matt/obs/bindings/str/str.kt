@@ -1,29 +1,38 @@
 package matt.obs.bindings.str
 
-import matt.obs.prop.MObservableROPropBase
-import matt.obs.prop.ValProp
+import matt.lang.S
+import matt.obs.prop.ObsVal
 
-fun MObservableROPropBase<String>.length() = binding {
+typealias ObsS = ObsVal<S>
+
+fun ObsS.length() = binding {
   value.length
 }
 
-fun MObservableROPropBase<String>.isEmpty() = binding {
+fun ObsS.isEmpty() = binding {
   value.isEmpty()
 }
 
-fun MObservableROPropBase<String>.isNotEmpty() = binding {
+fun ObsS.isNotEmpty() = binding {
   value.isNotEmpty()
 }
 
-operator fun MObservableROPropBase<String>.plus(other: String): ValProp<String> = binding {
+operator fun ObsS.plus(other: String): ObsS = binding {
   it + other
 }
 
-operator fun MObservableROPropBase<String>.plus(other: MObservableROPropBase<String>): ValProp<String> =
+operator fun ObsS.plus(other: ObsS): ObsS =
   binding(other) {
 	it + other.value
   }
 
-//operator fun String.plus(other: MObservableROPropBase<String>): ValProp<String> = other.binding {
-//  this@plus + it
-//}
+/*
+
+Shouldn't do this because string + Any is already defined!
+
+operator fun String.plus(other: ObsS): ObsS = other.binding {
+  this@plus + it
+}
+
+*/
+

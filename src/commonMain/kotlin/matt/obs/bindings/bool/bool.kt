@@ -4,19 +4,21 @@ import matt.collect.weak.lazyWeakMap
 import matt.lang.B
 import matt.obs.prop.ObsVal
 
-private val notProps = lazyWeakMap<ObsVal<B>, ObsVal<B>> { prop ->
+typealias ObsB = ObsVal<B>
+
+private val notProps = lazyWeakMap<ObsB, ObsB> { prop ->
   prop.binding {
 	!it
   }
 }
 
-fun ObsVal<B>.not() = notProps[this]
+fun ObsB.not() = notProps[this]
 
 
-infix fun ObsVal<B>.and(other: ObsVal<B>) = binding(other) {
+infix fun ObsB.and(other: ObsB) = binding(other) {
   it && other.value
 }
 
-infix fun ObsVal<B>.or(other: ObsVal<B>) = binding(other) {
+infix fun ObsB.or(other: ObsB) = binding(other) {
   it || other.value
 }

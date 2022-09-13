@@ -1,28 +1,29 @@
 package matt.obs.bindings.math
 
-import matt.obs.prop.MObservableROPropBase
-import matt.obs.prop.ReadOnlyBindableProperty
-import matt.obs.prop.ValProp
+import matt.lang.D
+import matt.obs.prop.ObsVal
 
-operator fun MObservableROPropBase<Double>.unaryPlus(): ValProp<Double> = binding { it }
-operator fun MObservableROPropBase<Double>.unaryMinus(): ValProp<Double> = binding { -it }
+typealias ObsD = ObsVal<D>
 
-operator fun MObservableROPropBase<Double>.times(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
+operator fun ObsD.unaryPlus(): ObsD = binding { it }
+operator fun ObsD.unaryMinus(): ObsD = binding { -it }
+
+operator fun ObsD.times(other: ObsD): ObsD =
   binding(other) {
 	it*other.value
   }
 
-operator fun MObservableROPropBase<Double>.minus(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
+operator fun ObsD.minus(other: ObsD): ObsD =
   binding(other) {
 	it - other.value
   }
 
-operator fun MObservableROPropBase<Double>.plus(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
+operator fun ObsD.plus(other: ObsD): ObsD =
   binding(other) {
 	it + other.value
   }
 
-operator fun MObservableROPropBase<Double>.div(other: ReadOnlyBindableProperty<Double>): ValProp<Double> =
+operator fun ObsD.div(other: ObsD): ObsD =
   binding(other) {
 	it/other.value
   }
@@ -33,39 +34,39 @@ private operator fun Number.minus(n: Number) = toDouble() - n.toDouble()
 private operator fun Number.div(n: Number) = toDouble()/n.toDouble()
 
 
-operator fun MObservableROPropBase<Double>.times(other: Number): ValProp<Double> = binding {
+operator fun ObsD.times(other: Number): ObsD = binding {
   it*other
 }
 
-operator fun MObservableROPropBase<Double>.minus(other: Number): ValProp<Double> = binding {
+operator fun ObsD.minus(other: Number): ObsD = binding {
   it - other
 }
 
-operator fun MObservableROPropBase<Double>.plus(other: Number): ValProp<Double> = binding {
+operator fun ObsD.plus(other: Number): ObsD = binding {
   it + other
 }
 
-operator fun MObservableROPropBase<Double>.div(other: Number): ValProp<Double> = binding {
+operator fun ObsD.div(other: Number): ObsD = binding {
   it/other
 }
 
-operator fun Number.times(other: MObservableROPropBase<Double>): ValProp<Double> = other.binding {
+operator fun Number.times(other: ObsD): ObsD = other.binding {
   it*this
 }
 
-operator fun Number.minus(other: MObservableROPropBase<Double>): ValProp<Double> = other.binding {
+operator fun Number.minus(other: ObsD): ObsD = other.binding {
   it - this
 }
 
-operator fun Number.plus(other: MObservableROPropBase<Double>): ValProp<Double> = other.binding {
+operator fun Number.plus(other: ObsD): ObsD = other.binding {
   it + this
 }
 
-operator fun Number.div(other: MObservableROPropBase<Double>): ValProp<Double> = other.binding {
+operator fun Number.div(other: ObsD): ObsD = other.binding {
   it/this
 }
 
-fun min(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Double> {
+fun min(vararg values: ObsD): ObsD {
   require(values.size > 0)
   if (values.size == 1) return values[0]
   else return values[0].binding(*values.drop(1).toTypedArray()) {
@@ -73,7 +74,7 @@ fun min(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Dou
   }
 }
 
-fun max(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Double> {
+fun max(vararg values: ObsD): ObsD {
   require(values.size > 0)
   if (values.size == 1) return values[0]
   else return values[0].binding(*values.drop(1).toTypedArray()) {
@@ -81,7 +82,7 @@ fun max(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Dou
   }
 }
 
-fun mean(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Double> {
+fun mean(vararg values: ObsD): ObsD {
   require(values.size > 0)
   if (values.size == 1) return values[0]
   else return values[0].binding(*values.drop(1).toTypedArray()) {
@@ -89,7 +90,7 @@ fun mean(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Do
   }
 }
 
-fun sum(vararg values: MObservableROPropBase<Double>): MObservableROPropBase<Double> {
+fun sum(vararg values: ObsD): ObsD {
   require(values.size > 0)
   if (values.size == 1) return values[0]
   else return values[0].binding(*values.drop(1).toTypedArray()) {
