@@ -1,6 +1,7 @@
 package matt.obs.prop
 
 import matt.lang.weak.WeakRef
+import matt.model.Converter
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.MyBinding
@@ -274,6 +275,7 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), Wr
   final override val bindManager = BindableValueHelper(this)
   override fun bind(source: MObservableVal<T, *, *>) = bindManager.bind(source)
   override fun bindBidirectional(source: WritableMObservableVal<T>) = bindManager.bindBidirectional(source)
+  override fun <S> bindBidirectional(source: WritableMObservableVal<S>, converter: Converter<T,S>) = bindManager.bindBidirectional(source,converter)
   override var theBind by bindManager::theBind
   override fun unbind() = bindManager.unbind()
 }
