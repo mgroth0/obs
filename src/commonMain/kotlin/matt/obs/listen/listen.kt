@@ -21,8 +21,8 @@ sealed class MyListener<U: Update> {
   var removeAfterInvocation: Boolean = false
 
   internal var currentObservable: MListenable<*>? = null
-  internal fun removeListener() = currentObservable!!.removeListener(this)
-  internal fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
+  fun removeListener() = currentObservable!!.removeListener(this)
+  fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
 
 
   internal fun preInvocation(): Boolean {
