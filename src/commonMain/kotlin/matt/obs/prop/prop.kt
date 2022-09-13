@@ -24,6 +24,8 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 	it as R
   }
 
+  override fun observe(op: ()->Unit) = onChange { op() }
+
   fun onChange(op: (T)->Unit): L
 
   fun onChangeOnce(op: (T)->Unit) = onChange(op).apply {
