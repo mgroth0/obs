@@ -1,6 +1,7 @@
 package matt.obs.col.olist
 
 import matt.collect.itr.MutableListIteratorWithSomeMemory
+import matt.lang.comparableComparator
 import matt.lang.weak.WeakRef
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableList
@@ -18,13 +19,14 @@ import matt.obs.col.change.RemoveElement
 import matt.obs.col.change.RemoveElements
 import matt.obs.col.change.ReplaceAt
 import matt.obs.col.change.RetainAll
-import matt.obs.col.olist.filtered.BasicFilteredList
-import matt.obs.col.olist.sorted.BasicSortedList
+import matt.obs.col.olist.dynamic.BasicFilteredList
+import matt.obs.col.olist.dynamic.BasicSortedList
+import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
 import matt.obs.prop.MObservableVal
 
 interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
-  fun filtered(filter: (E)->Boolean) = BasicFilteredList(this, filter)
+  fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
   fun onChangeWithWeak(
 	o: Any, op: ()->Unit
   ) = run {
@@ -40,7 +42,10 @@ interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
 }
 
 
-fun <E: Comparable<E>> BasicROObservableList<E>.sorted() = BasicSortedList(this)
+fun <E: Comparable<E>> BasicROObservableList<E>.sorted(): BasicSortedList<E> =
+  DynamicList(this, comparator = comparableComparator())
+
+
 interface BasicWritableObservableList<E>: MutableList<E>, BasicROObservableList<E>
 
 

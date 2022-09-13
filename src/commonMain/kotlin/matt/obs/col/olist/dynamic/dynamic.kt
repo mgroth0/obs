@@ -21,6 +21,7 @@ class DynamicList<E>(
   private val target: BasicWritableObservableList<E> = basicMutableObservableListOf()
 ): BasicROObservableList<E> by target, BasicFilteredList<E>, BasicSortedList<E> {
 
+
   override val filter = BindableProperty(filter)
   override val comparator = BindableProperty(comparator)
 
@@ -36,5 +37,7 @@ class DynamicList<E>(
 	refresh()
 	this.filter.observe { refresh() }
 	this.comparator.observe { refresh() }
+	source.observe { refresh() }
+
   }
 }
