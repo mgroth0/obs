@@ -1,7 +1,8 @@
 package matt.obs.listen
 
+import matt.lang.NEVER
 import matt.lang.ifTrue
-import matt.obs.MObservable
+import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ContextUpdate
@@ -19,7 +20,7 @@ sealed class MyListener<U: Update> {
   var removeCondition: (()->Boolean)? = null
   var removeAfterInvocation: Boolean = false
 
-  internal var currentObservable: MObservable<*>? = null
+  internal var currentObservable: MListenable<*>? = null
   internal fun removeListener() = currentObservable!!.removeListener(this)
   internal fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
 
@@ -44,7 +45,7 @@ sealed class MyListener<U: Update> {
   }
 }
 
-internal fun <U, L: MyListener<U>> L.moveTo(o: MObservable<L>) {
+internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
   tryRemovingListener()
   o.addListener(this)
 }
@@ -81,8 +82,7 @@ class ContextListener<C>(private val obj: C, private val invocation: C.()->Unit)
   }
 }
 
-class ObsHolderListener(private val invocation: ()->Unit): MyListener<ObsHolderUpdate>() {
-  final override fun notify(update: ObsHolderUpdate) {
-	invocation()
-  }
+class ObsHolderListener: MyListener<ObsHolderUpdate>() {
+  internal val subListeners = mutableListOf<MyListener<*>>()
+  final override fun notify(update: ObsHolderUpdate) = NEVER
 }

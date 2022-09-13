@@ -6,14 +6,16 @@ import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ObservableDSL
 
-@ObservableDSL interface MObservable<L: MyListener<*>> {
-
-  fun addListener(listener: L): L
+@ObservableDSL interface MObservable {
+  fun observe(op: ()->Unit): MyListener<*>
   fun removeListener(listener: MyListener<*>): Boolean
-
 }
 
-abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor(): MObservable<L> {
+@ObservableDSL interface MListenable<L: MyListener<*>>: MObservable {
+  fun addListener(listener: L): L
+}
+
+abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor(): MListenable<L> {
 
   private val listeners = mutableListOf<L>()
 

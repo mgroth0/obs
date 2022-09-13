@@ -4,7 +4,7 @@ import matt.lang.setAll
 import matt.lang.weak.WeakRef
 import matt.lang.weak.getValue
 import matt.model.recursionblocker.RecursionBlocker
-import matt.obs.MObservable
+import matt.obs.MListenable
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicROObservableList
 import matt.obs.listen.MyListener
@@ -107,7 +107,7 @@ interface ABind {
 }
 
 class TheBind(
-  source: MObservable<*>,
+  source: MListenable<*>,
   private val listener: MyListener<*>
 ): ABind {
   val source by WeakRef(source)

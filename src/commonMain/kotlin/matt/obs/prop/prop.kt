@@ -2,7 +2,7 @@ package matt.obs.prop
 
 import matt.lang.B
 import matt.lang.weak.WeakRef
-import matt.obs.MObservable
+import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableValue
@@ -16,7 +16,7 @@ import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import kotlin.reflect.KProperty
 
-sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservable<L> {
+sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L> {
   val value: T
 
   fun <R> cast() = binding {

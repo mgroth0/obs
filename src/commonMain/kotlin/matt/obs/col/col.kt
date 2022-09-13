@@ -1,6 +1,6 @@
 package matt.obs.col
 
-import matt.obs.MObservable
+import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.CollectionListener
@@ -9,7 +9,7 @@ import matt.obs.prop.MObservableVal
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 
-interface BasicOCollection<E>: Collection<E>, MObservable<CollectionListener<E>> {
+interface BasicOCollection<E>: Collection<E>, MListenable<CollectionListener<E>> {
   fun onChange(op: (CollectionChange<E>)->Unit): CollectionListener<E>
   fun <R> binding(
 	vararg dependencies: MObservableVal<*, *, *>,

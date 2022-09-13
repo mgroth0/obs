@@ -1,6 +1,6 @@
 package matt.obs.oobj
 
-import matt.obs.MObservable
+import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.MyBinding
 import matt.obs.listen.ContextListener
@@ -10,7 +10,7 @@ import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 
 
-interface MObservableObject<T>: MObservable<ContextListener<T>> {
+interface MObservableObject<T>: MListenable<ContextListener<T>> {
 
   @Suppress("UNCHECKED_CAST") val uncheckedThis get() = this as T
 
