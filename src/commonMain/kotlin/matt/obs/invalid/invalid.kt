@@ -18,7 +18,7 @@ interface CustomDependencies: CustomInvalidations {
 	}
   }
 
-  fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable)
+  fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?)
   fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>)
   fun removeDependency(o: MObservable)
 
@@ -30,7 +30,7 @@ interface CustomDependencies: CustomInvalidations {
   private val deps = mutableMapOf<MObservable, Listener>()
   private val subDeps = mutableMapOf<MObservable, List<Listener>>()
 
-  @Synchronized override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable) {
+  @Synchronized override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?) {
 	require(o !in deps)
 	subDeps[o] = deepDependencies.map {
 	  it(o).observe {
@@ -38,7 +38,7 @@ interface CustomDependencies: CustomInvalidations {
 	  }
 	}
 	deps[o] = o.observe {
-	  subEvent(o, deepDependencies.map { it(o) })
+	  subEvent(o, deepDependencies.mapNotNull { it(o) })
 	}
   }
 
