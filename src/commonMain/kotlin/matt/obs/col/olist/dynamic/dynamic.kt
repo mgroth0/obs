@@ -56,7 +56,7 @@ class DynamicList<E>(
 
   private val dependencyHelper by lazy { DependencyHelper(this) }
 
-  override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable) =
+  override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?) =
 	dependencyHelper.addDependency(o, *deepDependencies)
 
   override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =

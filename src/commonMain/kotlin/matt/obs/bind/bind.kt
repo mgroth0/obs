@@ -55,7 +55,7 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueU
 
   private val depHelper by lazy { DependencyHelper(this) }
 
-  override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable) =
+  override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?) =
 	depHelper.addDependency(o, *deepDependencies)
 
   override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =

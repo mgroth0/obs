@@ -32,8 +32,8 @@ interface CustomDependencies: CustomInvalidations {
 
   @Synchronized override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?) {
 	require(o !in deps)
-	subDeps[o] = deepDependencies.map {
-	  it(o).observe {
+	subDeps[o] = deepDependencies.mapNotNull {
+	  it(o)?.observe {
 		markInvalid()
 	  }
 	}
