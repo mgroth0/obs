@@ -10,6 +10,7 @@ import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 
 interface BasicOCollection<E>: Collection<E>, MListenable<CollectionListener<E>> {
+  override fun observe(op: ()->Unit) = onChange { op() }
   fun onChange(op: (CollectionChange<E>)->Unit): CollectionListener<E>
   fun <R> binding(
 	vararg dependencies: MObservableVal<*, *, *>,
