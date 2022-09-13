@@ -3,6 +3,7 @@ package matt.obs.bindhelp
 import matt.lang.setAll
 import matt.lang.weak.WeakRef
 import matt.lang.weak.getValue
+import matt.model.Converter
 import matt.model.recursionblocker.RecursionBlocker
 import matt.obs.MListenable
 import matt.obs.col.change.mirror
@@ -60,6 +61,7 @@ class BindableListImpl<E>(private val list: MutableList<E>): BindableImpl(), Bin
 interface BindableValue<T>: Bindable {
   fun bind(source: MObservableVal<T, *, *>)
   fun bindBidirectional(source: WritableMObservableVal<T>)
+  fun <S> bindBidirectional(source: WritableMObservableVal<S>, converter: Converter<T, S>)
 }
 
 class BindableValueHelper<T>(private val wProp: WritableMObservableVal<T>): BindableImpl(), BindableValue<T> {
@@ -74,14 +76,8 @@ class BindableValueHelper<T>(private val wProp: WritableMObservableVal<T>): Bind
   }
 
   @Synchronized override fun bindBidirectional(source: WritableMObservableVal<T>) {
-	require(this !is FXBackedPropBase || !isFXBound)
 	unbind()
 	source.unbind()
-
-
-	bind(source)
-	source.bind(wProp)
-
 	wProp.value = source.value
 
 	val rBlocker = RecursionBlocker()
@@ -93,6 +89,28 @@ class BindableValueHelper<T>(private val wProp: WritableMObservableVal<T>): Bind
 	val targetListener = wProp.onChange {
 	  rBlocker.with {
 		source.value = wProp.value
+	  }
+	}
+
+	theBind =
+	  BiTheBind(source = source, target = wProp, sourceListener = sourceListener, targetListener = targetListener)
+	source.theBind = theBind
+  }
+
+  @Synchronized override fun <S> bindBidirectional(source: WritableMObservableVal<S>, converter: Converter<T, S>) {
+	unbind()
+	source.unbind()
+	wProp.value = converter.convertToA(source.value)
+
+	val rBlocker = RecursionBlocker()
+	val sourceListener = source.onChange {
+	  rBlocker.with {
+		wProp.value = converter.convertToA(source.value)
+	  }
+	}
+	val targetListener = wProp.onChange {
+	  rBlocker.with {
+		source.value = converter.convertToB(wProp.value)
 	  }
 	}
 
