@@ -11,6 +11,22 @@ import matt.obs.prop.VarProp
 
 interface BasicOCollection<E>: Collection<E>, MObservable<CollectionListener<E>> {
   fun onChange(op: (CollectionChange<E>)->Unit): CollectionListener<E>
+  fun <R> binding(
+	vararg dependencies: MObservableVal<*, *, *>,
+	op: (BasicOCollection<E>)->R,
+  ): ValProp<R> {
+	val prop = this
+	return VarProp(op(prop)).apply {
+	  prop.onChange {
+		value = op(prop)
+	  }
+	  dependencies.forEach {
+		it.onChange {
+		  value = op(prop)
+		}
+	  }
+	}
+  }
 }
 
 abstract class InternallyBackedOCollection<E> internal constructor():
@@ -34,23 +50,6 @@ abstract class InternallyBackedOCollection<E> internal constructor():
 	}
   }
 
-
-  inline fun <C, R> binding(
-	vararg dependencies: MObservableVal<*, *, *>,
-	crossinline op: (BasicOCollection<E>)->R,
-  ): ValProp<R> {
-	val prop = this
-	return VarProp(op(prop)).apply {
-	  prop.onChange {
-		value = op(prop)
-	  }
-	  dependencies.forEach {
-		it.onChange {
-		  value = op(prop)
-		}
-	  }
-	}
-  }
 }
 
 interface BasicOMutableCollection<E>: BasicOCollection<E>, MutableCollection<E>

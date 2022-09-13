@@ -38,22 +38,7 @@ interface BasicROObservableList<E>: BasicOCollection<E>, BindableList<E> {
 	}
   }
 
-  fun <R> binding(
-	vararg dependencies: MObservableVal<*, *, *>,
-	op: (BasicROObservableList<E>)->R,
-  ): ValProp<R> {
-	val prop = this
-	return VarProp(op(prop)).apply {
-	  prop.onChange {
-		value = op(prop)
-	  }
-	  dependencies.forEach {
-		it.onChange {
-		  value = op(prop)
-		}
-	  }
-	}
-  }
+
 }
 
 
