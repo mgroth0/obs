@@ -6,10 +6,13 @@ import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ContextUpdate
+import matt.obs.listen.update.MapUpdate
 import matt.obs.listen.update.ObsHolderUpdate
 import matt.obs.listen.update.Update
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
+import matt.obs.map.change.MapChange
+import matt.obs.map.change.MapChangeTodo
 
 @DslMarker
 annotation class ListenerDSL
@@ -74,6 +77,10 @@ class OldAndNewListener<T>(internal val invoke: OldAndNewListener<T>.(old: T, ne
 class CollectionListener<E>(internal val invoke: CollectionListener<E>.(change: CollectionChange<E>)->Unit):
   MyListener<CollectionUpdate<E>>() {
   override fun notify(update: CollectionUpdate<E>) = invoke(update.change)
+}
+class MapListener<K,V>(internal val invoke: MapListener<K,V>.(change: MapChange<K,V>)->Unit):
+  MyListener<MapUpdate<k,V>>() {
+  override fun notify(update: MapUpdate<K,V>) = invoke(update.change)
 }
 
 class ContextListener<C>(private val obj: C, private val invocation: C.()->Unit): MyListener<ContextUpdate>() {

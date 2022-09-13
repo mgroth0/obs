@@ -1,16 +1,24 @@
-package matt.obs.col.change
+package matt.obs.map.change
 
-sealed interface CollectionChange<E> {
-  val collection: Collection<E>
-  fun <T> convert(collection: Collection<T>, convert: (E)->T): CollectionChange<T>
+sealed interface MapChange<K, V> {
+  val map: Map<K, V>
+  //  fun <T> convert(collection: Collection<T>, convert: (E)->T): CollectionChange<T>
 }
 
+class Put<K, V>(override val map: Map<K, V>, val key: K, val value: V): MapChange<K, V>
+class PutAll<K, V>(override val map: Map<K, V>, val from: Map<out K, V>): MapChange<K, V>
+class Remove<K, V>(override val map: Map<K, V>, val key: K): MapChange<K, V>
+class ItrRemove<K, V>(override val map: Map<K, V>): MapChange<K, V>
+class RemoveValue<K, V>(override val map: Map<K, V>): MapChange<K, V>
+class Clear<K, V>(override val map: Map<K, V>): MapChange<K, V>
 
-sealed interface AdditionBase<E>: CollectionChange<E> {
+/*
+
+sealed interface AdditionBase<E>: MapChange<E> {
   val addedElements: List<E>
 }
 
-sealed interface RemovalBase<E>: CollectionChange<E> {
+sealed interface RemovalBase<E>: MapChange<E> {
   val removedElements: List<E>
 }
 
@@ -104,5 +112,5 @@ fun <E> MutableList<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
   return c
 }
 
-fun <S, T> MutableList<T>.mirror(c: CollectionChange<S>, convert: (S)->T) =
-  mirror(c.convert(this, convert))
+fun <S, T> MutableList<T>.mirror(c: CollectionChange<S>, convert: (S)->T) = mirror(c.convert(this, convert))
+*/

@@ -1,6 +1,7 @@
 package matt.obs.listen.update
 
 import matt.obs.col.change.CollectionChange
+import matt.obs.map.change.MapChange
 
 sealed interface Update
 sealed interface ValueUpdate<T>: Update {
@@ -16,6 +17,7 @@ open class LazyNewValueUpdate<T>(private val newOp: ()->T): ValueUpdate<T> {
 }
 class ValueChange<T>(internal val old: T, new: T): NewValueUpdate<T>(new)
 class CollectionUpdate<E>(internal val change: CollectionChange<E>): Update
+class MapUpdate<K,V>(internal val change: MapChange<K,V>): Update
 
 object ContextUpdate: Update
 object ObsHolderUpdate: Update

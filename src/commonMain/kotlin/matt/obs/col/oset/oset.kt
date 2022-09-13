@@ -2,12 +2,12 @@ package matt.obs.col.oset
 
 import matt.collect.itr.MutableIteratorWithSomeMemory
 import matt.obs.col.InternallyBackedOCollection
-import matt.obs.col.change.AddAtEnd
-import matt.obs.col.change.Clear
-import matt.obs.col.change.MultiAddAtEnd
-import matt.obs.col.change.RemoveElement
-import matt.obs.col.change.RemoveElements
-import matt.obs.col.change.RetainAll
+import matt.obs.map.change.AddAtEnd
+import matt.obs.map.change.Clear
+import matt.obs.map.change.MultiAddAtEnd
+import matt.obs.map.change.RemoveElement
+import matt.obs.map.change.RemoveElements
+import matt.obs.map.change.RetainAll
 import matt.obs.fx.requireNotObservable
 
 
