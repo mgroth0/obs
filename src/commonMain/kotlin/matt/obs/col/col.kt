@@ -3,50 +3,54 @@ package matt.obs.col
 import matt.obs.MObservable
 import matt.obs.MObservableImpl
 import matt.obs.col.change.CollectionChange
+import matt.obs.listen.CollectionListener
+import matt.obs.listen.update.CollectionUpdate
+import matt.obs.prop.MObservableVal
+import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 
-interface MObservableWithChangeObject<C>: MObservable<(C)->Unit, (C)->Boolean> {
-  override fun onChangeSimple(listener: ()->Unit) {
-	onChange {
-	  listener()
-	}
-  }
+interface BasicOCollection<E>: Collection<E>, MObservable<CollectionListener<E>> {
+  fun onChange(op: (CollectionChange<E>)->Unit): CollectionListener<E>
 }
 
+abstract class InternallyBackedOCollection<E> internal constructor():
+  MObservableImpl<CollectionUpdate<E>, CollectionListener<E>>(), BasicOCollection<E> {
 
-
-abstract class InternalBackedMObservableWithChangeObject<C> internal constructor():
-  MObservableImpl<(C)->Unit, (C)->Boolean>(),
-  MObservableWithChangeObject<C> {
-
-  final override fun onChangeUntil(until: (C)->Boolean, listener: (C)->Unit) {
-	var realListener: ((C)->Unit)? = null
-	realListener = { t: C ->
-	  listener(t)
-	  if (until(t)) listeners -= realListener!!
-	}
-	listeners += realListener
+  override fun onChange(op: (CollectionChange<E>)->Unit): CollectionListener<E> {
+	return addListener(CollectionListener {
+	  op(it)
+	})
   }
 
-  final override fun onChangeOnce(listener: (C)->Unit) = onChangeUntil({ true }, listener)
-
-  protected fun emitChange(change: C) {
-	listeners.forEach { it(change) }
+  protected fun emitChange(change: CollectionChange<E>) {
+	notifyListeners(CollectionUpdate((change)))
   }
-}
 
-interface BasicOCollection<E>: Collection<E>, MObservableWithChangeObject<CollectionChange<E>>
-
-abstract class ObservableCollectionImpl<E>: InternalBackedMObservableWithChangeObject<CollectionChange<E>>(), BasicOCollection<E> {
-  val isEmptyProp by lazy {
+  val isEmptyProp: ValProp<Boolean> by lazy {
 	VarProp(this.isEmpty()).apply {
 	  onChange {
-		value = this@ObservableCollectionImpl.isEmpty()
+		value = this@InternallyBackedOCollection.isEmpty()
+	  }
+	}
+  }
+
+
+  inline fun <C, R> binding(
+	vararg dependencies: MObservableVal<*, *, *>,
+	crossinline op: (BasicOCollection<E>)->R,
+  ): ValProp<R> {
+	val prop = this
+	return VarProp(op(prop)).apply {
+	  prop.onChange {
+		value = op(prop)
+	  }
+	  dependencies.forEach {
+		it.onChange {
+		  value = op(prop)
+		}
 	  }
 	}
   }
 }
-
-
 
 interface BasicOMutableCollection<E>: BasicOCollection<E>, MutableCollection<E>

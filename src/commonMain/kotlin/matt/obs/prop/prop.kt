@@ -4,118 +4,146 @@ import matt.lang.B
 import matt.lang.weak.WeakRef
 import matt.obs.MObservable
 import matt.obs.MObservableImpl
-import matt.obs.bind.binding
+import matt.obs.bind.MyBinding
+import matt.obs.bindhelp.BindableValue
+import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.bindings.bool.not
+import matt.obs.listen.NewListener
+import matt.obs.listen.OldAndNewListener
+import matt.obs.listen.ValueListener
+import matt.obs.listen.update.ValueChange
+import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
-import matt.obs.prop.listen.ValueListener
-import matt.obs.prop.listen.NewListener
-import matt.obs.prop.listen.OldAndNewListener
-import matt.stream.recurse.recurse
 import kotlin.reflect.KProperty
 
-sealed interface MObservableVal<T, L: ValueListener<T>>: MObservable<L, (T)->Boolean> {
+sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservable<L> {
   val value: T
-  fun addBoundedProp(p: WritableMObservableVal<in T>)
-  fun removeBoundedProp(p: WritableMObservableVal<in T>)
+
   fun <R> cast() = binding {
-	@Suppress("UNCHECKED_CAST")
-	it as R
+	@Suppress("UNCHECKED_CAST") it as R
   }
 
-  fun onChange(listener: (T)->Unit): NewListener<T>
+  fun onChange(op: (T)->Unit): L
 
+  fun onChangeOnce(op: (T)->Unit) = onChange(op).apply {
+	removeAfterInvocation = true
+  }
 
-}
-
-
-interface MObservableValNewAndOld<T>: MObservable<ValueListener<T>, (T)->Boolean>,
-									  MObservableVal<T, ValueListener<T>> {
-
-  //  fun onChange(op: (T)->Unit) = onChange(matt.obs.prop.listen.NewListener { op(it) })
-  override fun onChange(listener: (T)->Unit) = onChange(NewListener { listener(it) }) as NewListener<T>
-
-  fun onChangeWithWeak(o: Any, op: (T)->Unit) = apply {
-	var listener: NewListener<T>? = null
+  fun onChangeWithWeak(o: Any, op: (T)->Unit) = run {
 	val weakRef = WeakRef(o)
-	listener = NewListener { new ->
-	  if (weakRef.deref() == null) {
-		removeListener(listener!!)
+	onChange(op).apply {
+	  removeCondition = { weakRef.deref() == null }
+	}
+  }
+
+  fun onChangeUntil(until: (T)->Boolean, op: (T)->Unit) = onChange {
+	op(it)
+  }.apply {
+	this.until = { until(it.new) }
+  }
+
+  fun <R> binding(
+	vararg dependencies: MObservableVal<*, *, *>,
+	debug: Boolean = false,
+	op: (T)->R,
+  ): ValProp<R> {
+	val prop = this
+	return VarProp(op(value)).apply {
+	  prop.onChange {
+		if (debug) println("prop changed: $it")
+		value = op(it)
 	  }
-	  op(new)
+	  dependencies.forEach {
+		it.onChange {
+		  if (debug) println("dep changed: $it")
+		  value = op(prop.value)
+		}
+	  }
 	}
-	onChange(listener)
   }
+
 }
 
-interface MObservableValNewOnly<T>: MObservable<NewListener<T>, (T)->Boolean>,
-									MObservableVal<T, NewListener<T>> { //  fun onChange(op: (T)->Unit) = onChange(matt.obs.prop.listen.NewListener { op(it) })
-  override fun onChange(listener: (T)->Unit) = onChange(NewListener { listener(it) })
-} //
-//@Suppress("UNCHECKED_CAST")
-//inline fun <reified T, reified L: matt.obs.prop.listen.ListenerType<T>, P: MObservableVal<T, L>> P.onChange(listener: matt.obs.prop.listen.NewListener<T>) =
-//  when (this) {
-//	is MObservableValNewAndOld<*> -> (this as MObservableValNewAndOld<T>).onChange(listener)
-//	is MObservableValNewOnly<*>   -> (this as MObservableValNewOnly<T>).onChange(listener)
-//	else                          -> NEVER
+
+interface MObservableValNewAndOld<T>: MObservableVal<T, ValueChange<T>, OldAndNewListener<T>> {
+  override fun onChange(op: (T)->Unit) = addListener(OldAndNewListener { _, new ->
+	op(new)
+  })
+}
+
+interface MObservableValNewOnly<T>: MObservableVal<T, ValueUpdate<T>, NewListener<T>> {
+  override fun onChange(op: (T)->Unit) = addListener(NewListener { new ->
+	op(new)
+  })
+}
+
+//interface NullableVal<T>: MObservableValNewAndOld<T?> {
+//  fun onNonNullChange(op: (T & Any)->Unit) = apply {
+//	onChange {
+//	  if (it != null) op(it)
+//	}
 //  }
-
-interface NullableVal<T>: MObservableValNewAndOld<T?> {
-  fun onNonNullChange(op: (T & Any)->Unit) = apply {
-	onChange {
-	  if (it != null) op(it)
-	}
-  }
-}
+//}
 
 
 interface FXBackedPropBase {
   val isFXBound: Boolean
 }
 
-interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
+interface WritableMObservableVal<T>: MObservableValNewAndOld<T>, BindableValue<T> {
 
 
   override var value: T
 
-  var boundTo: MObservableROPropBase<out T>?
+  //  var boundTo: MObservableROPropBase<out T>?
 
-  fun cleanBind(other: MObservableROPropBase<out T>) {
-	unbind()
-	bind(other)
-  }
+  //  fun cleanBind(other: MObservableROPropBase<out T>) {
+  //	unbind()
+  //	bind(other)
+  //  }
 
-  val isBound get() = boundTo != null
-  fun bind(other: MObservableROPropBase<out T>) {
-	require(!isBound)
-	require((this as? FXBackedPropBase)?.isFXBound != true)
+  //  val isBound get() = boundTo != null
 
-	val recursiveDeps: List<WritableMObservableVal<*>> = (other as? BindableProperty<*>?)?.recurse {
-	  it.boundedProps.filterIsInstance<BindableProperty<*>>()
-	}?.toList() ?: listOf()
-
-
-	require(this !in recursiveDeps)
-
-	this.value = other.value
-	boundTo = other
-	other.addBoundedProp(this)
-  }
-
-  fun unbind() {
-	boundTo?.removeBoundedProp(this)
-	boundTo = null
-  }
-
-  fun unbindBidirectional() {
-	(boundTo as? WritableMObservableVal<*>)?.unbind()
-	unbind()
-  }
-
-  fun bindBidirectional(other: WritableMObservableVal<T>) {
-	this.value = other.value
-	other.addBoundedProp(this)
-	addBoundedProp(other)
-  }
+  //
+  //  fun bind(other: MObservableROPropBase<out T>) {
+  //	require(!isBound)
+  //	require((this as? FXBackedPropBase)?.isFXBound != true)
+  //
+  //
+  //	val recursiveDeps: List<WritableMObservableVal<*>> = (other as? WritableMObservableVal<*>?)?.chain {
+  //	  (it as? WritableMObservableVal<*>)?.boundTo as? WritableMObservableVal<*>
+  //	}?.toList() ?: listOf()
+  //
+  //
+  //	require(this !in recursiveDeps)
+  //
+  //	value = other.value
+  //
+  //
+  //	other.onChange {
+  //	  value = it
+  //	}
+  //
+  //	other.addBoundedProp(this)
+  //
+  //	boundTo = other
+  //  }
+  //
+  //  fun unbind() {
+  //	boundTo?.removeBoundedProp(this)
+  //	boundTo = null
+  //  }
+  //
+  //  fun unbindBidirectional() {
+  //	(boundTo as? WritableMObservableVal<*>)?.unbind()
+  //	unbind()
+  //  }
+  //
+  //  fun bindBidirectional(other: WritableMObservableVal<T>) {
+  //	this.value = other.value
+  //	other.addBoundedProp(this)
+  //	addBoundedProp(other)
+  //  }
 
   operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: T) {
 	value = newValue
@@ -126,10 +154,8 @@ interface WritableMObservableVal<T>: MObservableValNewAndOld<T> {
 }
 
 
-abstract class MObservableROValBase<T, L: ValueListener<T>>: MObservableImpl<L, (T)->Boolean>(),
-
-
-															 MObservableVal<T, L> {
+abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableImpl<U, L>(),
+																				   MObservableVal<T, U, L> {
 
 
   infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
@@ -151,59 +177,33 @@ abstract class MObservableROValBase<T, L: ValueListener<T>>: MObservableImpl<L, 
 
   override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
 
-  internal val boundedProps = mutableSetOf<WritableMObservableVal<in T>>()
-
-  override fun addBoundedProp(p: WritableMObservableVal<in T>) {
-	boundedProps += p
-  }
-
-  override fun removeBoundedProp(p: WritableMObservableVal<in T>) {
-	boundedProps -= p
-  }
-
-  final override fun onChangeSimple(listener: ()->Unit) {
-	onChange { listener() }
-  }
-
-  init {
-	onChangeSimple {
-	  val v = value
-	  boundedProps.forEach {
-		if (it.value != v) it.value = v
-	  }
-	}
-  }
-
   operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
 	return value
   }
 
-  final override fun onChangeOnce(listener: L) = onChangeUntil({ true }, listener)
-
-
 }
 
 
-abstract class MObservableROPropBase<T>: MObservableROValBase<T, ValueListener<T>>(), MObservableValNewAndOld<T> {
+abstract class MObservableROPropBase<T>: MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T>>(),
+										 MObservableValNewAndOld<T> {
 
-  protected fun notifyListeners(old: T, new: T) {
-	/*gotta make a new list to prevent concurrent mod error if listeners list is edited in a listener*/
-	listeners.toList().forEach {
-	  it.invokeWith(old, new)
+
+  fun <R> lazyBinding(
+	vararg dependencies: MObservableVal<*, *, *>,
+	op: (T)->R,
+  ): MyBinding<R> {
+	val prop = this
+	return MyBinding { op(value) }.apply {
+	  prop.onChange {
+		invalidate()
+	  }
+	  dependencies.forEach {
+		it.onChange {
+		  invalidate()
+		}
+	  }
 	}
   }
-
-
-  final override fun onChangeUntil(until: (T)->Boolean, listener: ValueListener<T>) {
-	var realListener: ValueListener<T>? = null
-	realListener = OldAndNewListener { old, t: T ->
-	  listener.invokeWith(old, t)
-	  if (until(t)) listeners -= realListener!!
-	}
-	listeners += realListener
-  }
-
-
 }
 
 open class ReadOnlyBindableProperty<T>(value: T): MObservableROPropBase<T>() {
@@ -213,7 +213,7 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROPropBase<T>() {
 	  if (v != field) {
 		val old = v
 		field = v
-		notifyListeners(old, v)
+		notifyListeners(ValueChange(old, v))
 	  }
 	}
 
@@ -240,16 +240,22 @@ infix fun <T> WritableMObservableVal<T>.notEqNow(value: MObservableROPropBase<T>
 }
 
 
-open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T> {
-  override var boundTo: MObservableROPropBase<out T>? = null
+open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value), WritableMObservableVal<T>,
+										  BindableValue<T> {
   override var value = value
 	set(v) {
 	  if (v != field) {
 		val old = v
 		field = v
-		notifyListeners(old, v)
+		notifyListeners(ValueChange(old, v))
 	  }
 	}
+
+  final override val bindManager = BindableValueHelper(this)
+  override fun bind(source: MObservableVal<T, *, *>) = bindManager.bind(source)
+  override fun bindBidirectional(source: WritableMObservableVal<T>) = bindManager.bindBidirectional(source)
+  override var theBind by bindManager::theBind
+  override fun unbind() = bindManager.unbind()
 }
 
 
@@ -264,7 +270,8 @@ fun iProp(i: Int) = BindableProperty(i)
 fun ValProp<B>.whenTrueOnce(op: ()->Unit) {
   if (value) op()
   else {
-	onChangeUntil({ it }, NewListener {
+	onChange { op() }
+	onChangeUntil({ it }, {
 	  if (it) op()
 	})
   }

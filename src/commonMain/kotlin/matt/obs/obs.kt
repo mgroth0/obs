@@ -1,51 +1,46 @@
 package matt.obs
 
-import matt.obs.prop.listen.MyListener
+import matt.obs.listen.MyListener
+import matt.obs.listen.update.Update
 import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ObservableDSL
 
-@ObservableDSL sealed interface MObservable<L: MyListener> {
+@ObservableDSL interface MObservable<L: MyListener<*>> {
 
-  fun addListener(listener: L)
-  fun onChange(op: ()->Unit): L
-  fun removeListener(listener: MyListener): Boolean
+  fun addListener(listener: L): L
+  fun removeListener(listener: MyListener<*>): Boolean
 
 }
 
-abstract class MObservableImpl<L: MyListener> internal constructor(): MObservable<L> {
+abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor(): MObservable<L> {
 
   private val listeners = mutableListOf<L>()
 
   @Synchronized
-  final override fun addListener(listener: L) {
+  final override fun addListener(listener: L): L {
 	listeners += listener
 	require(listener.currentObservable == null)
 	listener.currentObservable = this
+	return listener
   }
 
   @Synchronized
-  protected fun notifyListeners() {
-	listeners.forEach {
+  protected fun notifyListeners(update: U) {
+	/*gotta make a new list to prevent concurrent mod error if listeners list is edited in a listener*/
+	listeners.toList().forEach {
 	  if (it.preInvocation()) {
-		it.notify()
+		it.notify(update)
 		it.postInvocation()
 	  }
 	}
   }
 
-  protected abstract fun L.notify()
-
-
   @Synchronized
-  override fun removeListener(listener: MyListener): Boolean {
+  override fun removeListener(listener: MyListener<*>): Boolean {
 	val b = listeners.remove(listener)
 	listener.currentObservable = null
 	return b
-  }
-
-  fun onChangeOnce(op: ()->Unit) = onChange(op).apply {
-	removeAfterInvocation = true
   }
 
 

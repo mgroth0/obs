@@ -2,36 +2,65 @@ package matt.obs.oobj
 
 import matt.obs.MObservable
 import matt.obs.MObservableImpl
+import matt.obs.bind.MyBinding
+import matt.obs.listen.ContextListener
+import matt.obs.listen.update.ContextUpdate
+import matt.obs.prop.MObservableVal
+import matt.obs.prop.ValProp
+import matt.obs.prop.VarProp
 
 
+interface MObservableObject<T>: MObservable<ContextListener<T>> {
 
-interface MObservableObject<T>: MObservable<T.()->Unit, T.()->Boolean> {
-  override fun onChangeSimple(listener: ()->Unit) {
-	onChange {
-	  listener()
+  @Suppress("UNCHECKED_CAST") val uncheckedThis get() = this as T
+
+  fun onChange(op: T.()->Unit) = addListener(ContextListener<T>(uncheckedThis) {
+	op()
+  })
+
+  fun <R> lazyBinding(
+	vararg dependencies: MObservableVal<*, *, *>,
+	op: T.()->R,
+  ): MyBinding<R> {
+	return MyBinding { uncheckedThis.op() }.apply {
+	  this@MObservableObject.onChange {
+		invalidate()
+	  }
+	  dependencies.forEach {
+		it.onChange {
+		  invalidate()
+		}
+	  }
+	}
+  }
+
+  fun <R> binding(
+	vararg dependencies: MObservableVal<T, *, *>,
+	debug: Boolean = false,
+	op: T.()->R,
+  ): ValProp<R> {
+	return VarProp(uncheckedThis.op()).apply {
+	  val b = this
+	  this@MObservableObject.onChange {
+		if (debug) println("MObservableObject changed: ${this@MObservableObject}")
+		b.value = this@MObservableObject.uncheckedThis.op()
+	  }
+	  dependencies.forEach {
+		it.onChange {
+		  if (debug) println("dep changed: $it")
+		  b.value = this@MObservableObject.uncheckedThis.op()
+		}
+	  }
 	}
   }
 }
 
-abstract class MObservableObjectImpl<T: MObservableObjectImpl<T>> internal constructor(): MObservableImpl<T.()->Unit, T.()->Boolean>(),
+class ObservableObject<T: ObservableObject<T>> internal constructor():
+  MObservableImpl<ContextUpdate, ContextListener<T>>(),
   MObservableObject<T> {
-  final override fun onChangeUntil(until: T.()->Boolean, listener: T.()->Unit) {
-	var realListener: (T.()->Unit)? = null
-	realListener = {
-	  listener()
-	  if (until()) listeners -= realListener!!
-	}
-	listeners += realListener
+
+  fun invalidate() {
+	notifyListeners(ContextUpdate)
   }
 
-  final override fun onChangeOnce(listener: T.()->Unit) = onChangeUntil({ true }, listener)
-
-  protected fun emitChange() {
-	listeners.forEach {
-	  @Suppress("UNCHECKED_CAST")
-	  it.invoke(this as T)
-	}
-  }
 }
-
-open class ObservableObject<T: ObservableObject<T>>: MObservableObjectImpl<T>()
