@@ -1,6 +1,7 @@
 package matt.obs.bindings.math
 
 import matt.lang.D
+import matt.obs.bind.binding
 import matt.obs.prop.ObsVal
 
 typealias ObsD = ObsVal<D>

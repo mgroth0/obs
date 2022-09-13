@@ -2,6 +2,7 @@ package matt.obs.bindings.bool
 
 import matt.collect.weak.lazyWeakMap
 import matt.lang.B
+import matt.obs.bind.binding
 import matt.obs.prop.ObsVal
 
 typealias ObsB = ObsVal<B>

@@ -1,5 +1,6 @@
 package matt.obs.bindings.comp
 
+import matt.obs.bind.binding
 import matt.obs.prop.ObsVal
 
 

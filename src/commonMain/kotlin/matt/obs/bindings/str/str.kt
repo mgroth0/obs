@@ -2,6 +2,7 @@ package matt.obs.bindings.str
 
 import matt.lang.S
 import matt.obs.prop.ObsVal
+import matt.obs.bind.binding
 
 typealias ObsS = ObsVal<S>
 
