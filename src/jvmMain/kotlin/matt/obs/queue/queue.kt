@@ -1,8 +1,8 @@
 package matt.obs.queue
 
 import matt.obs.col.InternallyBackedOCollection
-import matt.obs.map.change.AddAtEnd
-import matt.obs.map.change.RemoveAt
+import matt.obs.col.change.AddAtEnd
+import matt.obs.col.change.RemoveAt
 import java.util.Queue
 
 fun <E> Queue<E>.wrapInObservableQueue(): ObservableQueue<E> {

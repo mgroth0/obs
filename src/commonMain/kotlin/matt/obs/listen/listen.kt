@@ -12,7 +12,6 @@ import matt.obs.listen.update.Update
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.map.change.MapChange
-import matt.obs.map.change.MapChangeTodo
 
 @DslMarker
 annotation class ListenerDSL
@@ -79,7 +78,7 @@ class CollectionListener<E>(internal val invoke: CollectionListener<E>.(change: 
   override fun notify(update: CollectionUpdate<E>) = invoke(update.change)
 }
 class MapListener<K,V>(internal val invoke: MapListener<K,V>.(change: MapChange<K,V>)->Unit):
-  MyListener<MapUpdate<k,V>>() {
+  MyListener<MapUpdate<K,V>>() {
   override fun notify(update: MapUpdate<K,V>) = invoke(update.change)
 }
 

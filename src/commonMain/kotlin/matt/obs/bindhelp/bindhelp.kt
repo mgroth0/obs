@@ -8,7 +8,7 @@ import matt.model.recursionblocker.RecursionBlocker
 import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
 import matt.obs.col.InternallyBackedOCollection
-import matt.obs.map.change.mirror
+import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicROObservableList
 import matt.obs.listen.MyListener
 import matt.obs.prop.BindableProperty
@@ -52,7 +52,7 @@ class BindableListImpl<E>(private val list: MutableList<E>): BindableImpl(), Bin
 	(list as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
 	val listener = source.onChange {
 	  (list as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
-	  matt.obs.map.change.mirror(it, converter)
+	  list.mirror(it, converter)
 	  (list as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
 	}
 	theBind = TheBind(source = source, listener = listener)
