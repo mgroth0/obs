@@ -1,6 +1,6 @@
 package matt.obs.col
 
-import matt.model.keypass.KeyPass
+import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bindhelp.BindableList

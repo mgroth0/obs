@@ -2,7 +2,7 @@ package matt.obs.map
 
 import matt.lang.ILLEGAL
 import matt.log.warn
-import matt.model.keypass.KeyPass
+import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.listen.MapListener

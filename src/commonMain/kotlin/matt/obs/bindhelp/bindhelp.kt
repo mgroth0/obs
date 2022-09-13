@@ -4,7 +4,7 @@ import matt.lang.setAll
 import matt.lang.weak.WeakRef
 import matt.lang.weak.getValue
 import matt.model.Converter
-import matt.model.recursionblocker.RecursionBlocker
+import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
 import matt.obs.col.InternallyBackedOCollection

@@ -2,7 +2,7 @@
 
 package matt.obs.prop.cast
 
-import matt.model.recursionblocker.RecursionBlocker
+import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.Var
 

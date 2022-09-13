@@ -2,17 +2,17 @@ package matt.obs.col.olist.mappedlist
 
 
 import matt.model.Converter
-import matt.model.recursionblocker.RecursionBlocker
+import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.col.olist.BasicROObservableList
 import matt.obs.col.olist.BasicWritableObservableList
 
 //fun <O, E> ObservableList<O>.toMappedList(mapFun: (O)->E) = MappedList(this.createImmutableWrapper(), mapFun)
-//fun <O, E> ObservableList<O>.toSyncedList(converter: Converter<O, E>) = SyncedList(this.createMutableWrapper(), converter)
+//fun <O, E> ObservableList<O>.toSyncedList(converter: matt.model.convert.Converter<O, E>) = SyncedList(this.createMutableWrapper(), converter)
 
 //fun <O, E> MyObservableListWrapperPlusList<O>.toMappedList(mapFun: (O)->E) = MappedList(this, mapFun)
-//fun <O, E> MyObservableListWrapperPlusMutableList<O>.toSyncedList(converter: Converter<O, E>) = SyncedList(this, converter)
+//fun <O, E> MyObservableListWrapperPlusMutableList<O>.toSyncedList(converter: matt.model.convert.Converter<O, E>) = SyncedList(this, converter)
 
 fun <S, T> BasicROObservableList<S>.toMappedList(mapFun: (S)->T): BasicROObservableList<T> {
   val r = BasicObservableListImpl(map(mapFun))
@@ -112,7 +112,7 @@ fun <S, T> BasicWritableObservableList<S>.toSyncedList(converter: Converter<S, T
 //
 //  constructor(
 //	sourceList: BasicWritableObservableList<O>,
-//	converter: Converter<O, E>
+//	converter: matt.model.convert.Converter<O, E>
 //  ): this(
 //	sourceList,
 //	{ converter.convertToB(it) },
