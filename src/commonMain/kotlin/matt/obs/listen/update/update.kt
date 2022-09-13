@@ -18,3 +18,4 @@ class ValueChange<T>(internal val old: T, new: T): NewValueUpdate<T>(new)
 class CollectionUpdate<E>(internal val change: CollectionChange<E>): Update
 
 object ContextUpdate: Update
+object ObsHolderUpdate: Update

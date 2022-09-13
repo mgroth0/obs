@@ -1,14 +1,15 @@
 package matt.obs.col.oset
 
 import matt.collect.itr.MutableIteratorWithSomeMemory
-import matt.obs.col.ObservableCollectionImpl
+import matt.obs.col.BasicOCollection
+import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.AddAtEnd
 import matt.obs.col.change.Clear
 import matt.obs.col.change.MultiAddAtEnd
 import matt.obs.col.change.RemoveElement
 import matt.obs.col.change.RemoveElements
 import matt.obs.col.change.RetainAll
-import matt.obs.requireNotObservable
+import matt.obs.fx.requireNotObservable
 
 
 fun <E> Collection<E>.toBasicObservableSet(): BasicObservableSet<E> {
@@ -23,8 +24,8 @@ fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> {
   return BasicObservableSet(this.toSet())
 }
 
-class BasicObservableSet<E>(private val theSet: MutableSet<E>): ObservableCollectionImpl<E>(),
-														 MutableSet<E> {
+class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBackedOCollection<E>(),
+																MutableSet<E> {
 
 
   constructor(c: Collection<E>): this(c.requireNotObservable().toMutableSet())

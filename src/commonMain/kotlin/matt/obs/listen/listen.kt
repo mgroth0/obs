@@ -5,6 +5,7 @@ import matt.obs.MObservable
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ContextUpdate
+import matt.obs.listen.update.ObsHolderUpdate
 import matt.obs.listen.update.Update
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
@@ -77,5 +78,11 @@ class CollectionListener<E>(internal val invoke: CollectionListener<E>.(change: 
 class ContextListener<C>(private val obj: C, private val invocation: C.()->Unit): MyListener<ContextUpdate>() {
   final override fun notify(update: ContextUpdate) {
 	obj.invocation()
+  }
+}
+
+class ObsHolderListener(private val invocation: ()->Unit): MyListener<ObsHolderUpdate>() {
+  final override fun notify(update: ObsHolderUpdate) {
+	invocation()
   }
 }

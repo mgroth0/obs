@@ -1,10 +1,12 @@
 package matt.obs.hold
 
-import matt.obs.MObsBase
+import matt.obs.MObservable
+import matt.obs.listen.ObsHolderListener
 
-interface MObsHolder: MObsBase {
-  val props: List<MObsBase>
-  override fun onChangeSimple(listener: ()->Unit) {
-	props.forEach { it.onChangeSimple { listener() } }
-  }
+interface MObsHolder: MObservable<ObsHolderListener> {
+  val props: List<MObservable<*>>
+
+//  override fun onChange(op: ()->Unit) {
+//	props.forEach { it.onChange( { op() } }
+//  }
 }

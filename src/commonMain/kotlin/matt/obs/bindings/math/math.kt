@@ -1,6 +1,5 @@
 package matt.obs.bindings.math
 
-import matt.obs.bind.binding
 import matt.obs.prop.MObservableROPropBase
 import matt.obs.prop.ReadOnlyBindableProperty
 import matt.obs.prop.ValProp
