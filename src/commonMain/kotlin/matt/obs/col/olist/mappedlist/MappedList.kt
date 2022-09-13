@@ -1,7 +1,7 @@
 package matt.obs.col.olist.mappedlist
 
 
-import matt.model.Converter
+import matt.model.convert.Converter
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl

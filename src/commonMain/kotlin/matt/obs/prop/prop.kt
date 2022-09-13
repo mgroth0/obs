@@ -1,7 +1,7 @@
 package matt.obs.prop
 
 import matt.lang.weak.WeakRef
-import matt.model.Converter
+import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl

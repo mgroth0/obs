@@ -1,6 +1,6 @@
 package matt.obs.bind
 
-import matt.model.Converter
+import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.lazy.DependentValue
 import matt.obs.MObservable
