@@ -2,16 +2,15 @@ package matt.obs.col.olist.dynamic
 
 import matt.lang.setAll
 import matt.obs.MObservable
-import matt.obs.col.olist.ObsList
 import matt.obs.col.olist.MutableObsList
+import matt.obs.col.olist.ObsList
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.invalid.CustomDependencies
-import matt.obs.invalid.CustomInvalidations
 import matt.obs.invalid.DependencyHelper
 import matt.obs.prop.BindableProperty
 
 interface BasicFilteredList<E>: ObsList<E>, CustomDependencies, List<E> {
-  val filter: BindableProperty<((E)->Boolean)?>
+  val predicate: BindableProperty<((E)->Boolean)?>
 }
 
 interface BasicSortedList<E>: ObsList<E>, CustomDependencies, List<E> {
@@ -26,11 +25,11 @@ class DynamicList<E>(
 ): ObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies {
 
 
-  override val filter = BindableProperty(filter)
+  override val predicate = BindableProperty(filter)
   override val comparator = BindableProperty(comparator)
 
   private fun refresh() {
-	target.setAll(source.filter { filter.value?.invoke(it) ?: true }.let {
+	target.setAll(source.filter { predicate.value?.invoke(it) ?: true }.let {
 	  val c = comparator.value
 	  if (c != null) sortedWith(c)
 	  else it
@@ -39,7 +38,7 @@ class DynamicList<E>(
 
   init {
 	refresh()
-	this.filter.observe { refresh() }
+	this.predicate.observe { refresh() }
 	this.comparator.observe { refresh() }
 	source.observe { refresh() }
   }
