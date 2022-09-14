@@ -1,6 +1,5 @@
 package matt.obs.col.olist.map
 
-import matt.log.warn
 import matt.obs.col.change.Addition
 import matt.obs.col.change.Clear
 import matt.obs.col.change.MultiAddition
@@ -12,7 +11,7 @@ import matt.obs.map.BasicOMap
 import matt.obs.map.BasicOMutableMapImpl
 
 fun <V, K> ObsList<V>.toMappedMap(keySelectorFun: (V)->K): BasicOMap<K, V> {
-  warn("this must be limited to sets to work as expected...")
+  /*WARNING/TODO: this must be limited to sets to work as expected...*/
   val map = BasicOMutableMapImpl<K, V>()
   onChange {
 	when (it) {
