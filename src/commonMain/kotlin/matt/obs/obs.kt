@@ -1,6 +1,8 @@
 package matt.obs
 
 import matt.collect.snapshotToPreventConcurrentModification
+import matt.lang.function.MetaFunction
+import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Update
 import kotlin.jvm.Synchronized
@@ -8,12 +10,24 @@ import kotlin.jvm.Synchronized
 @DslMarker annotation class ObservableDSL
 
 @ObservableDSL interface MObservable {
-  fun observe(op: ()->Unit): MyListener<*>
-  fun removeListener(listener: MyListener<*>): Boolean
+  fun observe(op: ()->Unit): Listener
+  fun removeListener(listener: Listener): Boolean
+  fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): Listener {
+	var shouldScheduleAnother = true
+	return observe {
+	  if (shouldScheduleAnother) {
+		shouldScheduleAnother = false
+		scheduleOp {
+		  shouldScheduleAnother = true
+		  op()
+		}
+	  }
+	}
+  }
 }
 
 
-@ObservableDSL interface MListenable<L: MyListener<*>>: MObservable {
+@ObservableDSL interface MListenable<L: Listener>: MObservable {
   fun addListener(listener: L): L
 }
 
@@ -40,7 +54,7 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
   }
 
   @Synchronized
-  override fun removeListener(listener: MyListener<*>): Boolean {
+  override fun removeListener(listener: Listener): Boolean {
 	val b = listeners.remove(listener)
 	listener.currentObservable = null
 	return b

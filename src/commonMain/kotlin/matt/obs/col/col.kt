@@ -27,7 +27,7 @@ abstract class InternallyBackedOCollection<E> internal constructor():
 
   internal val bindWritePass = KeyPass()
   protected fun emitChange(change: CollectionChange<E>) {
-	require (this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)
+	require(this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)
 	notifyListeners(CollectionUpdate((change)))
   }
 
@@ -38,6 +38,8 @@ abstract class InternallyBackedOCollection<E> internal constructor():
 	  }
 	}
   }
+
+
 
 }
 
