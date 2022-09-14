@@ -13,9 +13,7 @@ import matt.obs.col.olist.ObsList
 import matt.obs.listen.MyListener
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.FXBackedPropBase
-import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
-import matt.obs.prop.ValProp
 import matt.obs.prop.Var
 import kotlin.jvm.Synchronized
 
@@ -76,7 +74,7 @@ class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), B
 }
 
 interface BindableValue<T>: Bindable {
-  fun bind(source: MObservableVal<T, *, *>)
+  fun bind(source: ObsVal<out T>)
   fun bindBidirectional(source: Var<T>)
   fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>)
 }
@@ -93,7 +91,7 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	}
   }
 
-  @Synchronized override fun bind(source: MObservableVal<T, *, *>) {
+  @Synchronized override fun bind(source: ObsVal<out T>) {
 	require(this !is FXBackedPropBase || !isFXBound)
 	unbind()
 	wProp setCorrectlyTo { source.value }
