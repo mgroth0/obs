@@ -14,6 +14,7 @@ import matt.obs.listen.MyListener
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.FXBackedPropBase
 import matt.obs.prop.MObservableVal
+import matt.obs.prop.ObsVal
 import matt.obs.prop.ValProp
 import matt.obs.prop.Var
 import kotlin.jvm.Synchronized
@@ -23,6 +24,8 @@ sealed interface Bindable {
   var theBind: ABind?
   fun unbind()
   val isBound: Boolean get() = theBind != null
+  val isBoundUnidirectionally: Boolean get() = theBind is TheBind
+  val isBoundBidirectionally: Boolean get() = theBind is BiTheBind
 }
 
 sealed class BindableImpl: Bindable {
@@ -39,7 +42,7 @@ sealed class BindableImpl: Bindable {
 
 interface BindableList<E>: Bindable {
   fun <S> bind(source: ObsList<S>, converter: (S)->E)
-  fun <S> bind(source: ValProp<S>, converter: (S)->List<E>)
+  fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>)
 }
 
 /*todo: lazily evaluated bound lists!*/
@@ -58,7 +61,7 @@ class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), B
 	theBind = TheBind(source = source, listener = listener)
   }
 
-  @Synchronized override fun <S> bind(source: ValProp<S>, converter: (S)->List<E>) {
+  @Synchronized override fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>) {
 	unbind()
 	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
 	target.setAll(converter(source.value))

@@ -170,7 +170,7 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
   private val bindWritePass = KeyPass()
   override var value = value
 	set(v) {
-	  require(!this.isBound || bindWritePass.isHeld)
+	  require(!this.isBoundUnidirectionally || bindWritePass.isHeld)
 	  if (v != field) {
 		val old = v
 		field = v

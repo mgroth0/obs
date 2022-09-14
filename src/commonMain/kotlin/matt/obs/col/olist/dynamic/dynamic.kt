@@ -10,11 +10,11 @@ import matt.obs.invalid.CustomInvalidations
 import matt.obs.invalid.DependencyHelper
 import matt.obs.prop.BindableProperty
 
-interface BasicFilteredList<E>: ObsList<E>, CustomInvalidations, List<E> {
+interface BasicFilteredList<E>: ObsList<E>, CustomDependencies, List<E> {
   val filter: BindableProperty<((E)->Boolean)?>
 }
 
-interface BasicSortedList<E>: ObsList<E>, CustomInvalidations, List<E> {
+interface BasicSortedList<E>: ObsList<E>, CustomDependencies, List<E> {
   val comparator: BindableProperty<Comparator<in E>?>
 }
 

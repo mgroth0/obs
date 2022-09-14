@@ -20,6 +20,13 @@ infix fun ObsB.and(other: ObsB) = binding(other) {
   it && other.value
 }
 
+infix fun ObsB.and(other: Boolean) = binding {
+  it && other
+}
 infix fun ObsB.or(other: ObsB) = binding(other) {
   it || other.value
+}
+
+infix fun ObsB.or(other: Boolean) = binding {
+  it || other
 }
