@@ -102,6 +102,8 @@ fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
 class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>): BaseBasicWritableOList<E>(list),
 																						List<E> by list {
 
+
+
   constructor(c: Collection<E>): this(c.requireNotObservable().toMutableList())
 
   constructor(): this(mutableListOf())

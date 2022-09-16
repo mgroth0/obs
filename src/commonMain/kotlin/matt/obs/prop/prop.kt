@@ -10,9 +10,11 @@ import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.bindings.bool.ObsB
 import matt.obs.bindings.bool.not
+import matt.obs.listen.Listener
 import matt.obs.listen.NewListener
 import matt.obs.listen.OldAndNewListener
 import matt.obs.listen.ValueListener
+import matt.obs.listen.ValueListenerInter
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
@@ -20,7 +22,7 @@ import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
 
-sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L> {
+sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerInter<T, U>>: MListenable<L> {
   val value: T
 
   fun <R> cast(): MObservableVal<R, *, *> = binding {
@@ -28,7 +30,7 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 	it as R
   }
 
-  override fun observe(op: ()->Unit) = onChange { op() }
+  override fun observe(op: ()->Unit): Listener = onChange { op() }
 
   fun onChange(op: (T)->Unit): L
 
@@ -84,7 +86,7 @@ interface MObservableValNewAndOld<T>: MObservableVal<T, ValueChange<T>, OldAndNe
 
 }
 
-interface MObservableValNewOnly<T>: MObservableVal<T, ValueUpdate<T>, NewListener<T>> {
+interface MObservableValNewOnly<T>: MObservableVal<T, ValueUpdate<T>, ValueListenerInter<T, ValueUpdate<T>>> {
   override fun onChange(op: (T)->Unit) = addListener(NewListener { new ->
 	op(new)
   })
@@ -97,8 +99,8 @@ interface FXBackedPropBase {
 
 typealias Var<T> = WritableMObservableVal<T, *, *>
 
-interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableVal<T, U, L>,
-																				BindableValue<T> {
+interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListenerInter<T, U>>: MObservableVal<T, U, L>,
+																					 BindableValue<T> {
 
 
   override var value: T
@@ -132,14 +134,14 @@ interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: 
   }
 
 
-
 }
 
 
-fun <T,O: Var<T>> O.withNonNullUpdatesFrom(o: ObsVal<out T?>): O = apply {
+fun <T, O: Var<T>> O.withNonNullUpdatesFrom(o: ObsVal<out T?>): O = apply {
   takeNonNullChangesFrom(o)
 }
-fun <T,O: Var<T>> O.withUpdatesFrom(o: ObsVal<out T>): O = apply {
+
+fun <T, O: Var<T>> O.withUpdatesFrom(o: ObsVal<out T>): O = apply {
   takeChangesFrom(o)
 }
 

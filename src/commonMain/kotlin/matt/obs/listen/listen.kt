@@ -2,6 +2,7 @@ package matt.obs.listen
 
 import matt.lang.NEVER
 import matt.lang.ifTrue
+import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.update.CollectionUpdate
@@ -15,20 +16,29 @@ import matt.obs.map.change.MapChange
 
 @DslMarker annotation class ListenerDSL
 
-typealias Listener = MyListener<*>
+interface Listener {
+  var name: String?
+  var removeCondition: (()->Boolean)?
+  var removeAfterInvocation: Boolean
+  fun removeListener(): Boolean
+  fun tryRemovingListener(): Boolean
+}
 
-@ListenerDSL sealed class MyListener<U: Update> {
+interface TypedListener<U>: Listener
 
-  var name: String? = null
 
-  override fun toString() = "${this::class.simpleName} with name=$name"
+@ListenerDSL sealed class MyListener<U: Update>: TypedListener<U> {
 
-  var removeCondition: (()->Boolean)? = null
-  var removeAfterInvocation: Boolean = false
+  override var name: String? = null
+
+  override fun toString() = toStringBuilder("name" to name)
+
+  override var removeCondition: (()->Boolean)? = null
+  override var removeAfterInvocation: Boolean = false
 
   internal var currentObservable: MListenable<*>? = null
-  fun removeListener() = currentObservable!!.removeListener(this)
-  fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
+  override fun removeListener() = currentObservable!!.removeListener(this)
+  override fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
 
 
   internal fun preInvocation(): Boolean {
@@ -56,9 +66,12 @@ internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
   o.addListener(this)
 }
 
+sealed interface ValueListenerInter<T, U: ValueUpdate<T>>: Listener {
+  var until: ((U)->Boolean)?
+}
 
-sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>() {
-  var until: ((U)->Boolean)? = null
+sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>(), ValueListenerInter<T, U> {
+  override var until: ((U)->Boolean)? = null
   final override fun notify(update: U) {
 	subNotify(update)
 	until?.invoke(update)?.ifTrue { removeListener() }
@@ -67,7 +80,15 @@ sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>() {
   abstract fun subNotify(update: U)
 }
 
-class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit): ValueListener<T, ValueUpdate<T>>() {
+sealed class NewOrLessListener<T, U: ValueUpdate<T>>: ValueListener<T, U>(), ValueListenerInter<T, U>
+
+class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit): NewOrLessListener<T, ValueUpdate<T>>(),
+																		   ValueListenerInter<T, ValueUpdate<T>> {
+  override fun subNotify(update: ValueUpdate<T>) = invoke()
+}
+
+class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit): NewOrLessListener<T, ValueUpdate<T>>(),
+																		 ValueListenerInter<T, ValueUpdate<T>> {
   override fun subNotify(update: ValueUpdate<T>) = invoke(update.new)
 }
 

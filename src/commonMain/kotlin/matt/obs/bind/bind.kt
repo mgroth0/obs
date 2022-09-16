@@ -8,7 +8,8 @@ import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.col.BasicOCollection
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
-import matt.obs.listen.NewListener
+import matt.obs.listen.InvalidListener
+import matt.obs.listen.ValueListener
 import matt.obs.listen.update.LazyNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.oobj.MObservableObject
@@ -42,6 +43,7 @@ fun <T, R> ObsVal<T>.deepBinding(propGetter: (T)->ObsVal<R>) = MyBinding(this) {
 }.apply {
   addDependency(this@deepBinding, { propGetter(it.value) })
 }
+
 fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->ObsVal<R>?) = MyBinding(this) {
   propGetter(value)?.value
 }.apply {
@@ -50,8 +52,9 @@ fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->
 
 interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
-abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
-												  MyBindingBase<T>, CustomDependencies {
+abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, ValueListener<T,ValueUpdate<T>>>(),
+												  MyBindingBase<T>,
+												  CustomDependencies {
 
 
   protected val cval = DependentValue(calc)
@@ -69,14 +72,16 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueU
   override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =
 	depHelper.addDependencyWithDeepList(o, deepDependencies)
 
-  override fun <O: ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(o: O, vararg deepDependencies: (O)->MObservable?) = depHelper.addDependencyIgnoringFutureNullOuterChanges(o,*deepDependencies)
+  override fun <O: ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(
+	o: O,
+	vararg deepDependencies: (O)->MObservable?
+  ) = depHelper.addDependencyIgnoringFutureNullOuterChanges(o, *deepDependencies)
 
   override fun removeDependency(o: MObservable) = depHelper.removeDependency(o)
 
 }
 
-class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T):
-  MyBindingBaseImpl<T>(calc) {
+class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBaseImpl<T>(calc) {
 
   init {
 	addDependencies(*dependencies)
@@ -84,12 +89,17 @@ class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T):
 
   override val value: T @Synchronized get() = cval.get()
 
+
+  override fun observe(op: ()->Unit) = addListener(InvalidListener {
+	op()
+  })
+
 }
 
 
 class LazyBindableProp<T>(
   calc: ()->T
-): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewListener<T>> {
+): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLess<T>> {
 
   constructor(t: T): this({ t })
 

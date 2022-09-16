@@ -2,6 +2,7 @@ package matt.obs
 
 import matt.collect.snapshotToPreventConcurrentModification
 import matt.lang.function.MetaFunction
+import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Update
@@ -12,7 +13,7 @@ import kotlin.jvm.Synchronized
 
 @ObservableDSL interface MObservable {
   fun observe(op: ()->Unit): Listener
-  fun removeListener(listener: Listener): Boolean
+  fun removeListener(listener: MyListener<*>): Boolean
 
   /*critical if an observer is receiving a batch of redundant notfications and only needs to act once*/
   fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): Listener {
@@ -39,7 +40,12 @@ import kotlin.jvm.Synchronized
 
 abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor(): MListenable<L> {
 
+  override fun toString() = toStringBuilder(
+	"#listeners" to listeners.size
+  )
+
   private val listeners = mutableListOf<L>()
+
 
 
   @Synchronized
@@ -67,12 +73,17 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 	}
   }
 
-  @Synchronized
-  override fun removeListener(listener: Listener): Boolean {
+//  @Synchronized
+//  override fun removeListener(listener: Listener): Boolean {
+//
+//  }
+
+  override fun removeListener(listener: MyListener<*>): Boolean {
 	val b = listeners.remove(listener)
 	listener.currentObservable = null
 	return b
   }
+
 
 }
 
