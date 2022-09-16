@@ -78,7 +78,7 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 //
 //  }
 
-  override fun removeListener(listener: MyListener<*>): Boolean {
+  override fun removeListener(listener: Listener): Boolean {
 	val b = listeners.remove(listener)
 	listener.currentObservable = null
 	return b

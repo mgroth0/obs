@@ -16,29 +16,21 @@ import matt.obs.map.change.MapChange
 
 @DslMarker annotation class ListenerDSL
 
-interface Listener {
-  var name: String?
-  var removeCondition: (()->Boolean)?
-  var removeAfterInvocation: Boolean
-  fun removeListener(): Boolean
-  fun tryRemovingListener(): Boolean
-}
-
-interface TypedListener<U>: Listener
+typealias Listener = MyListener<*>
 
 
-@ListenerDSL sealed class MyListener<U: Update>: TypedListener<U> {
+@ListenerDSL sealed class MyListener<U: Update> {
 
-  override var name: String? = null
+  var name: String? = null
 
   override fun toString() = toStringBuilder("name" to name)
 
-  override var removeCondition: (()->Boolean)? = null
-  override var removeAfterInvocation: Boolean = false
+  var removeCondition: (()->Boolean)? = null
+  var removeAfterInvocation: Boolean = false
 
   internal var currentObservable: MListenable<*>? = null
-  override fun removeListener() = currentObservable!!.removeListener(this)
-  override fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
+  fun removeListener() = currentObservable!!.removeListener(this)
+  fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
 
 
   internal fun preInvocation(): Boolean {
