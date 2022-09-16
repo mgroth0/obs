@@ -13,7 +13,7 @@ import kotlin.jvm.Synchronized
 
 @ObservableDSL interface MObservable {
   fun observe(op: ()->Unit): Listener
-  fun removeListener(listener: MyListener<*>): Boolean
+  fun removeListener(listener: Listener): Boolean
 
   /*critical if an observer is receiving a batch of redundant notfications and only needs to act once*/
   fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): Listener {

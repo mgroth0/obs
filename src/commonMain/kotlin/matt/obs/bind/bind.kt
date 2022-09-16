@@ -10,7 +10,6 @@ import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.listen.InvalidListener
 import matt.obs.listen.NewOrLessListener
-import matt.obs.listen.ValueListener
 import matt.obs.listen.update.LazyNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.oobj.MObservableObject

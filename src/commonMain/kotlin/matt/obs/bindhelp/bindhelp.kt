@@ -10,7 +10,7 @@ import matt.obs.bind.LazyBindableProp
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.ObsList
-import matt.obs.listen.MyListener
+import matt.obs.listen.Listener
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.FXBackedPropBase
 import matt.obs.prop.ObsVal
@@ -153,7 +153,7 @@ interface ABind {
 
 class TheBind(
   source: MListenable<*>,
-  private val listener: MyListener<*>
+  private val listener: Listener
 ): ABind {
   val source by WeakRef(source)
   override fun cut() {
@@ -164,8 +164,8 @@ class TheBind(
 class BiTheBind(
   val source: Var<*>,
   val target: Var<*>,
-  private val sourceListener: MyListener<*>,
-  private val targetListener: MyListener<*>
+  private val sourceListener: Listener,
+  private val targetListener: Listener
 ): ABind {
 
   override fun cut() {

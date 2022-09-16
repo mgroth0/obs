@@ -9,6 +9,7 @@ import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.ObsList
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.col.olist.basicROObservableListOf
+import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
 import matt.obs.listen.ObsHolderListener
 import matt.obs.prop.BindableProperty
@@ -22,7 +23,7 @@ interface MObsHolder<O: MObservable>: MObservable {
 	subListeners.setAll(observables.map { it.observe(op) })
   }
 
-  override fun removeListener(listener: MyListener<*>): Boolean {
+  override fun removeListener(listener: Listener): Boolean {
 	return (listener as? ObsHolderListener)?.subListeners?.map { it.tryRemovingListener() }?.any { it } ?: false
   }
 }
