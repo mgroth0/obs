@@ -9,6 +9,7 @@ import matt.obs.col.BasicOCollection
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.listen.InvalidListener
+import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.ValueListener
 import matt.obs.listen.update.LazyNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
@@ -52,7 +53,7 @@ fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->
 
 interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
-abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, ValueListener<T,ValueUpdate<T>>>(),
+abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T,ValueUpdate<T>>>(),
 												  MyBindingBase<T>,
 												  CustomDependencies {
 
@@ -99,7 +100,7 @@ class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBase
 
 class LazyBindableProp<T>(
   calc: ()->T
-): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLess<T>> {
+): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T,ValueUpdate<T>>> {
 
   constructor(t: T): this({ t })
 
