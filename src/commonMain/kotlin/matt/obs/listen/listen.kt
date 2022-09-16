@@ -66,12 +66,8 @@ internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
   o.addListener(this)
 }
 
-sealed interface ValueListenerInter<T, U: ValueUpdate<T>>: Listener {
-  var until: ((U)->Boolean)?
-}
-
-sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>(), ValueListenerInter<T, U> {
-  override var until: ((U)->Boolean)? = null
+sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>() {
+  var until: ((U)->Boolean)? = null
   final override fun notify(update: U) {
 	subNotify(update)
 	until?.invoke(update)?.ifTrue { removeListener() }
@@ -80,15 +76,13 @@ sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>(), ValueListener
   abstract fun subNotify(update: U)
 }
 
-sealed class NewOrLessListener<T, U: ValueUpdate<T>>: ValueListener<T, U>(), ValueListenerInter<T, U>
+sealed class NewOrLessListener<T, U: ValueUpdate<T>>: ValueListener<T, U>()
 
-class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit): NewOrLessListener<T, ValueUpdate<T>>(),
-																		   ValueListenerInter<T, ValueUpdate<T>> {
+class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit): NewOrLessListener<T, ValueUpdate<T>>() {
   override fun subNotify(update: ValueUpdate<T>) = invoke()
 }
 
-class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit): NewOrLessListener<T, ValueUpdate<T>>(),
-																		 ValueListenerInter<T, ValueUpdate<T>> {
+class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit): NewOrLessListener<T, ValueUpdate<T>>() {
   override fun subNotify(update: ValueUpdate<T>) = invoke(update.new)
 }
 
