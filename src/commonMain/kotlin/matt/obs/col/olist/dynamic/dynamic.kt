@@ -1,6 +1,7 @@
 package matt.obs.col.olist.dynamic
 
 import matt.lang.setAll
+import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.MObservable
 import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.ObsList
