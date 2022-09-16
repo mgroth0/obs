@@ -12,10 +12,11 @@ import kotlin.jvm.Synchronized
 @DslMarker annotation class ObservableDSL
 
 @ObservableDSL interface MObservable {
+  var nam: String?
   fun observe(op: ()->Unit): Listener
   fun removeListener(listener: Listener): Boolean
 
-  /*critical if an observer is receiving a batch of redundant notfications and only needs to act once*/
+  /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
   fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): Listener {
 	var shouldScheduleAnother = true
 	return observe {
@@ -40,12 +41,14 @@ import kotlin.jvm.Synchronized
 
 abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor(): MListenable<L> {
 
+  override var nam: String? = null
+
   override fun toString() = toStringBuilder(
+	"name" to nam,
 	"#listeners" to listeners.size
   )
 
   private val listeners = mutableListOf<L>()
-
 
 
   @Synchronized
@@ -73,10 +76,10 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 	}
   }
 
-//  @Synchronized
-//  override fun removeListener(listener: Listener): Boolean {
-//
-//  }
+  //  @Synchronized
+  //  override fun removeListener(listener: Listener): Boolean {
+  //
+  //  }
 
   override fun removeListener(listener: Listener): Boolean {
 	val b = listeners.remove(listener)

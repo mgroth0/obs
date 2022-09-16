@@ -149,6 +149,7 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>
 																				   MObservableVal<T, U, L> {
 
 
+
   infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
 	it == other.value
   }

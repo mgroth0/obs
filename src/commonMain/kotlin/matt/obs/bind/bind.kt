@@ -57,6 +57,10 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueU
 												  CustomDependencies {
 
 
+  override fun observe(op: ()->Unit) = addListener(InvalidListener {
+	op()
+  })
+
   protected val cval = DependentValue(calc)
 
   @Synchronized override fun markInvalid() {
@@ -90,9 +94,7 @@ class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBase
   override val value: T @Synchronized get() = cval.get()
 
 
-  override fun observe(op: ()->Unit) = addListener(InvalidListener {
-	op()
-  })
+
 
 }
 

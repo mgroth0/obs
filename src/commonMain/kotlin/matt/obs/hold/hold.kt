@@ -10,7 +10,6 @@ import matt.obs.col.olist.ObsList
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.col.olist.basicROObservableListOf
 import matt.obs.listen.Listener
-import matt.obs.listen.MyListener
 import matt.obs.listen.ObsHolderListener
 import matt.obs.prop.BindableProperty
 import kotlin.contracts.ExperimentalContracts
@@ -36,6 +35,7 @@ interface NamedObsHolder<O: MObservable>: MObsHolder<O> {
 
 
 sealed class ObservableHolderImplBase<O: MObservable>: NamedObsHolder<O> {
+  override var nam: String? = null
   protected val _observables = mutableMapOf<String, O>()
   override fun namedObservables(): Map<String, O> = _observables
   override var verboseObservations: Boolean
