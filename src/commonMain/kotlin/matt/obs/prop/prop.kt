@@ -32,6 +32,7 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 
   fun onChange(op: (T)->Unit): L
 
+
   fun onNonNullChange(op: (T & Any)->Unit) = onChange {
 	if (it != null) op(it)
   }
@@ -68,6 +69,10 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
   infix fun <T> notEqNow(value: ObsVal<T>) = this.value != value.value
 
 
+}
+
+fun <T, O: ObsVal<T>> O.withChangeListener(op: (T)->Unit) = apply {
+  onChange(op)
 }
 
 
@@ -114,8 +119,29 @@ interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: 
   fun readOnly() = binding { it }
 
 
+  fun takeNonNullChangesFrom(o: ObsVal<out T?>) {
+	o.onNonNullChange {
+	  value = it!!
+	}
+  }
+
+  fun takeChangesFrom(o: ObsVal<out T>) {
+	o.onChange {
+	  value = it
+	}
+  }
+
+
+
 }
 
+
+fun <T,O: Var<T>> O.withNonNullUpdatesFrom(o: ObsVal<out T?>): O = apply {
+  takeNonNullChangesFrom(o)
+}
+fun <T,O: Var<T>> O.withUpdatesFrom(o: ObsVal<out T>): O = apply {
+  takeChangesFrom(o)
+}
 
 abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableImpl<U, L>(),
 																				   MObservableVal<T, U, L> {

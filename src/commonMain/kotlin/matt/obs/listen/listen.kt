@@ -13,12 +13,15 @@ import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.map.change.MapChange
 
-@DslMarker
-annotation class ListenerDSL
+@DslMarker annotation class ListenerDSL
 
 typealias Listener = MyListener<*>
-@ListenerDSL
-sealed class MyListener<U: Update> {
+
+@ListenerDSL sealed class MyListener<U: Update> {
+
+  var name: String? = null
+
+  override fun toString() = "${this::class.simpleName} with name=$name"
 
   var removeCondition: (()->Boolean)? = null
   var removeAfterInvocation: Boolean = false
@@ -64,8 +67,7 @@ sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>() {
   abstract fun subNotify(update: U)
 }
 
-class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit):
-  ValueListener<T, ValueUpdate<T>>() {
+class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit): ValueListener<T, ValueUpdate<T>>() {
   override fun subNotify(update: ValueUpdate<T>) = invoke(update.new)
 }
 

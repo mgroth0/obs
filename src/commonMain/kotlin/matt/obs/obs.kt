@@ -5,6 +5,7 @@ import matt.lang.function.MetaFunction
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Update
+import matt.time.UnixTime
 import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ObservableDSL
@@ -26,6 +27,9 @@ import kotlin.jvm.Synchronized
 	  }
 	}
   }
+
+  var verboseObservations: Boolean
+
 }
 
 
@@ -37,6 +41,7 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 
   private val listeners = mutableListOf<L>()
 
+
   @Synchronized
   final override fun addListener(listener: L): L {
 	listeners += listener
@@ -45,12 +50,19 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 	return listener
   }
 
+  override var verboseObservations: Boolean = false
+
   @Synchronized
   protected fun notifyListeners(update: U) {
-	listeners.snapshotToPreventConcurrentModification().forEach {
-	  if (it.preInvocation()) {
-		it.notify(update)
-		it.postInvocation()
+	val start = if (verboseObservations) UnixTime() else null
+	listeners.snapshotToPreventConcurrentModification().forEach { listener ->
+	  if (listener.preInvocation()) {
+		var now = start?.let { UnixTime() - it }
+		now?.let { println("$it\tinvoking $listener for $this") }
+		listener.notify(update)
+		now = start?.let { UnixTime() - it }
+		now?.let { println("$it\tfinished invoking") }
+		listener.postInvocation()
 	  }
 	}
   }

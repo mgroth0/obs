@@ -8,6 +8,7 @@ import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.prop.BindableProperty
+import matt.obs.prop.ObsVal
 
 interface BasicFilteredList<E>: ObsList<E>, CustomDependencies, List<E> {
   val predicate: BindableProperty<((E)->Boolean)?>
@@ -25,6 +26,8 @@ class DynamicList<E>(
 ): ObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies {
 
 
+  override fun toString() = toStringBuilder()
+
   override val predicate = BindableProperty(filter)
   override val comparator = BindableProperty(comparator)
 
@@ -40,12 +43,8 @@ class DynamicList<E>(
 	refresh()
 	this.predicate.observe { refresh() }
 	this.comparator.observe { refresh() }
-	source.observe { refresh() }
-  }
-
-  fun addDependency(o: MObservable) {
-	o.observe {
-	  refresh()
+	source.observe { refresh() }.apply {
+	  name = "listener for ${this@DynamicList}"
 	}
   }
 
@@ -60,6 +59,13 @@ class DynamicList<E>(
 
   override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =
 	dependencyHelper.addDependencyWithDeepList(o, deepDependencies)
+
+  override fun <O: ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(
+	o: O,
+	vararg deepDependencies: (O)->MObservable?
+  ) {
+	return dependencyHelper.addDependencyIgnoringFutureNullOuterChanges(o, *deepDependencies)
+  }
 
   override fun removeDependency(o: MObservable) = dependencyHelper.removeDependency(o)
 

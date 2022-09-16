@@ -20,6 +20,11 @@
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
 	  "cfg" :  "commonMainImplementation",
 	  "path" : ":k:model"
+	},
+	{
+	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
+	  "cfg" :  "commonMainImplementation",
+	  "path" : ":k:time"
 	}
   ]
 }

@@ -5,8 +5,8 @@ import matt.lang.setAll
 import matt.model.delegate.SimpleGetter
 import matt.obs.MObservable
 import matt.obs.col.change.CollectionChange
-import matt.obs.col.olist.ObsList
 import matt.obs.col.olist.MutableObsList
+import matt.obs.col.olist.ObsList
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.col.olist.basicROObservableListOf
 import matt.obs.listen.MyListener
@@ -37,6 +37,13 @@ interface NamedObsHolder<O: MObservable>: MObsHolder<O> {
 sealed class ObservableHolderImplBase<O: MObservable>: NamedObsHolder<O> {
   protected val _observables = mutableMapOf<String, O>()
   override fun namedObservables(): Map<String, O> = _observables
+  override var verboseObservations: Boolean
+	get() = observables.all { it.verboseObservations }
+	set(value) {
+	  observables.forEach {
+		it.verboseObservations = value
+	  }
+	}
 }
 
 open class ObservableObjectHolder<T>: ObservableHolderImplBase<BindableProperty<T>>() {

@@ -36,16 +36,24 @@ fun <E, R> BasicOCollection<E>.binding(
   op: (BasicOCollection<E>)->R,
 ): MyBinding<R> = MyBinding(this, *dependencies) { op(this) }
 
+
 fun <T, R> ObsVal<T>.deepBinding(propGetter: (T)->ObsVal<R>) = MyBinding(this) {
   propGetter(value).value
 }.apply {
   addDependency(this@deepBinding, { propGetter(it.value) })
+}
+fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->ObsVal<R>?) = MyBinding(this) {
+  propGetter(value)?.value
+}.apply {
+  addDependencyIgnoringFutureNullOuterChanges(this@deepBindingIgnoringFutureNullOuterChanges, { propGetter(it.value) })
 }
 
 interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
 abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewListener<T>>(),
 												  MyBindingBase<T>, CustomDependencies {
+
+
   protected val cval = DependentValue(calc)
 
   @Synchronized override fun markInvalid() {
@@ -60,6 +68,8 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueU
 
   override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =
 	depHelper.addDependencyWithDeepList(o, deepDependencies)
+
+  override fun <O: ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(o: O, vararg deepDependencies: (O)->MObservable?) = depHelper.addDependencyIgnoringFutureNullOuterChanges(o,*deepDependencies)
 
   override fun removeDependency(o: MObservable) = depHelper.removeDependency(o)
 
