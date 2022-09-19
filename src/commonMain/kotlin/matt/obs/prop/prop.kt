@@ -100,7 +100,7 @@ interface FXBackedPropBase {
 typealias Var<T> = WritableMObservableVal<T, *, *>
 
 interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableVal<T, U, L>,
-																					 BindableValue<T> {
+																				BindableValue<T> {
 
 
   override var value: T
@@ -147,7 +147,6 @@ fun <T, O: Var<T>> O.withUpdatesFrom(o: ObsVal<out T>): O = apply {
 
 abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableImpl<U, L>(),
 																				   MObservableVal<T, U, L> {
-
 
 
   infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
@@ -223,11 +222,18 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
   override fun unbind() = bindManager.unbind()
 }
 
-fun ObsB.whenTrue(op: ()->Unit) {
+fun ObsB.whenTrue(op: ()->Unit): Listener {
   if (value) op()
+  return onChange {
+	if (it) op()
+  }
 }
-fun ObsB.whenFalse(op: ()->Unit) {
+
+fun ObsB.whenFalse(op: ()->Unit): Listener {
   if (!value) op()
+  return onChange {
+	if (!it) op()
+  }
 }
 
 fun ObsB.whenTrueOnce(op: ()->Unit) {
