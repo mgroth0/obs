@@ -1,6 +1,7 @@
 package matt.obs.col.olist
 
 import matt.collect.itr.MutableListIteratorWithSomeMemory
+import matt.lang.NOT_IMPLEMENTED
 import matt.lang.comparableComparator
 import matt.lang.weak.WeakRef
 import matt.obs.bind.MyBinding
@@ -95,13 +96,8 @@ fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
   BasicObservableListImpl(elements.toList())
 
 
-
-
-
-
 class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>): BaseBasicWritableOList<E>(list),
 																						List<E> by list {
-
 
 
   constructor(c: Collection<E>): this(c.requireNotObservable().toMutableList())
@@ -150,17 +146,19 @@ class BasicObservableListImpl<E> private constructor(private val list: MutableLi
 
 	override fun remove() {
 	  super.remove()
-	  emitChange(RemoveAt(list, lastReturned!!, lastIndex))
+	  emitChange(RemoveAt(list, lastReturned!!, nextIndex() - 1))
 	}
 
 	override fun add(element: E) {
 	  super.add(element)
-	  emitChange(AddAt(list, element, lastIndex))
+	  emitChange(AddAt(list, element, nextIndex() - 1))
 	}
 
 	override fun set(element: E) {
 	  super.set(element)
-	  emitChange(ReplaceAt(list, lastReturned!!, element, index = lastIndex))
+	  NOT_IMPLEMENTED /*would need to track whether last call was a next() or a previous()*/
+	  @Suppress("UNREACHABLE_CODE")
+	  emitChange(ReplaceAt(list, lastReturned!!, element, index = -99999999))
 	}
   }
 
@@ -178,6 +176,7 @@ class BasicObservableListImpl<E> private constructor(private val list: MutableLi
   }
 
   override fun removeAt(index: Int): E {
+	require(index >= 0)
 	val e = list.removeAt(index)
 	emitChange(RemoveAt(list, e, index))
 	return e
