@@ -164,7 +164,7 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>
   infix fun neq(other: Any?) = eq(other).not()
 
   val isNull by lazy { eq(null) }
-  val notNull by lazy { isNull.not() }
+  val isNotNull by lazy { isNull.not() }
 
 
   override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
@@ -221,6 +221,13 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 
   override var theBind by bindManager::theBind
   override fun unbind() = bindManager.unbind()
+}
+
+fun ObsB.whenTrue(op: ()->Unit) {
+  if (value) op()
+}
+fun ObsB.whenFalse(op: ()->Unit) {
+  if (!value) op()
 }
 
 fun ObsB.whenTrueOnce(op: ()->Unit) {
