@@ -132,8 +132,14 @@ interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: 
 	  value = it
 	}
   }
+  fun takeChangesFromWhen(o: ObsVal<out T>,predicate: () -> Boolean) {
+	o.onChange {
+	  if (predicate()) {
+		value = it
+	  }
 
-
+	}
+  }
 }
 
 
@@ -143,6 +149,9 @@ fun <T, O: Var<T>> O.withNonNullUpdatesFrom(o: ObsVal<out T?>): O = apply {
 
 fun <T, O: Var<T>> O.withUpdatesFrom(o: ObsVal<out T>): O = apply {
   takeChangesFrom(o)
+}
+fun <T, O: Var<T>> O.withUpdatesFromWhen(o: ObsVal<out T>, predicate: () -> Boolean): O = apply {
+  takeChangesFromWhen(o,predicate)
 }
 
 abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableImpl<U, L>(),

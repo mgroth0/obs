@@ -18,6 +18,7 @@ import matt.obs.prop.MObservableValNewOnly
 import matt.obs.prop.ObsVal
 import matt.obs.prop.Var
 import matt.obs.prop.WritableMObservableVal
+import kotlin.contracts.ExperimentalContracts
 import kotlin.jvm.Synchronized
 
 
@@ -52,9 +53,10 @@ fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->
 
 interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
-abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T,ValueUpdate<T>>>(),
-												  MyBindingBase<T>,
-												  CustomDependencies {
+abstract class MyBindingBaseImpl<T>(calc: ()->T):
+  MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>>>(),
+  MyBindingBase<T>,
+  CustomDependencies {
 
 
   override fun observe(op: ()->Unit) = addListener(InvalidListener {
@@ -62,6 +64,7 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueU
   })
 
   protected val cval = DependentValue(calc)
+  var stopwatch by cval::stopwatch
 
   @Synchronized override fun markInvalid() {
 	cval.markInvalid()
@@ -83,16 +86,19 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T): MObservableROValBase<T, ValueU
 
   override fun removeDependency(o: MObservable) = depHelper.removeDependency(o)
 
+
+
 }
 
+@OptIn(ExperimentalContracts::class)
 class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBaseImpl<T>(calc) {
 
   init {
 	addDependencies(*dependencies)
   }
 
-  override val value: T @Synchronized get() = cval.get()
-
+  override val value: T
+	@Synchronized get() =cval.get()
 
 
 
@@ -101,7 +107,7 @@ class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBase
 
 class LazyBindableProp<T>(
   calc: ()->T
-): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T,ValueUpdate<T>>> {
+): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>>> {
 
   constructor(t: T): this({ t })
 
