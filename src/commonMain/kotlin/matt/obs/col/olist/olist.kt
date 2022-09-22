@@ -146,12 +146,12 @@ class BasicObservableListImpl<E> private constructor(private val list: MutableLi
 
 	override fun remove() {
 	  super.remove()
-	  emitChange(RemoveAt(list, lastReturned!!, nextIndex() - 1))
+	  emitChange(RemoveAt(list, lastReturned!!, currentIndex))
 	}
 
 	override fun add(element: E) {
 	  super.add(element)
-	  emitChange(AddAt(list, element, nextIndex() - 1))
+	  emitChange(AddAt(list, element, currentIndex))
 	}
 
 	override fun set(element: E) {
