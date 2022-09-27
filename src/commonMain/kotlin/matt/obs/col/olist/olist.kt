@@ -7,6 +7,7 @@ import matt.lang.weak.WeakRef
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableList
 import matt.obs.bindhelp.BindableListImpl
+import matt.obs.bindings.bool.ObsB
 import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.AddAt
@@ -28,6 +29,7 @@ import matt.obs.prop.MObservableVal
 
 interface ObsList<E>: BasicOCollection<E>, BindableList<E>, List<E> {
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
+  fun dynamicallyFiltered(filter: (E)->ObsB): BasicFilteredList<E> = DynamicList(this, dynamicFilter = filter)
 
   fun sorted(comparator: Comparator<in E>? = null): BasicSortedList<E> = DynamicList(this, comparator = comparator)
 
