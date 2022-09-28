@@ -132,7 +132,8 @@ interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: 
 	  value = it
 	}
   }
-  fun takeChangesFromWhen(o: ObsVal<out T>,predicate: () -> Boolean) {
+
+  fun takeChangesFromWhen(o: ObsVal<out T>, predicate: ()->Boolean) {
 	o.onChange {
 	  if (predicate()) {
 		value = it
@@ -150,8 +151,9 @@ fun <T, O: Var<T>> O.withNonNullUpdatesFrom(o: ObsVal<out T?>): O = apply {
 fun <T, O: Var<T>> O.withUpdatesFrom(o: ObsVal<out T>): O = apply {
   takeChangesFrom(o)
 }
-fun <T, O: Var<T>> O.withUpdatesFromWhen(o: ObsVal<out T>, predicate: () -> Boolean): O = apply {
-  takeChangesFromWhen(o,predicate)
+
+fun <T, O: Var<T>> O.withUpdatesFromWhen(o: ObsVal<out T>, predicate: ()->Boolean): O = apply {
+  takeChangesFromWhen(o, predicate)
 }
 
 abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableImpl<U, L>(),
@@ -222,7 +224,7 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
   }
 
   final override val bindManager by lazy { BindableValueHelper(this) }
-  override fun bind(source: ObsVal<out T>) = bindManager.bind(source)
+  override infix fun bind(source: ObsVal<out T>) = bindManager.bind(source)
   override fun bindBidirectional(source: Var<T>) = bindManager.bindBidirectional(source)
   override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
 	bindManager.bindBidirectional(source, converter)
