@@ -1,5 +1,6 @@
 package matt.obs.prop
 
+import matt.obs.prop.proxy.ProxyProp
 import matt.lang.weak.WeakRef
 import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
@@ -112,6 +113,7 @@ interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: 
 
 
   override fun <R> cast() = CastedWritableProp<T, R>(this)
+  fun <R> proxy(converter: Converter<T, R>) = ProxyProp<T, R>(this, converter)
 
 
   infix fun v(value: T) {
