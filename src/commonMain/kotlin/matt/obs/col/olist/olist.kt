@@ -1,6 +1,10 @@
 package matt.obs.col.olist
 
+import matt.collect.fake.FakeMutableList
+import matt.collect.itr.FakeMutableIterator
+import matt.collect.itr.FakeMutableListIterator
 import matt.collect.itr.MutableListIteratorWithSomeMemory
+import matt.lang.ILLEGAL
 import matt.lang.NOT_IMPLEMENTED
 import matt.lang.comparableComparator
 import matt.lang.weak.WeakRef
@@ -51,6 +55,46 @@ interface ObsList<E>: BasicOCollection<E>, BindableList<E>, List<E> {
 fun <E: Comparable<E>> ObsList<E>.sorted(): BasicSortedList<E> =
   DynamicList(this, comparator = comparableComparator())
 
+fun <E> ObsList<E>.toFakeMutableObsList() = FakeMutableObsList(this)
+
+
+class FakeMutableObsList<E>(private val o: ObsList<E>): ObsList<E> by o, MutableObsList<E> {
+  override fun add(element: E) = ILLEGAL
+
+  override fun add(index: Int, element: E) = ILLEGAL
+
+  override fun addAll(index: Int, elements: Collection<E>) = ILLEGAL
+
+  override fun addAll(elements: Collection<E>) = ILLEGAL
+
+  override fun clear() = ILLEGAL
+
+  override fun remove(element: E) = ILLEGAL
+
+  override fun removeAll(elements: Collection<E>) = ILLEGAL
+
+  override fun removeAt(index: Int) = ILLEGAL
+
+  override fun retainAll(elements: Collection<E>) = ILLEGAL
+
+  override fun set(index: Int, element: E) = ILLEGAL
+
+  override fun iterator(): MutableIterator<E> {
+	return FakeMutableIterator(o.iterator())
+  }
+
+  override fun listIterator(): MutableListIterator<E> {
+	return FakeMutableListIterator(o.listIterator())
+  }
+
+  override fun listIterator(index: Int): MutableListIterator<E> {
+	return FakeMutableListIterator(o.listIterator(index))
+  }
+
+  override fun subList(fromIndex: Int, toIndex: Int): MutableList<E> {
+	return FakeMutableList(o.subList(fromIndex, toIndex))
+  }
+}
 
 interface MutableObsList<E>: MutableList<E>, ObsList<E>
 

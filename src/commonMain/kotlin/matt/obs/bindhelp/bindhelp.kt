@@ -7,6 +7,7 @@ import matt.model.convert.Converter
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
+import matt.obs.bind.binding
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.ObsList
@@ -78,6 +79,16 @@ interface BindableValue<T>: Bindable {
   fun bindBidirectional(source: Var<T>)
   fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>)
 }
+
+/*this is the way to have a final interface fun!!!*/
+fun <S, T> BindableValue<T>.bind(source: ObsVal<out S>, converter: Converter<S, T>) =
+  bind(source.binding { converter.convertToB(it) })
+
+fun <S, T> BindableValue<T>.bindInv(source: ObsVal<out S>, converter: Converter<T, S>) =
+  bind(source.binding { converter.convertToA(it) })
+
+fun <S, T> BindableValue<T>.bindBidirectionalInv(source: Var<S>, converter: Converter<S, T>) =
+  bindBidirectional(source, converter.invert())
 
 class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), BindableValue<T> {
 
@@ -152,8 +163,7 @@ interface ABind {
 }
 
 class TheBind(
-  source: MListenable<*>,
-  private val listener: Listener
+  source: MListenable<*>, private val listener: Listener
 ): ABind {
   val source by WeakRef(source)
   override fun cut() {
@@ -162,10 +172,7 @@ class TheBind(
 }
 
 class BiTheBind(
-  val source: Var<*>,
-  val target: Var<*>,
-  private val sourceListener: Listener,
-  private val targetListener: Listener
+  val source: Var<*>, val target: Var<*>, private val sourceListener: Listener, private val targetListener: Listener
 ): ABind {
 
   override fun cut() {

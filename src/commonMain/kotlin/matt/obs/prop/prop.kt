@@ -1,6 +1,5 @@
 package matt.obs.prop
 
-import matt.obs.prop.proxy.ProxyProp
 import matt.lang.weak.WeakRef
 import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
@@ -19,6 +18,7 @@ import matt.obs.listen.ValueListener
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
+import matt.obs.prop.proxy.ProxyProp
 import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
@@ -113,7 +113,9 @@ interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: 
 
 
   override fun <R> cast() = CastedWritableProp<T, R>(this)
-  fun <R> proxy(converter: Converter<T, R>) = ProxyProp<T, R>(this, converter)
+  fun <R> proxy(converter: Converter<T, R>) = ProxyProp(this, converter)
+
+  fun <R> proxyInv(converter: Converter<R, T>) = ProxyProp(this, converter.invert())
 
 
   infix fun v(value: T) {
