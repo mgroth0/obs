@@ -101,5 +101,5 @@ class ContextListener<C>(private val obj: C, private val invocation: C.()->Unit)
 
 class ObsHolderListener: MyListener<ObsHolderUpdate>() {
   internal val subListeners = mutableListOf<MyListener<*>>()
-  final override fun notify(update: ObsHolderUpdate) = NEVER
+  override fun notify(update: ObsHolderUpdate) = NEVER
 }

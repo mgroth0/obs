@@ -116,9 +116,9 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	unbind()
 	source.unbind()
 	if (!checkEquality || source.value != wProp.value) {
-	  println("checkEquality=$checkEquality")
-	  println("source.value=${source.value}")
-	  println("wProp.value=${wProp.value}")
+//	  println("checkEquality=$checkEquality")
+//	  println("source.value=${source.value}")
+//	  println("wProp.value=${wProp.value}")
 	  wProp setCorrectlyTo { source.value }
 	}
 
