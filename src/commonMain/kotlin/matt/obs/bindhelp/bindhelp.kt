@@ -76,7 +76,7 @@ class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), B
 
 interface BindableValue<T>: Bindable {
   fun bind(source: ObsVal<out T>)
-  fun bindBidirectional(source: Var<T>)
+  fun bindBidirectional(source: Var<T>, checkEquality: Boolean = false)
   fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>)
 }
 
@@ -112,20 +112,30 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	theBind = TheBind(source = source, listener = listener)
   }
 
-  @Synchronized override fun bindBidirectional(source: Var<T>) {
+  @Synchronized override fun bindBidirectional(source: Var<T>, checkEquality: Boolean) {
 	unbind()
 	source.unbind()
-	wProp setCorrectlyTo { source.value }
+	if (!checkEquality || source.value != wProp.value) {
+	  println("checkEquality=$checkEquality")
+	  println("source.value=${source.value}")
+	  println("wProp.value=${wProp.value}")
+	  wProp setCorrectlyTo { source.value }
+	}
 
 	val rBlocker = RecursionBlocker()
 	val sourceListener = source.observe {
-	  rBlocker.with {
-		wProp setCorrectlyTo { source.value }
+	  if (!checkEquality || source.value != wProp.value) {
+		rBlocker.with {
+		  wProp setCorrectlyTo { source.value }
+		}
 	  }
+
 	}
 	val targetListener = wProp.observe {
-	  rBlocker.with {
-		source setCorrectlyTo { wProp.value }
+	  if (!checkEquality || source.value != wProp.value) {
+		rBlocker.with {
+		  source setCorrectlyTo { wProp.value }
+		}
 	  }
 	}
 

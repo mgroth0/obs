@@ -229,7 +229,9 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 
   final override val bindManager by lazy { BindableValueHelper(this) }
   override infix fun bind(source: ObsVal<out T>) = bindManager.bind(source)
-  override fun bindBidirectional(source: Var<T>) = bindManager.bindBidirectional(source)
+  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean) =
+	bindManager.bindBidirectional(source, checkEquality = checkEquality)
+
   override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
 	bindManager.bindBidirectional(source, converter)
 
