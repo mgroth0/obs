@@ -18,7 +18,7 @@
 	},
 	{
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
-	  "cfg" :  "commonMainImplementation",
+	  "cfg" :  "commonMainApi",
 	  "path" : ":k:model"
 	},
 	{
