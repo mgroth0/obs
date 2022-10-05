@@ -13,7 +13,7 @@ operator fun ObsI.rangeTo(other: Int): Sequence<ObsI> = value.rangeTo(other).asS
 operator fun ObsI.rangeTo(other: Long): Sequence<ObsL> = value.rangeTo(other).asSequence().map(::BindableProperty)
 
 
-operator fun ObsL.rangeTo(other: ObsL): Sequence<ObsL> = value.rangeTo(other.value).asSequence().map(::BindableProperty)
+/*operator fun ObsL.rangeTo(other: ObsL): Sequence<ObsL> = value.rangeTo(other.value).asSequence().map(::BindableProperty)*/
 
 operator fun ObsL.rangeTo(other: Long): Sequence<ObsL> = value.rangeTo(other).asSequence().map(::BindableProperty)
 
