@@ -122,6 +122,10 @@ abstract class BaseBasicWritableOList<E>(list: MutableList<E>): InternallyBacked
 }
 
 
+fun <E> Array<E>.toBasicObservableList(): BasicObservableListImpl<E> {
+  return BasicObservableListImpl(toList())
+}
+
 fun <E> Collection<E>.toBasicObservableList(): BasicObservableListImpl<E> {
   return BasicObservableListImpl(this)
 }
