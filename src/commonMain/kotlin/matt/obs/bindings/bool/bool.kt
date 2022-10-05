@@ -30,3 +30,11 @@ infix fun ObsB.or(other: ObsB) = binding(other) {
 infix fun ObsB.or(other: Boolean) = binding {
   it || other
 }
+
+infix fun ObsB.xor(other: ObsB) = binding(other) {
+  it xor other.value
+}
+
+infix fun ObsB.xor(other: Boolean) = binding {
+  it xor other
+}
