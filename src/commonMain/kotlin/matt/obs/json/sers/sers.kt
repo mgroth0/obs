@@ -44,7 +44,7 @@ class BasicObservableListImplSerializer<E: Any>(val serializer: KSerializer<in E
 }
 
 
-abstract class JsonObjectFXSerializer<T: NamedObsHolder<*>>(override val cls: KClass<T>): JsonObjectSerializer<T>(cls) {
+abstract class JsonObjectFXSerializer<T: NamedObsHolder<*>>(val cls: KClass<T>): JsonObjectSerializer<T>(cls) {
   open val miniSerializers: List<MySerializer<*>> = listOf()
   final override fun serialize(value: T) = jsonObj(
 	value.namedObservables(),
