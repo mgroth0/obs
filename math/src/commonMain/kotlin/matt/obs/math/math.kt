@@ -20,8 +20,8 @@ fun <N: Num> reduction(vararg values: ObsVal<N>, op: (Array<out ObsVal<N>>)->N):
 }
 
 
-fun <N: Number> ObsNum.asInt() = binding { it.toInt() }
-fun <N: Number> ObsNum.asLong() = binding { it.toLong() }
-fun <N: Number> ObsNum.asShort() = binding { it.toShort() }
-fun <N: Number> ObsNum.asFloat() = binding { it.toFloat() }
-fun <N: Number> ObsNum.asDouble() = binding { it.toDouble() }
+fun  ObsNum.asInt() = binding { it.toInt() }
+fun  ObsNum.asLong() = binding { it.toLong() }
+fun ObsNum.asShort() = binding { it.toShort() }
+fun  ObsNum.asFloat() = binding { it.toFloat() }
+fun  ObsNum.asDouble() = binding { it.toDouble() }
