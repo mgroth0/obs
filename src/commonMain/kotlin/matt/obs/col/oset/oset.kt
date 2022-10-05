@@ -10,6 +10,7 @@ import matt.obs.col.change.RemoveElements
 import matt.obs.col.change.RetainAll
 import matt.obs.fx.requireNotObservable
 
+typealias ObsSet<E> = BasicObservableSet<E>
 
 fun <E> Collection<E>.toBasicObservableSet(): BasicObservableSet<E> {
   return BasicObservableSet(this)
