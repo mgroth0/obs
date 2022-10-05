@@ -58,6 +58,7 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
   }.apply {
 	this.untilInclusive = { until(it.new) }
   }
+
   fun onChangeUntilExclusive(until: (T)->Boolean, op: (T)->Unit) = onChange {
 	op(it)
   }.apply {
@@ -217,6 +218,13 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 
 
   private val bindWritePass = KeyPass()
+
+  fun setIfDifferent(newValue: T) {
+	if (value != newValue) {
+	  value = newValue
+	}
+  }
+
   override var value = value
 	set(v) {
 	  require(!this.isBoundUnidirectionally || bindWritePass.isHeld)
