@@ -1,5 +1,6 @@
 package matt.obs.prop
 
+import matt.model.value.ValueWrapper
 import matt.lang.weak.WeakRef
 import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
@@ -23,8 +24,8 @@ import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
 
-sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L> {
-  val value: T
+sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L>, ValueWrapper<T> {
+  override val value: T
 
   fun <R> cast(): MObservableVal<R, *, *> = binding {
 	@Suppress("UNCHECKED_CAST")

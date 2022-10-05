@@ -5,9 +5,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import matt.json.ser.JsonArraySerializer
+import matt.json.ser.JsonObjectSerializer
 import matt.json.ser.MySerializer
 import matt.obs.col.olist.BasicObservableListImpl
+import matt.obs.hold.NamedObsHolder
 import matt.obs.prop.BindableProperty
+import kotlin.reflect.KClass
 
 class BindablePropertySerializer<T>(val serializer: KSerializer<T>):
   MySerializer<BindableProperty<T>>(BindableProperty::class) {
@@ -37,4 +40,13 @@ class BasicObservableListImplSerializer<E: Any>(val serializer: KSerializer<in E
 	return JsonArray(value.map { Json.encodeToJsonElement(serializer, it) })
   }
 
+}
+
+
+abstract class JsonObjectFXSerializer<T: NamedObsHolder<*>>(val cls: KClass<T>): JsonObjectSerializer<T>(cls) {
+  open val miniSerializers: List<MySerializer<*>> = listOf()
+  final override fun serialize(value: T) = jsonObj(
+	value.namedObservables(),
+	serializers = miniSerializers
+  )
 }
