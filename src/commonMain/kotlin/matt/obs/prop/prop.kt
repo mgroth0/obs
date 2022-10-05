@@ -272,3 +272,5 @@ fun ObsB.whenTrueOnce(op: ()->Unit) {
 fun Var<Boolean>.toggle() {
   value = !value
 }
+
+fun <A: Any?> A.toVarProp() = VarProp<A>(this)
