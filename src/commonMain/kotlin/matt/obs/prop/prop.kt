@@ -1,9 +1,9 @@
 package matt.obs.prop
 
-import matt.model.value.ValueWrapper
 import matt.lang.weak.WeakRef
 import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
+import matt.model.value.ValueWrapper
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.binding
@@ -53,10 +53,15 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 	}
   }
 
-  fun onChangeUntil(until: (T)->Boolean, op: (T)->Unit) = onChange {
+  fun onChangeUntilInclusive(until: (T)->Boolean, op: (T)->Unit) = onChange {
 	op(it)
   }.apply {
-	this.until = { until(it.new) }
+	this.untilInclusive = { until(it.new) }
+  }
+  fun onChangeUntilExclusive(until: (T)->Boolean, op: (T)->Unit) = onChange {
+	op(it)
+  }.apply {
+	this.untilExclusive = { until(it.new) }
   }
 
 
@@ -257,7 +262,7 @@ fun ObsB.whenFalse(op: ()->Unit): Listener {
 fun ObsB.whenTrueOnce(op: ()->Unit) {
   if (value) op()
   else {
-	onChangeUntil({ it }, {
+	onChangeUntilInclusive({ it }, {
 	  if (it) op()
 	})
   }

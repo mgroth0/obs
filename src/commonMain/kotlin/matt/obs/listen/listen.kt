@@ -59,10 +59,15 @@ internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
 }
 
 sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>() {
-  var until: ((U)->Boolean)? = null
+  var untilInclusive: ((U)->Boolean)? = null
+  var untilExclusive: ((U)->Boolean)? = null
   final override fun notify(update: U) {
+	untilExclusive?.invoke(update)?.ifTrue {
+	  removeListener()
+	  return
+	}
 	subNotify(update)
-	until?.invoke(update)?.ifTrue { removeListener() }
+	untilInclusive?.invoke(update)?.ifTrue { removeListener() }
   }
 
   abstract fun subNotify(update: U)
