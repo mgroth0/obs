@@ -21,5 +21,11 @@
 	  "cfg" :  "commonMainImplementation",
 	  "path" : ":k:time"
 	}
+  ,
+	{
+	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
+	  "cfg" :  "commonMainImplementation",
+	  "path" : ":k:reflect"
+	}
   ]
 }

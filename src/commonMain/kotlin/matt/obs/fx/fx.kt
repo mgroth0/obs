@@ -1,9 +1,9 @@
 package matt.obs.fx
 
 import matt.lang.go
-import matt.lang.reflect.classForName
-import matt.lang.reflect.isSubTypeOf
 import matt.log.warn
+import matt.reflect.classForName
+import matt.reflect.isSubTypeOf
 import kotlin.contracts.ExperimentalContracts
 
 internal val JAVAFX_OBSERVABLE_CLASS by lazy {
