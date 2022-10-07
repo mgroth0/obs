@@ -13,7 +13,7 @@ internal val JAVAFX_OBSERVABLE_CLASS by lazy {
 }
 
 
-internal fun <E> Collection<E>.requireNotObservable() = apply {
+internal fun <E> Iterable<E>.requireNotObservable() = apply {
   JAVAFX_OBSERVABLE_CLASS?.go {
 	require(!this::class.isSubTypeOf(it)) {
 	  "this is the wrong way to make a BasicObservableList from an ObservableList if you want them to be synced"

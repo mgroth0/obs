@@ -150,7 +150,7 @@ class BasicObservableListImpl<E> private constructor(private val list: MutableLi
 																						List<E> by list {
 
 
-  constructor(c: Collection<E>): this(c.requireNotObservable().toMutableList())
+  constructor(c: Iterable<E>): this(c.requireNotObservable().toMutableList())
 
   constructor(): this(mutableListOf())
 

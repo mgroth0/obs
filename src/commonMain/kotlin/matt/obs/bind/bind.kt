@@ -1,26 +1,50 @@
 package matt.obs.bind
 
+import matt.lang.setAll
 import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
-import matt.obs.lazy.DependentValue
 import matt.obs.MObservable
+import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.col.BasicOCollection
+import matt.obs.col.olist.BasicObservableListImpl
+import matt.obs.col.olist.ObsList
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
+import matt.obs.lazy.DependentValue
 import matt.obs.listen.InvalidListener
 import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.update.LazyNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.oobj.MObservableObject
 import matt.obs.prop.MObservableROValBase
+import matt.obs.prop.MObservableVal
 import matt.obs.prop.MObservableValNewOnly
 import matt.obs.prop.ObsVal
+import matt.obs.prop.ReadOnlyBindableProperty
+import matt.obs.prop.ValProp
 import matt.obs.prop.Var
+import matt.obs.prop.VarProp
 import matt.obs.prop.WritableMObservableVal
 import kotlin.contracts.ExperimentalContracts
 import kotlin.jvm.Synchronized
 
+fun <T> BindableValue<T>.smartBind(property: ValProp<T>, readonly: Boolean) {
+  if (readonly || (property !is VarProp<*>)) bind(property) else bindBidirectional(property as VarProp)
+}
+
+fun <T> BindableValue<T>.smartBind(property: MObservableVal<T, *, *>, readonly: Boolean) {
+  require(property is ReadOnlyBindableProperty)
+  if (readonly || (property !is VarProp<T>)) bind(property) else
+	bindBidirectional(property)
+}
+
+fun <T, E> ObsVal<T>.boundList(propGetter: (T)->Iterable<E>): ObsList<E> =
+  BasicObservableListImpl(propGetter(value)).apply {
+	this@boundList.onChange {
+	  setAll(propGetter(it).toList())
+	}
+  }
 
 fun <T, R> MObservableObject<T>.binding(
   vararg dependencies: MObservable,
@@ -87,7 +111,6 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T):
   override fun removeDependency(o: MObservable) = depHelper.removeDependency(o)
 
 
-
 }
 
 @OptIn(ExperimentalContracts::class)
@@ -98,8 +121,7 @@ class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBase
   }
 
   override val value: T
-	@Synchronized get() =cval.get()
-
+	@Synchronized get() = cval.get()
 
 
 }
@@ -141,7 +163,9 @@ class LazyBindableProp<T>(
 
   override val bindManager by lazy { BindableValueHelper(this) }
   override fun bind(source: ObsVal<out T>) = bindManager.bind(source)
-  override fun bindBidirectional(source: Var<T>,checkEquality: Boolean) = bindManager.bindBidirectional(source,checkEquality=checkEquality)
+  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean) =
+	bindManager.bindBidirectional(source, checkEquality = checkEquality)
+
   override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
 	bindManager.bindBidirectional(source, converter)
 
