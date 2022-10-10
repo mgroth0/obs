@@ -1,5 +1,6 @@
 package matt.obs.watch
 
+import matt.obs.col.olist.ObsList
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ObsVal
 import matt.time.dur.sleep

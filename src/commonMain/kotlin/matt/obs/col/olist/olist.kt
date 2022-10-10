@@ -21,7 +21,7 @@ import matt.obs.col.change.CollectionChange
 import matt.obs.col.change.MultiAddAt
 import matt.obs.col.change.MultiAddAtEnd
 import matt.obs.col.change.RemoveAt
-import matt.obs.col.change.RemoveElement
+import matt.obs.col.change.RemoveElementFromList
 import matt.obs.col.change.RemoveElements
 import matt.obs.col.change.ReplaceAt
 import matt.obs.col.change.RetainAll
@@ -214,8 +214,9 @@ class BasicObservableListImpl<E> private constructor(private val list: MutableLi
 
 
   override fun remove(element: E): Boolean {
+	val i = list.indexOf(element)
 	val b = list.remove(element)
-	if (b) emitChange(RemoveElement(list, element))
+	if (b) emitChange(RemoveElementFromList(list, element,i))
 	return b
   }
 

@@ -46,8 +46,15 @@ sealed class Removal<E>(override val collection: Collection<E>, val removed: E):
   override val removedElements get() = listOf(removed)
 }
 
-class RemoveElement<E>(collection: Collection<E>, removed: E): Removal<E>(collection, removed) {
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = RemoveElement(collection, convert(removed))
+open class RemoveElement<E>(collection: Collection<E>, removed: E): Removal<E>(collection, removed) {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	RemoveElement(collection, convert(removed))
+}
+
+class RemoveElementFromList<E>(collection: Collection<E>, removed: E, val index: Int):
+  RemoveElement<E>(collection, removed) {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	RemoveElementFromList(collection, convert(removed), index)
 }
 
 class RemoveAt<E>(collection: Collection<E>, removed: E, val index: Int): Removal<E>(collection, removed) {
