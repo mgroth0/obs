@@ -20,6 +20,7 @@ import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import matt.obs.prop.proxy.ProxyProp
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
@@ -212,6 +213,7 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T, ValueC
 
 typealias VarProp<T> = BindableProperty<T>
 
+
 open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 										  WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T>>,
 										  BindableValue<T> {
@@ -252,6 +254,8 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
   override var theBind by bindManager::theBind
   override fun unbind() = bindManager.unbind()
 }
+
+class TypedBindableProperty<T: Any>(val cls: KClass<T>, value: T): BindableProperty<T>(value)
 
 fun ObsB.whenTrue(op: ()->Unit): Listener {
   if (value) op()
