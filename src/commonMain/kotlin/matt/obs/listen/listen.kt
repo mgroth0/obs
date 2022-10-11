@@ -2,6 +2,7 @@ package matt.obs.listen
 
 import matt.lang.NEVER
 import matt.lang.ifTrue
+import matt.lang.weak.WeakRef
 import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
@@ -28,9 +29,9 @@ typealias Listener = MyListener<*>
   var removeCondition: (()->Boolean)? = null
   var removeAfterInvocation: Boolean = false
 
-  internal var currentObservable: MListenable<*>? = null
-  fun removeListener() = currentObservable!!.removeListener(this)
-  fun tryRemovingListener() = currentObservable?.removeListener(this) ?: false
+  internal var currentObservable: WeakRef<MListenable<*>>? = null
+  fun removeListener() = currentObservable!!.deref()!!.removeListener(this)
+  fun tryRemovingListener() = currentObservable?.deref()?.removeListener(this) ?: false
 
 
   internal fun preInvocation(): Boolean {
