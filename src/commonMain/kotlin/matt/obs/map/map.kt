@@ -1,7 +1,7 @@
 package matt.obs.map
 
 import matt.lang.ILLEGAL
-import matt.log.warn
+import matt.log.warn.warn
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
