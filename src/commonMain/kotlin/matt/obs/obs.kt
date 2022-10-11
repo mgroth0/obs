@@ -2,6 +2,7 @@ package matt.obs
 
 import matt.collect.snapshotToPreventConcurrentModification
 import matt.lang.function.MetaFunction
+import matt.lang.weak.WeakRef
 import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
@@ -55,7 +56,7 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
   final override fun addListener(listener: L): L {
 	listeners += listener
 	require(listener.currentObservable == null)
-	listener.currentObservable = this
+	listener.currentObservable = WeakRef(this)
 	return listener
   }
 
