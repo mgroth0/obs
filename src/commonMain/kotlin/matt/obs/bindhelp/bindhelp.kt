@@ -44,7 +44,7 @@ interface BindableList<E>: Bindable {
   fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>)
 }
 
-/*todo: lazily evaluated bound lists!*/
+/*matt.log.todo.todo: lazily evaluated bound lists!*/
 class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), BindableList<E> {
 
   @Synchronized override fun <S> bind(source: ObsList<S>, converter: (S)->E) {

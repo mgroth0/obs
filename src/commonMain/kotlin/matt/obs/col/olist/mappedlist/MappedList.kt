@@ -122,7 +122,7 @@ fun <S, T> MutableObsList<S>.toSyncedList(converter: Converter<S, T>): MutableOb
 //  private fun <R> changeFromMapView(op: ()->R): R {
 //	val r = op()
 //	changingFromMappedView = true
-//	/*todo:
+//	/*matt.log.todo.todo:
 //	*  1. optimize
 //	*  2. use correct changes*/
 //	sourceList.setAll(list.map { mapBackFun(it) })
@@ -156,7 +156,7 @@ fun <S, T> MutableObsList<S>.toSyncedList(converter: Converter<S, T>): MutableOb
 //	MutableListIteratorWrapper(list, index) { _, op -> changeFromMapView(op) }
 //
 //  override fun subList(fromIndex: Int, toIndex: Int) = list.subList(fromIndex, toIndex).toFakeMutableList().apply {
-//	todoOnce("make this work")
+//	matt.log.todo.todoOnce("make this work")
 //  }
 //
 //}
