@@ -127,7 +127,7 @@ class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBase
 }
 
 
-class LazyBindableProp<T>(
+open class LazyBindableProp<T>(
   calc: ()->T
 ): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>>> {
 

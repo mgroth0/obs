@@ -2,11 +2,11 @@ package matt.obs.prop.proxy
 
 import matt.model.convert.Converter
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
-import matt.obs.prop.BindableProperty
+import matt.obs.bind.LazyBindableProp
 import matt.obs.prop.Var
 
 class ProxyProp<S, C>(source: Var<S>, converter: Converter<S, C>):
-  BindableProperty<C>(converter.convertToB(source.value)) {
+  LazyBindableProp<C>({ converter.convertToB(source.value) }) {
   init {
 	val rBlocker = RecursionBlocker()
 	onChange {
