@@ -57,6 +57,8 @@ fun <T, R> ObsVal<T>.binding(
 ) = MyBinding(this, *dependencies) { op(value) }
 
 
+
+
 fun <E, R> BasicOCollection<E>.binding(
   vararg dependencies: MObservable,
   op: (BasicOCollection<E>)->R,
