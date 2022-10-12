@@ -1,6 +1,7 @@
 package matt.obs.prop
 
 import matt.lang.weak.WeakRef
+import matt.lang.weak.lazySoft
 import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.value.ValueWrapper
@@ -185,8 +186,13 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>
 
   infix fun neq(other: Any?) = eq(other).not()
 
-  val isNull by lazy { eq(null) }
-  val isNotNull by lazy { isNull.not() }
+
+  val isNull by lazySoft {
+	eq(null)
+  }
+  val isNotNull by lazySoft {
+	isNull.not()
+  }
 
 
   override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
@@ -219,7 +225,7 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 										  BindableValue<T> {
 
 
-  private val bindWritePass = KeyPass()
+  private val bindWritePass by lazy { KeyPass() }
 
   fun setIfDifferent(newValue: T) {
 	if (value != newValue) {

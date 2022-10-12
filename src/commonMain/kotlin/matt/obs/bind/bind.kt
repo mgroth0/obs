@@ -116,7 +116,7 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T):
 }
 
 @OptIn(ExperimentalContracts::class)
-class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBaseImpl<T>(calc) {
+open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBaseImpl<T>(calc) {
 
   init {
 	addDependencies(*dependencies)
