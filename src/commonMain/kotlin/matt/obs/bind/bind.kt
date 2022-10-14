@@ -56,7 +56,10 @@ fun <T, R> ObsVal<T>.binding(
   op: (T)->R,
 ) = MyBinding(this, *dependencies) { op(value) }
 
-
+fun <T, R> ObsVal<T>.binding(
+  vararg dependencies: MObservable,
+  converter: Converter<T, R>,
+) = MyBinding(this, *dependencies) { converter.convertToB(value) }
 
 
 fun <E, R> BasicOCollection<E>.binding(
