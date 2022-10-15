@@ -62,7 +62,7 @@ operator fun Var<Float>.divAssign(other: ObsF) {
 }
 
 operator fun Var<Float>.remAssign(other: ObsF) {
-  value /= other.value
+  value %= other.value
 }
 
 
@@ -103,5 +103,5 @@ operator fun Var<Float>.divAssign(other: Float) {
 }
 
 operator fun Var<Float>.remAssign(other: Float) {
-  value /= other
+  value %= other
 }

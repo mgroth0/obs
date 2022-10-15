@@ -62,7 +62,7 @@ operator fun Var<Long>.divAssign(other: ObsL) {
 }
 
 operator fun Var<Long>.remAssign(other: ObsL) {
-  value /= other.value
+  value %= other.value
 }
 
 
@@ -103,5 +103,5 @@ operator fun Var<Long>.divAssign(other: Long) {
 }
 
 operator fun Var<Long>.remAssign(other: Long) {
-  value /= other
+  value %= other
 }
