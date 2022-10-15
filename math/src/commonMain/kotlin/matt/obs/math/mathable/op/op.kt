@@ -74,6 +74,30 @@ operator fun <T: Mathable<T>> ObsVal<T>.div(other: T): ObsVal<T> = binding {
 }
 
 
+
+
+
+operator fun <T: Mathable<T>> ObsVal<T>.times(other: Number): ObsVal<T> = binding {
+  it*other
+}
+
+operator fun <T: Mathable<T>> ObsVal<T>.minus(other: Number): ObsVal<T> = binding {
+  it - other
+}
+
+operator fun <T: Mathable<T>> ObsVal<T>.plus(other: Number): ObsVal<T> = binding {
+  it + other
+}
+
+operator fun <T: Mathable<T>> ObsVal<T>.div(other: Number): ObsVal<T> = binding {
+  it/other
+}
+
+
+
+
+
+
 operator fun <T: Mathable<T>> Var<T>.timesAssign(other: T) {
   value *= other
 }
@@ -87,5 +111,28 @@ operator fun <T: Mathable<T>> Var<T>.plusAssign(other: T) {
 }
 
 operator fun <T: Mathable<T>> Var<T>.divAssign(other: T) {
+  value /= other
+}
+
+
+
+
+
+
+
+
+operator fun <T: Mathable<T>> Var<T>.timesAssign(other: Number) {
+  value *= other
+}
+
+operator fun <T: Mathable<T>> Var<T>.minusAssign(other: Number) {
+  value -= other
+}
+
+operator fun <T: Mathable<T>> Var<T>.plusAssign(other: Number) {
+  value += other
+}
+
+operator fun <T: Mathable<T>> Var<T>.divAssign(other: Number) {
   value /= other
 }
