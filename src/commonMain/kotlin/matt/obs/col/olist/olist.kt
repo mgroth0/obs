@@ -176,7 +176,6 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   override fun iterator(): MutableIterator<E> = listIterator()
 
   override fun add(element: E): Boolean {
-	println("adding $element")
 	val b = list.add(element)
 	require(b)
 	if (b) {
