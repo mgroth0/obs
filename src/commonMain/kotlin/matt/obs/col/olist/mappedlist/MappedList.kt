@@ -5,8 +5,8 @@ import matt.model.convert.Converter
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl
-import matt.obs.col.olist.ObsList
 import matt.obs.col.olist.MutableObsList
+import matt.obs.col.olist.ObsList
 
 //fun <O, E> ObservableList<O>.toMappedList(mapFun: (O)->E) = MappedList(this.createImmutableWrapper(), mapFun)
 //fun <O, E> ObservableList<O>.toSyncedList(converter: matt.model.convert.Converter<O, E>) = SyncedList(this.createMutableWrapper(), converter)

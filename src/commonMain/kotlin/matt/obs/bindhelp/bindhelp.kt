@@ -10,6 +10,7 @@ import matt.obs.bind.LazyBindableProp
 import matt.obs.bind.binding
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.mirror
+import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.ObsList
 import matt.obs.listen.Listener
 import matt.obs.prop.BindableProperty
@@ -45,7 +46,7 @@ interface BindableList<E>: Bindable {
 }
 
 /*matt.log.todo.todo: lazily evaluated bound lists!*/
-class BindableListImpl<E>(private val target: MutableList<E>): BindableImpl(), BindableList<E> {
+class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl(), BindableList<E> {
 
   @Synchronized override fun <S> bind(source: ObsList<S>, converter: (S)->E) {
 	unbind()

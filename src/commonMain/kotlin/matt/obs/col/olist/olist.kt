@@ -33,6 +33,7 @@ import matt.obs.col.olist.dynamic.BasicSortedList
 import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
 import matt.obs.prop.MObservableVal
+import matt.obs.prop.ObsVal
 
 interface ObsList<E>: BasicOCollection<E>, BindableList<E>, List<E> {
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
@@ -102,10 +103,24 @@ class FakeMutableObsList<E>(private val o: ObsList<E>): ObsList<E> by o, Mutable
 interface MutableObsList<E>: MutableList<E>, ObsList<E>
 
 
-abstract class BaseBasicWritableOList<E>(list: MutableList<E>): InternallyBackedOCollection<E>(),
-																ObsList<E>,
-																MutableObsList<E>,
-																BindableList<E> by BindableListImpl(list) {
+abstract class BaseBasicWritableOList<E>: InternallyBackedOCollection<E>(),
+										  ObsList<E>,
+										  MutableObsList<E>,
+										  BindableList<E> {
+
+  val bindableListHelper by lazy { BindableListImpl(this) }
+  override fun <S> bind(source: ObsList<S>, converter: (S)->E) = bindableListHelper.bind(source, converter)
+  override fun <T> bind(source: ObsVal<T>, converter: (T)->List<E>) = bindableListHelper.bind(source, converter)
+  final override val bindManager get() = bindableListHelper.bindManager
+  override var theBind
+	get() = bindManager.theBind
+	set(value) {
+	  bindManager.theBind = value
+	}
+
+  override fun unbind() = bindableListHelper.unbind()
+
+
   fun <R> lazyBinding(
 	vararg dependencies: MObservableVal<*, *, *>,
 	op: (Collection<E>)->R,
@@ -150,7 +165,7 @@ fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
 
 
 open class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>):
-  BaseBasicWritableOList<E>(list),
+  BaseBasicWritableOList<E>(),
   List<E> by list {
 
 
@@ -161,6 +176,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   override fun iterator(): MutableIterator<E> = listIterator()
 
   override fun add(element: E): Boolean {
+	println("adding $element")
 	val b = list.add(element)
 	require(b)
 	if (b) {
