@@ -3,9 +3,12 @@ package matt.obs.col.olist
 import matt.collect.fake.FakeMutableList
 import matt.collect.itr.FakeMutableIterator
 import matt.collect.itr.FakeMutableListIterator
+import matt.collect.itr.ItrDir.NEXT
+import matt.collect.itr.ItrDir.PREVIOUS
 import matt.collect.itr.MutableListIteratorWithSomeMemory
 import matt.lang.ILLEGAL
-import matt.lang.NOT_IMPLEMENTED
+import matt.lang.NEVER
+import matt.lang.NeedsTest
 import matt.lang.comparableComparator
 import matt.lang.weak.WeakRef
 import matt.obs.bind.MyBinding
@@ -146,8 +149,9 @@ fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
   BasicObservableListImpl(elements.toList())
 
 
-open class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>): BaseBasicWritableOList<E>(list),
-																							 List<E> by list {
+open class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>):
+  BaseBasicWritableOList<E>(list),
+  List<E> by list {
 
 
   constructor(c: Iterable<E>): this(c.requireNotObservable().toMutableList())
@@ -204,11 +208,24 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  emitChange(AddAt(list, element, currentIndex))
 	}
 
+	@NeedsTest
 	override fun set(element: E) {
 	  super.set(element)
-	  NOT_IMPLEMENTED /*would need to track whether last call was a next() or a previous()*/
-	  @Suppress("UNREACHABLE_CODE")
-	  emitChange(ReplaceAt(list, lastReturned!!, element, index = -99999999))
+	  emitChange(
+		ReplaceAt(
+		  list, lastReturned!!, element, index = when (lastItrDir) {
+			NEXT     -> {
+			  currentIndex - 1
+			}
+
+			PREVIOUS -> {
+			  currentIndex
+			}
+
+			else     -> NEVER
+		  }
+		)
+	  )
 	}
   }
 
@@ -216,7 +233,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   override fun remove(element: E): Boolean {
 	val i = list.indexOf(element)
 	val b = list.remove(element)
-	if (b) emitChange(RemoveElementFromList(list, element,i))
+	if (b) emitChange(RemoveElementFromList(list, element, i))
 	return b
   }
 
