@@ -7,14 +7,14 @@ import kotlinx.serialization.json.JsonElement
 import matt.json.oldfx.jsonObj
 import matt.json.ser.JsonArraySerializer
 import matt.json.ser.JsonObjectSerializer
-import matt.json.ser.MySerializer
+import matt.json.ser.MyJsonSerializer
 import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.hold.NamedObsHolder
 import matt.obs.prop.BindableProperty
 import kotlin.reflect.KClass
 
 class BindablePropertySerializer<T>(val serializer: KSerializer<T>):
-  MySerializer<BindableProperty<T>>(BindableProperty::class) {
+  MyJsonSerializer<BindableProperty<T>>(BindableProperty::class) {
   override fun deserialize(jsonElement: JsonElement): BindableProperty<T> {
 	return BindableProperty(Json.decodeFromJsonElement(serializer, jsonElement))
   }
@@ -45,7 +45,7 @@ class BasicObservableListImplSerializer<E: Any>(val serializer: KSerializer<in E
 
 
 abstract class JsonObjectFXSerializer<T: NamedObsHolder<*>>(cls: KClass<T>): JsonObjectSerializer<T>(cls) {
-  open val miniSerializers: List<MySerializer<*>> = listOf()
+  open val miniSerializers: List<MyJsonSerializer<*>> = listOf()
   final override fun serialize(value: T) = jsonObj(
 	value.namedObservables(),
 	serializers = miniSerializers
