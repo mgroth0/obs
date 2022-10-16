@@ -69,7 +69,6 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 	  if (listener.preInvocation()) {
 		var now = start?.let { UnixTime() - it }
 		now?.let { println("$it\tinvoking $listener for $this") }
-		println("notify update = $update")
 		listener.notify(update)
 		now = start?.let { UnixTime() - it }
 		now?.let { println("$it\tfinished invoking") }
