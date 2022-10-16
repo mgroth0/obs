@@ -1,7 +1,7 @@
 package matt.obs.col.change
 
 import matt.test.yesIUseTestLibs
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 class SomeTests {
 
