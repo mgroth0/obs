@@ -75,7 +75,7 @@ sealed class MultiRemoval<E>(override val collection: Collection<E>, val removed
 class RemoveElements<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<E>(collection, removed) {
 
 
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = MultiAddAtEnd(collection, removed.map(convert))
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = RemoveElements(collection, removed.map(convert))
 
 
 
