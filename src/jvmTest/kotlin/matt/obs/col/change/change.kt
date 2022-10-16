@@ -11,7 +11,7 @@ class SomeTests {
 
 	yesIUseTestLibs()
 
-	CollectionChange::class.mattSubClasses().filter { !it.isAbstract }.forEach {
+	CollectionChange::class.mattSubClasses().filter { !it.isAbstract && !it.isSealed }.forEach {
 	  val classifier = it.functions.first { it.name == "convert" }.returnType.classifier
 	  if (classifier != it) {
 		println("$classifier is not $it")
