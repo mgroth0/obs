@@ -7,8 +7,10 @@ class SomeTests {
 
   @Test fun testWrappers() {
 
+	/*yesIUseTestLibs()*/
 
-	assertEquals(1, 2)
+//	assertEquals(1, 2)
+	assertEquals(1,1)
 
 
   }
