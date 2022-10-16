@@ -34,6 +34,7 @@ import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
+import kotlin.jvm.Synchronized
 
 interface ObsList<E>: BasicOCollection<E>, BindableList<E>, List<E> {
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
@@ -179,32 +180,32 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	val b = list.add(element)
 	require(b)
 	if (b) {
-	  emitChange(AddAtEnd(list, element))
+	  changedFromOuter(AddAtEnd(list, element))
 	}
 	return b
   }
 
   override fun add(index: Int, element: E) {
 	list.add(index, element)
-	emitChange(AddAt(list, element, index))
+	changedFromOuter(AddAt(list, element, index))
   }
 
   override fun addAll(index: Int, elements: Collection<E>): Boolean {
 	val b = list.addAll(index, elements)
-	if (b) emitChange(MultiAddAt(list, elements, index))
+	if (b) changedFromOuter(MultiAddAt(list, elements, index))
 	return b
   }
 
   override fun addAll(elements: Collection<E>): Boolean {
 	val b = list.addAll(elements)
-	if (b) emitChange(MultiAddAtEnd(list, elements))
+	if (b) changedFromOuter(MultiAddAtEnd(list, elements))
 	return b
   }
 
   override fun clear() {
 	val removed = list.toList()
 	list.clear()
-	emitChange(Clear(list, removed = removed))
+	changedFromOuter(Clear(list, removed = removed))
   }
 
 
@@ -215,18 +216,18 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 	override fun remove() {
 	  super.remove()
-	  emitChange(RemoveAt(list, lastReturned!!, currentIndex))
+	  changedFromOuter(RemoveAt(list, lastReturned!!, currentIndex))
 	}
 
 	override fun add(element: E) {
 	  super.add(element)
-	  emitChange(AddAt(list, element, currentIndex))
+	  changedFromOuter(AddAt(list, element, currentIndex))
 	}
 
 	@NeedsTest
 	override fun set(element: E) {
 	  super.set(element)
-	  emitChange(
+	  changedFromOuter(
 		ReplaceAt(
 		  list, lastReturned!!, element, index = when (lastItrDir) {
 			NEXT     -> {
@@ -248,38 +249,160 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   override fun remove(element: E): Boolean {
 	val i = list.indexOf(element)
 	val b = list.remove(element)
-	if (b) emitChange(RemoveElementFromList(list, element, i))
+	if (b) changedFromOuter(RemoveElementFromList(list, element, i))
 	return b
   }
 
   override fun removeAll(elements: Collection<E>): Boolean {
 	val b = list.removeAll(elements)
-	if (b) emitChange(RemoveElements(list, elements))
+	if (b) changedFromOuter(RemoveElements(list, elements))
 	return b
   }
 
   override fun removeAt(index: Int): E {
 	require(index >= 0)
 	val e = list.removeAt(index)
-	emitChange(RemoveAt(list, e, index))
+	changedFromOuter(RemoveAt(list, e, index))
 	return e
   }
 
   override fun retainAll(elements: Collection<E>): Boolean {
 	val toRemove = list.filter { it !in elements }
 	val b = list.retainAll(elements)
-	if (b) emitChange(RetainAll(list, toRemove, retained = elements))
+	if (b) changedFromOuter(RetainAll(list, toRemove, retained = elements))
 	return b
   }
 
   override fun set(index: Int, element: E): E {
 	val oldElement = list.set(index, element)
-	emitChange(ReplaceAt(list, removed = oldElement, added = element, index = index))
+	changedFromOuter(ReplaceAt(list, removed = oldElement, added = element, index = index))
 	return oldElement
   }
 
-  override fun subList(fromIndex: Int, toIndex: Int): MutableList<E> {
-	return list.subList(fromIndex, toIndex)
+  fun changedFromOuter(c: CollectionChange<E>) {
+	invalidateSubLists()
+	emitChange(c)
+  }
+
+
+  @Synchronized
+  override fun subList(fromIndex: Int, toIndex: Int) = SubList(this, fromIndex, toIndex)
+
+  @Synchronized
+  private fun invalidateSubLists() {
+	validSubLists.forEach { it.isValid = false }
+	validSubLists.clear()
+  }
+
+  private var validSubLists = mutableListOf<SubList>()
+
+  inner class SubList(
+	private val outer: BasicObservableListImpl<E>,
+	private val fromIndex: Int,
+	private val toIndexExclusive: Int
+  ):
+	MutableList<E> {
+	internal var isValid = true
+
+	private val subList = list.subList(fromIndex, toIndexExclusive)
+
+	init {
+	  outer.validSubLists += this
+	}
+
+	override val size: Int
+	  get() = TODO("Not yet implemented")
+
+	override fun clear() {
+	  require(isValid)
+
+	  val copy = subList.toList()
+
+	  subList.clear()
+
+	  emitChange(RemoveElements(collection = outer, removed = copy))
+
+	}
+
+	override fun addAll(elements: Collection<E>): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+	override fun addAll(index: Int, elements: Collection<E>): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+	override fun add(index: Int, element: E) {
+	  TODO("Not yet implemented")
+	}
+
+	override fun add(element: E): Boolean {
+	  require(isValid)
+	  val b = subList.add(element)
+	  require(b)
+	  emitChange(AddAt(outer, element, fromIndex + subList.size - 1))
+	  return b
+	}
+
+	override fun get(index: Int): E {
+	  TODO("Not yet implemented")
+	}
+
+	override fun isEmpty(): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+	override fun iterator(): MutableIterator<E> {
+	  TODO("Not yet implemented")
+	}
+
+	override fun listIterator(): MutableListIterator<E> {
+	  TODO("Not yet implemented")
+	}
+
+	override fun listIterator(index: Int): MutableListIterator<E> {
+	  TODO("Not yet implemented")
+	}
+
+	override fun removeAt(index: Int): E {
+	  TODO("Not yet implemented")
+	}
+
+	override fun subList(fromIndex: Int, toIndex: Int): MutableList<E> {
+	  TODO("Not yet implemented")
+	}
+
+	override fun set(index: Int, element: E): E {
+	  TODO("Not yet implemented")
+	}
+
+	override fun retainAll(elements: Collection<E>): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+	override fun removeAll(elements: Collection<E>): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+	override fun remove(element: E): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+	override fun lastIndexOf(element: E): Int {
+	  TODO("Not yet implemented")
+	}
+
+	override fun indexOf(element: E): Int {
+	  TODO("Not yet implemented")
+	}
+
+	override fun containsAll(elements: Collection<E>): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+	override fun contains(element: E): Boolean {
+	  TODO("Not yet implemented")
+	}
   }
 
 
@@ -290,4 +413,7 @@ inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListen
   onChange(listener)
   return this
 }
+
+
+
 

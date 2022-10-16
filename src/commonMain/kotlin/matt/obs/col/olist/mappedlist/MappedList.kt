@@ -32,6 +32,7 @@ fun <S, T> MutableObsList<S>.toSyncedList(converter: Converter<S, T>): MutableOb
   }
   r.onChange {
 	rb.with {
+	  println("r on change c = $it")
 	  mirror(it) { converter.convertToA(it) }
 	}
   }

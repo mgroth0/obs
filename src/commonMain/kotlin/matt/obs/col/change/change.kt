@@ -1,5 +1,7 @@
 package matt.obs.col.change
 
+import matt.model.tostringbuilder.toStringBuilder
+
 sealed interface CollectionChange<E> {
   val collection: Collection<E>
   fun <T> convert(collection: Collection<T>, convert: (E)->T): CollectionChange<T>
@@ -20,11 +22,14 @@ sealed class Addition<E>(override val collection: Collection<E>, val added: E): 
 
 class AddAtEnd<E>(collection: Collection<E>, added: E): Addition<E>(collection, added) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) = AddAtEnd(collection, convert(added))
+  override fun toString() = toStringBuilder("added" to added)
 }
 
 class AddAt<E>(collection: Collection<E>, added: E, val index: Int): Addition<E>(collection, added) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	AddAt(collection, convert(added), index = index)
+
+  override fun toString() = toStringBuilder("added" to added, "index" to index)
 }
 
 sealed class MultiAddition<E>(override val collection: Collection<E>, val added: Collection<E>): AdditionBase<E> {
@@ -33,6 +38,7 @@ sealed class MultiAddition<E>(override val collection: Collection<E>, val added:
 
 class MultiAddAtEnd<E>(collection: Collection<E>, added: Collection<E>): MultiAddition<E>(collection, added) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) = MultiAddAtEnd(collection, added.map(convert))
+  override fun toString() = toStringBuilder("added" to added)
 }
 
 class MultiAddAt<E>(collection: Collection<E>, added: Collection<E>, val index: Int):
@@ -67,7 +73,12 @@ sealed class MultiRemoval<E>(override val collection: Collection<E>, val removed
 }
 
 class RemoveElements<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<E>(collection, removed) {
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = MultiAddAtEnd(collection, removed.map(convert))
+
+
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = RemoveElements(collection, removed.map(convert))
+
+
+
 }
 
 class RetainAll<E>(collection: Collection<E>, removed: Collection<E>, val retained: Collection<E>):
@@ -96,6 +107,7 @@ class Clear<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<
 
 
 fun <E> MutableList<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
+  println("mirror c = $c")
   when (c) {
 	is AddAt          -> add(index = c.index, element = c.added)
 	is AddAtEnd       -> add(c.added)
