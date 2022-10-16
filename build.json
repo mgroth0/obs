@@ -34,6 +34,10 @@
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
 	  "cfg" :  "commonMainImplementation",
 	  "path" : ":k:reflect"
+	},{
+	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
+	  "cfg" :  "commonTestImplementation",
+	  "path" : ":k:test"
 	}
   ]
 }
