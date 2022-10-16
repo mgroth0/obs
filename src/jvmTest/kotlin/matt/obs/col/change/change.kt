@@ -14,7 +14,7 @@ class SomeTests {
 	yesIUseTestLibs()
 
 	CollectionChange::class.mattSubClasses().filter { !it.isAbstract }.forEach {
-	  require(it.functions.first { it.name == "convert" }.returnType == it.starProjectedType)
+	  require(it.functions.first { it.name == "convert" }.returnType.classifier == it.starProjectedType.classifier)
 	}
 
 	//	assertEquals(1, 2)
