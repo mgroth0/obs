@@ -3,10 +3,11 @@ package matt.obs.col.change
 import org.junit.jupiter.api.Test
 import kotlin.contracts.ExperimentalContracts
 import kotlin.reflect.KClass
+import kotlin.test.Test
 
 class SomeTests {
 
-  @Test @ExperimentalContracts fun testWrappers() {
+  @Tes @ExperimentalContracts fun testWrappers() {
 
 	yesIUseTestLibs()
 
