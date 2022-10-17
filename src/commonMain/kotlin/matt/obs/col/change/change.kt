@@ -107,7 +107,7 @@ class Clear<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<
 
 
 fun <E> MutableList<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
-  println("mirror c = $c")
+//  println("mirror c = $c")
   when (c) {
 	is AddAt          -> add(index = c.index, element = c.added)
 	is AddAtEnd       -> add(c.added)

@@ -21,7 +21,7 @@ abstract class InternallyBackedOCollection<E> internal constructor():
 
   override fun onChange(op: (CollectionChange<E>)->Unit): CollectionListener<E> {
 	return addListener(CollectionListener {
-	  println("addListener c = $it")
+//	  println("addListener c = $it")
 	  op(it)
 	})
   }

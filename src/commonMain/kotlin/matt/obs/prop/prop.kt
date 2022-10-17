@@ -1,5 +1,6 @@
 package matt.obs.prop
 
+import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
 import matt.model.convert.Converter
@@ -225,6 +226,8 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 										  BindableValue<T> {
 
 
+  val monitorForSetting = object {}
+
   private val bindWritePass by lazy { KeyPass() }
 
   fun setIfDifferent(newValue: T) {
@@ -235,11 +238,13 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 
   override var value = value
 	set(v) {
-	  require(!this.isBoundUnidirectionally || bindWritePass.isHeld)
 	  if (v != field) {
-		val old = v
-		field = v
-		notifyListeners(ValueChange(old, v))
+		require(!this.isBoundUnidirectionally || bindWritePass.isHeld)
+		inSyncOrJustRun(monitorForSetting) {
+		  val old = v
+		  field = v
+		  notifyListeners(ValueChange(old, v))
+		}
 	  }
 	}
 
