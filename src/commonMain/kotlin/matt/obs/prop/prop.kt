@@ -22,12 +22,14 @@ import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import matt.obs.prop.proxy.ProxyProp
+import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
 
-sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L>, ValueWrapper<T> {
+sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L>, ValueWrapper<T>,
+																			   ReadOnlyProperty<Any?, T> {
   override val value: T
 
   fun <R> cast(): MObservableVal<R, *, *> = binding {
@@ -69,9 +71,10 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
   }
 
 
-  operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+  override operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
 	return value
   }
+
 
   infix fun <T> eqNow(value: T) = this.value == value
 
