@@ -286,7 +286,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 
   @Synchronized
-  override fun subList(fromIndex: Int, toIndex: Int) = SubList(this, fromIndex, toIndex)
+  override fun subList(fromIndex: Int, toIndex: Int) = SubList(fromIndex, toIndex)
 
   @Synchronized
   private fun invalidateSubLists() {
@@ -297,9 +297,8 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   private var validSubLists = mutableListOf<SubList>()
 
   inner class SubList(
-	private val outer: BasicObservableListImpl<E>,
 	private val fromIndex: Int,
-	private val toIndexExclusive: Int
+	toIndexExclusive: Int
   ):
 	MutableList<E> {
 	internal var isValid = true
@@ -307,7 +306,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	private val subList = list.subList(fromIndex, toIndexExclusive)
 
 	init {
-	  outer.validSubLists += this
+	  validSubLists += this
 	}
 
 	override val size: Int
@@ -320,7 +319,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 	  subList.clear()
 
-	  emitChange(RemoveElements(collection = outer, removed = copy))
+	  emitChange(RemoveElements(collection = this@BasicObservableListImpl, removed = copy))
 
 	}
 
@@ -340,7 +339,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  require(isValid)
 	  val b = subList.add(element)
 	  require(b)
-	  emitChange(AddAt(outer, element, fromIndex + subList.size - 1))
+	  emitChange(AddAt(this@BasicObservableListImpl, element, fromIndex + subList.size - 1))
 	  return b
 	}
 
