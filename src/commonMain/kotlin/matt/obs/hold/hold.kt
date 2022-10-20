@@ -11,7 +11,7 @@ import matt.obs.col.olist.basicROObservableListOf
 import matt.obs.listen.Listener
 import matt.obs.listen.ObsHolderListener
 import matt.obs.prop.BindableProperty
-import matt.obs.prop.TypedBindableProperty
+import matt.obs.prop.typed.TypedBindableProperty
 
 interface MObsHolder<O: MObservable>: MObservable {
   val observables: List<O>

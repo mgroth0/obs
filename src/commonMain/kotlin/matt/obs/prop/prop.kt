@@ -11,7 +11,6 @@ import matt.obs.MObservableImpl
 import matt.obs.bind.binding
 import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
-import matt.obs.bindings.bool.ObsB
 import matt.obs.bindings.bool.not
 import matt.obs.listen.Listener
 import matt.obs.listen.NewListener
@@ -23,7 +22,6 @@ import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import matt.obs.prop.proxy.ProxyProp
 import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
@@ -44,6 +42,10 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 
   fun onNonNullChange(op: (T & Any)->Unit) = onChange {
 	if (it != null) op(it)
+  }
+
+  fun on(valueCheck: T, op: (T)->Unit) = onChange {
+	if (it == valueCheck) op(it)
   }
 
 
@@ -267,31 +269,6 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 
   override var theBind by bindManager::theBind
   override fun unbind() = bindManager.unbind()
-}
-
-class TypedBindableProperty<T: Any>(val cls: KClass<T>, value: T): BindableProperty<T>(value)
-
-fun ObsB.whenTrue(op: ()->Unit): Listener {
-  if (value) op()
-  return onChange {
-	if (it) op()
-  }
-}
-
-fun ObsB.whenFalse(op: ()->Unit): Listener {
-  if (!value) op()
-  return onChange {
-	if (!it) op()
-  }
-}
-
-fun ObsB.whenTrueOnce(op: ()->Unit) {
-  if (value) op()
-  else {
-	onChangeUntilInclusive({ it }, {
-	  if (it) op()
-	})
-  }
 }
 
 
