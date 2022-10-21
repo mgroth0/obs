@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 class SomeTests {
 
-  @Test fun testUpdates() {
+  @Test fun testOldNewUpdates() {
 
 	yesIUseTestLibs()
 
