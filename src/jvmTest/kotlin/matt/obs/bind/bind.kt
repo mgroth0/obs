@@ -14,7 +14,9 @@ class SomeTests {
 	val d = thread(isDaemon = true) {
 	  var binding: MyBinding<Int>? = null
 	  binding = MyBinding {
-		binding!!.markInvalid()
+		thread {
+		  binding!!.markInvalid()
+		}.join()
 		1
 	  }
 	  require(binding.value == 1)
