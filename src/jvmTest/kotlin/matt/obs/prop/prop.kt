@@ -12,7 +12,7 @@ class SomeTests {
 
 	val prop = VarProp(1)
 	prop.addListener(OldAndNewListener { old, new ->
-	  require(old == 0)
+	  require(old == 1)
 	  require(new == 2)
 	})
 	prop.value = 2
