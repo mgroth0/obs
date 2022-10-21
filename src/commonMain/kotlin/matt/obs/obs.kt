@@ -1,14 +1,13 @@
 package matt.obs
 
 import matt.lang.function.MetaFunction
-import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
 import matt.model.debug.DebugLogger
+import matt.model.syncop.AntiDeadlockSynchronizer
 import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Update
-import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ObservableDSL
 
@@ -49,21 +48,15 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
   )
 
   private val listeners = mutableListOf<L>()
+  private val synchronizer by lazy { AntiDeadlockSynchronizer() }
 
 
-  @Synchronized final override fun addListener(listener: L): L {
-	if (currentUpdateCount > 0) {
-	  changeQueue += {
-		listeners += listener
-		require(listener.currentObservable == null)
-		listener.currentObservable = WeakRef(this)
-	  }
-	} else {
+  final override fun addListener(listener: L): L {
+	synchronizer.operateOnInternalDataNowOrLater {
 	  listeners += listener
 	  require(listener.currentObservable == null)
 	  listener.currentObservable = WeakRef(this)
 	}
-
 	return listener
   }
 
@@ -72,34 +65,21 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
   private var currentUpdateCount = 0
 
   protected fun notifyListeners(update: U) {
-	inSync(this) {
-	  currentUpdateCount += 1
-	}
-	listeners.forEach { listener ->
-	  if (listener.preInvocation()) {
-		listener.notify(update, debugger = debugger)
-		listener.postInvocation()
+	synchronizer.useInternalData {
+	  listeners.forEach { listener ->
+		if (listener.preInvocation()) {
+		  listener.notify(update, debugger = debugger)
+		  listener.postInvocation()
+		}
 	  }
-	}
-	inSync(this) {
-	  currentUpdateCount -= 1
-	  if (currentUpdateCount == 0) changeQueue.forEach { it() }
 	}
   }
 
-  @Synchronized
   override fun removeListener(listener: Listener) {
-
-	if (currentUpdateCount > 0) {
-	  changeQueue += {
-		listeners.remove(listener)
-		listener.currentObservable = null
-	  }
-	} else {
+	synchronizer.operateOnInternalDataNowOrLater {
 	  listeners.remove(listener)
 	  listener.currentObservable = null
 	}
-
   }
 
   private val changeQueue = mutableListOf<()->Unit>()
