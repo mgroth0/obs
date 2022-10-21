@@ -1,10 +1,8 @@
 package matt.obs.bind
 
-import matt.obs.bind.MyBinding
 import matt.test.yesIUseTestLibs
 import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
-
 
 
 class SomeTests {
@@ -19,6 +17,7 @@ class SomeTests {
 		binding!!.markInvalid()
 		1
 	  }
+	  require(binding.value == 1)
 	}
 	d.join(1000)
 	if (d.isAlive) {
