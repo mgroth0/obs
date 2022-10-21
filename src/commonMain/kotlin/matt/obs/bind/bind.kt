@@ -91,13 +91,11 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T):
 	op()
   })
 
-  protected val cval = DependentValue(calc)
-  var stopwatch by cval::stopwatch
+  protected val cVal = DependentValue(calc)
+  var stopwatch by cVal::stopwatch
 
-  @Synchronized final override fun markInvalid() {
-	debugger?.println("marking $this invalid 1")
-	cval.markInvalid()
-	debugger?.println("marking $this invalid 2")
+  final override fun markInvalid() {
+	cVal.markInvalid()
 	notifyListeners(LazyNewValueUpdate { value })
   }
 
@@ -128,8 +126,7 @@ open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindin
 	addDependencies(*dependencies)
   }
 
-  override val value: T
-	@Synchronized get() = cval.get()
+  override val value: T get() = cVal.get()
 
 
 }
@@ -143,10 +140,10 @@ open class LazyBindableProp<T>(
 
   private val bindWritePass = KeyPass()
   override var value: T
-	@Synchronized get() = cval.get()
+	@Synchronized get() = cVal.get()
 	set(value) {
 	  require(!this.isBound || bindWritePass.isHeld)
-	  cval.setOp { value }
+	  cVal.setOp { value }
 	  markInvalid()
 	}
 
@@ -159,7 +156,7 @@ open class LazyBindableProp<T>(
 
   fun setLazily(newCalc: ()->T) {
 	require(!this.isBound || bindWritePass.isHeld)
-	cval.setOp(newCalc)
+	cVal.setOp(newCalc)
 	markInvalid()
   }
 
