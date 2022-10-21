@@ -246,7 +246,7 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 	  if (v != field) {
 		require(!this.isBoundUnidirectionally || bindWritePass.isHeld)
 		inSyncOrJustRun(monitorForSetting) {
-		  val old = v
+		  val old = field
 		  field = v
 		  notifyListeners(ValueChange(old, v))
 		}
