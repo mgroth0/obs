@@ -1,14 +1,13 @@
 package matt.obs
 
-import matt.collect.snapshotToPreventConcurrentModification
 import matt.lang.function.MetaFunction
+import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
 import matt.model.debug.DebugLogger
 import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Update
-import matt.time.UnixTime
 import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ObservableDSL
@@ -16,7 +15,7 @@ import kotlin.jvm.Synchronized
 @ObservableDSL interface MObservable {
   var nam: String?
   fun observe(op: ()->Unit): Listener
-  fun removeListener(listener: Listener): Boolean
+  fun removeListener(listener: Listener)
 
   /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
   fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): Listener {
@@ -53,45 +52,57 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 
 
   @Synchronized final override fun addListener(listener: L): L {
-	debugger?.println("adding listener: $listener")
-	listeners += listener
-	require(listener.currentObservable == null)
-	listener.currentObservable = WeakRef(this)
-	debugger?.println("added listener: $listener")
+	if (currentUpdateCount > 0) {
+	  changeQueue += {
+		listeners += listener
+		require(listener.currentObservable == null)
+		listener.currentObservable = WeakRef(this)
+	  }
+	} else {
+	  listeners += listener
+	  require(listener.currentObservable == null)
+	  listener.currentObservable = WeakRef(this)
+	}
+
 	return listener
   }
 
   override var debugger: DebugLogger? = null
 
-  @Synchronized protected fun notifyListeners(update: U) {
-	debugger?.println("notifying listeners of $this")
-	val start = if (debugger != null) UnixTime() else null
-	listeners.snapshotToPreventConcurrentModification().forEach { listener ->
+  private var currentUpdateCount = 0
+
+  protected fun notifyListeners(update: U) {
+	inSync(this) {
+	  currentUpdateCount += 1
+	}
+	listeners.forEach { listener ->
 	  if (listener.preInvocation()) {
-		var now = start?.let { UnixTime() - it }
-		now?.let { debugger?.println("$it\tinvoking $listener for $this") }
 		listener.notify(update, debugger = debugger)
-		now = start?.let { UnixTime() - it }
-		now?.let { debugger?.println("$it\tfinished invoking") }
 		listener.postInvocation()
 	  }
 	}
+	inSync(this) {
+	  currentUpdateCount -= 1
+	  if (currentUpdateCount == 0) changeQueue.forEach { it() }
+	}
   }
 
-  //  @Synchronized
-  //  override fun removeListener(listener: Listener): Boolean {
-  //
-  //  }
+  @Synchronized
+  override fun removeListener(listener: Listener) {
 
-  override fun removeListener(listener: Listener): Boolean {
-	val b = listeners.remove(listener)
-	listener.currentObservable = null
-	return b
+	if (currentUpdateCount > 0) {
+	  changeQueue += {
+		listeners.remove(listener)
+		listener.currentObservable = null
+	  }
+	} else {
+	  listeners.remove(listener)
+	  listener.currentObservable = null
+	}
+
   }
 
+  private val changeQueue = mutableListOf<()->Unit>()
 
 }
-
-
-
 
