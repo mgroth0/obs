@@ -3,6 +3,7 @@ package matt.obs
 import matt.collect.snapshotToPreventConcurrentModification
 import matt.lang.function.MetaFunction
 import matt.lang.weak.WeakRef
+import matt.model.debug.DebugLogger
 import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
@@ -31,7 +32,7 @@ import kotlin.jvm.Synchronized
 	}
   }
 
-  var verboseObservations: Boolean
+  var debugger: DebugLogger?
 
 }
 
@@ -45,33 +46,33 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
   override var nam: String? = null
 
   override fun toString() = toStringBuilder(
-	"name" to nam,
-	"#listeners" to listeners.size
+	"name" to nam, "#listeners" to listeners.size
   )
 
   private val listeners = mutableListOf<L>()
 
 
-  @Synchronized
-  final override fun addListener(listener: L): L {
+  @Synchronized final override fun addListener(listener: L): L {
+	debugger?.println("adding listener: $listener")
 	listeners += listener
 	require(listener.currentObservable == null)
 	listener.currentObservable = WeakRef(this)
+	debugger?.println("added listener: $listener")
 	return listener
   }
 
-  override var verboseObservations: Boolean = false
+  override var debugger: DebugLogger? = null
 
-  @Synchronized
-  protected fun notifyListeners(update: U) {
-	val start = if (verboseObservations) UnixTime() else null
+  @Synchronized protected fun notifyListeners(update: U) {
+	debugger?.println("notifying listeners of $this")
+	val start = if (debugger != null) UnixTime() else null
 	listeners.snapshotToPreventConcurrentModification().forEach { listener ->
 	  if (listener.preInvocation()) {
 		var now = start?.let { UnixTime() - it }
-		now?.let { println("$it\tinvoking $listener for $this") }
-		listener.notify(update)
+		now?.let { debugger?.println("$it\tinvoking $listener for $this") }
+		listener.notify(update, debugger = debugger)
 		now = start?.let { UnixTime() - it }
-		now?.let { println("$it\tfinished invoking") }
+		now?.let { debugger?.println("$it\tfinished invoking") }
 		listener.postInvocation()
 	  }
 	}

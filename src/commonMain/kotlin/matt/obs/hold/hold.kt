@@ -1,8 +1,10 @@
 package matt.obs.hold
 
+import matt.collect.itr.filterNotNull
 import matt.lang.delegation.provider
 import matt.lang.go
 import matt.lang.setAll
+import matt.model.debug.DebugLogger
 import matt.model.delegate.SimpleGetter
 import matt.obs.MObservable
 import matt.obs.col.change.CollectionChange
@@ -38,11 +40,14 @@ sealed class ObservableHolderImplBase<O: MObservable>: NamedObsHolder<O> {
   @PublishedApi
   internal val _observables = mutableMapOf<String, O>()
   override fun namedObservables(): Map<String, O> = _observables
-  override var verboseObservations: Boolean
-	get() = observables.all { it.verboseObservations }
+  override var debugger: DebugLogger?
+	get() = observables.map { it.debugger }.filterNotNull().let {
+	  if (it.isEmpty()) null
+	  else DebugLogger("for ${it.size} observables")
+	}
 	set(value) {
 	  observables.forEach {
-		it.verboseObservations = value
+		it.debugger = value
 	  }
 	}
 }

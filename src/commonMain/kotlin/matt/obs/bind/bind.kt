@@ -26,7 +26,6 @@ import matt.obs.prop.ValProp
 import matt.obs.prop.Var
 import matt.obs.prop.VarProp
 import matt.obs.prop.WritableMObservableVal
-import kotlin.contracts.ExperimentalContracts
 import kotlin.jvm.Synchronized
 
 fun <T> BindableValue<T>.smartBind(property: ValProp<T>, readonly: Boolean) {
@@ -88,37 +87,41 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T):
   CustomDependencies {
 
 
-  override fun observe(op: ()->Unit) = addListener(InvalidListener {
+  final override fun observe(op: ()->Unit) = addListener(InvalidListener {
 	op()
   })
 
   protected val cval = DependentValue(calc)
   var stopwatch by cval::stopwatch
 
-  @Synchronized override fun markInvalid() {
+  @Synchronized final override fun markInvalid() {
+	debugger?.println("marking $this invalid 1")
 	cval.markInvalid()
+	debugger?.println("marking $this invalid 2")
 	notifyListeners(LazyNewValueUpdate { value })
   }
 
   private val depHelper by lazy { DependencyHelper(this) }
 
-  override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?) =
+  final override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?) =
 	depHelper.addDependency(o, *deepDependencies)
 
-  override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =
+  final override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =
 	depHelper.addDependencyWithDeepList(o, deepDependencies)
 
-  override fun <O: ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(
+  final override fun <O: ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(
 	o: O,
 	vararg deepDependencies: (O)->MObservable?
   ) = depHelper.addDependencyIgnoringFutureNullOuterChanges(o, *deepDependencies)
 
-  override fun removeDependency(o: MObservable) = depHelper.removeDependency(o)
+  final override fun removeDependency(o: MObservable) = depHelper.removeDependency(o)
 
+  final override fun addDependencies(vararg obs: MObservable) {
+	super<CustomDependencies>.addDependencies(*obs)
+  }
 
 }
 
-@OptIn(ExperimentalContracts::class)
 open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBaseImpl<T>(calc) {
 
   init {
@@ -143,7 +146,7 @@ open class LazyBindableProp<T>(
 	@Synchronized get() = cval.get()
 	set(value) {
 	  require(!this.isBound || bindWritePass.isHeld)
-	  cval.op = { value }
+	  cval.setOp { value }
 	  markInvalid()
 	}
 
@@ -156,7 +159,7 @@ open class LazyBindableProp<T>(
 
   fun setLazily(newCalc: ()->T) {
 	require(!this.isBound || bindWritePass.isHeld)
-	cval.op = newCalc
+	cval.setOp(newCalc)
 	markInvalid()
   }
 
@@ -166,7 +169,7 @@ open class LazyBindableProp<T>(
 	}
   }
 
-  override val bindManager by lazy { BindableValueHelper(this) }
+  final override val bindManager by lazy { BindableValueHelper(this) }
   override fun bind(source: ObsVal<out T>) = bindManager.bind(source)
   override fun bindBidirectional(source: Var<T>, checkEquality: Boolean) =
 	bindManager.bindBidirectional(source, checkEquality = checkEquality)
