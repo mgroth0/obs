@@ -104,6 +104,7 @@ class FakeMutableObsList<E>(private val o: ObsList<E>): ObsList<E> by o, Mutable
 interface MutableObsList<E>: MutableList<E>, ObsList<E>
 
 
+
 abstract class BaseBasicWritableOList<E>: InternallyBackedOCollection<E>(),
 										  ObsList<E>,
 										  MutableObsList<E>,
@@ -164,6 +165,8 @@ fun <E> basicROObservableListOf(vararg elements: E): ObsList<E> =
 fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
   BasicObservableListImpl(elements.toList())
 
+
+fun <E> ObsList<E>.toMutableObsList() = toBasicObservableList()
 
 open class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>):
   BaseBasicWritableOList<E>(),
