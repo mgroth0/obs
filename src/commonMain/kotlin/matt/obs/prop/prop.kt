@@ -21,6 +21,7 @@ import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import matt.obs.prop.proxy.ProxyProp
+import matt.service.scheduler.Scheduler
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -277,3 +278,17 @@ fun Var<Boolean>.toggle() {
 }
 
 fun <A: Any?> A.toVarProp() = VarProp<A>(this)
+
+
+fun <T> ObsVal<T>.wrapWithScheduledUpdates(scheduler: Scheduler? = null): ObsVal<T> {
+  val w = BindableProperty(value)
+  if (scheduler != null) onChange {
+	scheduler.schedule {
+	  w.value = it
+	}
+  }
+  else onChange {
+	w.value = it
+  }
+  return w
+}
