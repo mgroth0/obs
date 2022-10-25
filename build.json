@@ -1,5 +1,5 @@
 {
-  "type" :         "matt.mstruct.bj.NO_NATIVEModule",
+  "type" :         "matt.mstruct.bj.MultiPlatformModule", "jvm": "LIB", "js": "LIB",
   "dependencies" : [
 	{
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
