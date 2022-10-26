@@ -362,7 +362,18 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	}
 
 	override fun iterator(): MutableIterator<E> {
-	  TODO("Not yet implemented")
+	  val itr by lazy { subList.iterator() }
+	  return FakeMutableIterator<E>(object: Iterator<E> {
+		override fun hasNext(): Boolean {
+		  require(isValid)
+		  return itr.hasNext()
+		}
+
+		override fun next(): E {
+		  require(isValid)
+		  return itr.next()
+		}
+	  })
 	}
 
 	override fun listIterator(): MutableListIterator<E> {
