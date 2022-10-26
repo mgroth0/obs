@@ -97,8 +97,8 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
 }
 
 open class TypedObservableHolder: ObservableHolderImplBase<TypedBindableProperty<*>>() {
-  inline fun <reified T: Any> registeredProp(defaultValue: T, noinline onChange: (()->Unit)? = null) = provider {
-	val fx = TypedBindableProperty(T::class, defaultValue)
+  inline fun <reified T> registeredProp(defaultValue: T, noinline onChange: (()->Unit)? = null) = provider {
+	val fx = TypedBindableProperty(T::class, nullable = null is T, value = defaultValue)
 	onChange?.go { listener ->
 	  fx.onChange { listener() }
 	}
