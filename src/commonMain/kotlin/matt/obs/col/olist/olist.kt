@@ -321,13 +321,15 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  }
 
 	override fun clear() {
-	  require(isValid)
+	  inSync(this@BasicObservableListImpl) {
+		require(isValid)
 
-	  val copy = subList.toList()
+		val copy = subList.toList()
 
-	  subList.clear()
+		subList.clear()
 
-	  emitChange(RemoveElements(collection = this@BasicObservableListImpl, removed = copy))
+		emitChange(RemoveElements(collection = this@BasicObservableListImpl, removed = copy))
+	  }
 
 	}
 
