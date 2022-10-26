@@ -10,6 +10,7 @@ import matt.lang.ILLEGAL
 import matt.lang.NEVER
 import matt.lang.NeedsTest
 import matt.lang.comparableComparator
+import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableList
@@ -102,7 +103,6 @@ class FakeMutableObsList<E>(private val o: ObsList<E>): ObsList<E> by o, Mutable
 }
 
 interface MutableObsList<E>: MutableList<E>, ObsList<E>
-
 
 
 abstract class BaseBasicWritableOList<E>: InternallyBackedOCollection<E>(),
@@ -313,7 +313,12 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	}
 
 	override val size: Int
-	  get() = TODO("Not yet implemented")
+	  get() {
+		return inSync(this@BasicObservableListImpl) {
+		  require(isValid)
+		  subList.size
+		}
+	  }
 
 	override fun clear() {
 	  require(isValid)
