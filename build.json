@@ -1,5 +1,5 @@
 {
-  "type" :         "matt.mstruct.bj.MultiPlatformModule", "jvm": "LIB", "js": "LIB",
+  "type" :         "matt.mstruct.bj.MultiPlatformModule", "jvm": {}, "js": "LIB",
   "dependencies" : [
 	{
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
