@@ -39,8 +39,8 @@ sealed class ObservableHolderImplBase<O: MObservable>: NamedObsHolder<O> {
 
   @PublishedApi
   internal val _observables = mutableMapOf<String, O>()
-  override fun namedObservables(): Map<String, O> = _observables
-  override var debugger: DebugLogger?
+  final override fun namedObservables(): Map<String, O> = _observables
+  final override var debugger: DebugLogger?
 	get() = observables.map { it.debugger }.filterNotNull().let {
 	  if (it.isEmpty()) null
 	  else DebugLogger("for ${it.size} observables")
@@ -95,6 +95,8 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
   }
 
 }
+
+
 
 open class TypedObservableHolder: ObservableHolderImplBase<TypedBindableProperty<*>>() {
   inline fun <reified T> registeredProp(defaultValue: T, noinline onChange: (()->Unit)? = null) = provider {
