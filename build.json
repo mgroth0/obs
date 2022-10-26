@@ -13,11 +13,6 @@
 	},
 	{
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
-	  "cfg" :  "commonMainImplementation",
-	  "path" : ":k:json"
-	},
-	{
-	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
 	  "cfg" :  "commonMainApi",
 	  "path" : ":k:model"
 	},	{
