@@ -36,7 +36,6 @@ class TypedBindablePropertySerializer<T>(private val dataSerializer: KSerializer
 
 	val valueDescriptor = dataSerializer.descriptor
 
-	println("looking for class for name ${valueDescriptor.serialName}")
 	val cls = classForName(valueDescriptor.serialName)
 
 	val goodClass = cls as KClass<*>
