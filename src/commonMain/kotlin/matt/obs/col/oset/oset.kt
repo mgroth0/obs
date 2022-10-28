@@ -27,6 +27,8 @@ fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> {
   return BasicObservableSet(this.toSet())
 }
 
+fun <E> basicObservableSetOf(vararg values: E) = BasicObservableSet<E>(values.toMutableSet())
+
 class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBackedOCollection<E>(),
 																MutableObsSet<E> {
 
