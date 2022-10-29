@@ -1,9 +1,11 @@
 package matt.obs.prop
 
+import matt.lang.TemporaryCode
 import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
 import matt.model.convert.Converter
+import matt.model.debug.DebugLogger
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.value.ValueWrapper
 import matt.obs.MListenable
@@ -22,10 +24,53 @@ import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import matt.obs.prop.proxy.ProxyProp
 import matt.service.scheduler.Scheduler
+import kotlin.jvm.JvmInline
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
+@TemporaryCode
+typealias FakeObsVal<T> = BindableProperty<T>
+
+private val later = 1.apply {
+  if (KotlinVersion.CURRENT.isAtLeast(1, 8)) {
+	println("now I can finally make FakeObsVal (and remve the temporary typealias a real inline class since I can have generic inline classes!")
+
+	/*
+	*
+	*
+	*
+	*
+	* @JvmInline
+value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
+
+  override fun addListener(listener: OldAndNewListener<T>): OldAndNewListener<T> {
+	TODO("Not yet implemented")
+  }
+
+  override var nam: String?
+	get() = TODO("Not yet implemented")
+	set(value) {}
+
+  override fun removeListener(listener: Listener) {
+	TODO("Not yet implemented")
+  }
+
+  override var debugger: DebugLogger?
+	get() = TODO("Not yet implemented")
+	set(value) {}
+
+}
+*
+*
+	*
+	*
+	* */
+
+  }
+}
+
+
 
 sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L>, ValueWrapper<T>,
 																			   ReadOnlyProperty<Any?, T> {
