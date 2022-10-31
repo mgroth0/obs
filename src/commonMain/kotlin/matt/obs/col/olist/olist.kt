@@ -354,11 +354,13 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	}
 
 	override fun get(index: Int): E {
-	  TODO("Not yet implemented")
+	  require(isValid)
+	  return subList[index]
 	}
 
 	override fun isEmpty(): Boolean {
-	  TODO("Not yet implemented")
+	  require(isValid)
+	  return subList.isEmpty()
 	}
 
 	override fun iterator(): MutableIterator<E> {
@@ -409,19 +411,23 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	}
 
 	override fun lastIndexOf(element: E): Int {
-	  TODO("Not yet implemented")
+	  require(isValid)
+	  return subList.lastIndexOf(element)
 	}
 
 	override fun indexOf(element: E): Int {
-	  TODO("Not yet implemented")
+	  require(isValid)
+	  return subList.indexOf(element)
 	}
 
 	override fun containsAll(elements: Collection<E>): Boolean {
-	  TODO("Not yet implemented")
+	  require(isValid)
+	  return subList.containsAll(elements)
 	}
 
 	override fun contains(element: E): Boolean {
-	  TODO("Not yet implemented")
+	  require(isValid)
+	  return subList.contains(element)
 	}
   }
 
