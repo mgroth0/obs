@@ -1,7 +1,7 @@
 package matt.obs.map
 
 import matt.lang.ILLEGAL
-import matt.log.warn.warn
+import matt.log.warn.warnOnce
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
@@ -35,8 +35,9 @@ abstract class InternallyBackedOMap<K, V> internal constructor(map: Map<K, V>):
 
   internal val bindWritePass = KeyPass()
   protected fun emitChange(change: MapChange<K, V>) {
-	warn(
+	warnOnce(
 	  """
+		I guess InternallyBackedOMap needs similar infrastructural support as ObsList? like:
 	require(this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)  
 	""".trimIndent()
 	)
@@ -56,7 +57,7 @@ abstract class InternallyBackedOMap<K, V> internal constructor(map: Map<K, V>):
 interface BasicOMutableMap<K, V>: BasicOMap<K, V>, MutableMap<K, V>
 
 class BasicOMutableMapImpl<K, V>(private val map: MutableMap<K, V> = mutableMapOf()): InternallyBackedOMap<K, V>(map),
-																	 BasicOMutableMap<K, V> {
+																					  BasicOMutableMap<K, V> {
   override val entries: MutableSet<MutableEntry<K, V>> = object: MutableSet<MutableEntry<K, V>> {
 
 	inner class ObsMutableEntry(entry: MutableEntry<K, V>): MutableEntry<K, V> {
