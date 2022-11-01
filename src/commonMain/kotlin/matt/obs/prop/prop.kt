@@ -5,7 +5,6 @@ import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
 import matt.model.convert.Converter
-import matt.model.debug.DebugLogger
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.value.ValueWrapper
 import matt.obs.MListenable
@@ -24,7 +23,6 @@ import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import matt.obs.prop.proxy.ProxyProp
 import matt.service.scheduler.Scheduler
-import kotlin.jvm.JvmInline
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -34,7 +32,9 @@ typealias FakeObsVal<T> = BindableProperty<T>
 
 private val later = 1.apply {
   if (KotlinVersion.CURRENT.isAtLeast(1, 8)) {
-	println("now I can finally make FakeObsVal (and remve the temporary typealias a real inline class since I can have generic inline classes!")
+	println(
+	  "now I can finally make FakeObsVal (and remve the temporary typealias a real inline class since I can have generic inline classes!"
+	)
 
 	/*
 	*
@@ -69,7 +69,6 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 
   }
 }
-
 
 
 sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L>, ValueWrapper<T>,
@@ -307,8 +306,8 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 
   final override val bindManager by lazy { BindableValueHelper(this) }
   override infix fun bind(source: ObsVal<out T>) = bindManager.bind(source)
-  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean) =
-	bindManager.bindBidirectional(source, checkEquality = checkEquality)
+  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean) =
+	bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug)
 
   override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
 	bindManager.bindBidirectional(source, converter)

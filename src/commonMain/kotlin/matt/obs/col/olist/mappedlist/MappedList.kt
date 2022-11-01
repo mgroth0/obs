@@ -25,14 +25,14 @@ fun <S, T> ObsList<S>.toMappedList(mapFun: (S)->T): ObsList<T> {
 fun <S, T> MutableObsList<S>.toSyncedList(converter: Converter<S, T>): MutableObsList<T> {
   val r = BasicObservableListImpl(map { converter.convertToB(it) })
   val rb = RecursionBlocker()
-  onChange {
+  onChange("toSyncedList1") {
 	rb.with {
 	  r.mirror(it) { converter.convertToB(it) }
 	}
   }
-  r.onChange {
+  r.onChange("toSyncedList2") {
 	rb.with {
-//	  println("r on change c = $it")
+	  //	  println("r on change c = $it")
 	  mirror(it) { converter.convertToA(it) }
 	}
   }

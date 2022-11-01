@@ -2,7 +2,7 @@ package matt.obs
 
 import matt.lang.function.MetaFunction
 import matt.lang.weak.WeakRef
-import matt.model.debug.DebugLogger
+import matt.model.prints.Prints
 import matt.model.syncop.AntiDeadlockSynchronizer
 import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.listen.Listener
@@ -30,7 +30,7 @@ import matt.obs.listen.update.Update
 	}
   }
 
-  var debugger: DebugLogger?
+  var debugger: Prints?
 
 }
 
@@ -60,19 +60,29 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
 	return listener
   }
 
-  override var debugger: DebugLogger? = null
+  override var debugger: Prints? = null
 
   private var currentUpdateCount = 0
 
   protected fun notifyListeners(update: U) {
+	val t = debugger?.local("notifyListeners")
+	t?.println("waiting to use internal data")
 	synchronizer.useInternalData {
+	  t?.println("using internal data")
 	  listeners.forEach { listener ->
+		t?.println("invoking listener 1: $listener")
 		if (listener.preInvocation()) {
+		  t?.println("invoking listener 2")
 		  listener.notify(update, debugger = debugger)
+		  t?.println("invoking listener 3")
 		  listener.postInvocation()
+		  t?.println("invoking listener 4")
 		}
+		t?.println("invoking listener 5")
 	  }
+	  t?.println("invoked all listeners")
 	}
+	t?.println("done using internal data")
   }
 
   override fun removeListener(listener: Listener) {

@@ -233,7 +233,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  changedFromOuter(
 		ReplaceAt(
 		  list, lastReturned!!, element, index = when (lastItrDir) {
-			NEXT     -> {
+			NEXT -> {
 			  currentIndex - 1
 			}
 
@@ -241,7 +241,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 			  currentIndex
 			}
 
-			else     -> NEVER
+			else -> NEVER
 		  }
 		)
 	  )
@@ -435,8 +435,11 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 }
 
 
-inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListener(noinline listener: (CollectionChange<E>)->Unit): T {
-  onChange(listener)
+inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListener(
+  listenerName: String? = null,
+  noinline listener: (CollectionChange<E>)->Unit
+): T {
+  onChange(listenerName = listenerName, listener)
   return this
 }
 

@@ -77,7 +77,7 @@ class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl()
 
 interface BindableValue<T>: Bindable {
   fun bind(source: ObsVal<out T>)
-  fun bindBidirectional(source: Var<T>, checkEquality: Boolean = false)
+  fun bindBidirectional(source: Var<T>, checkEquality: Boolean = false, clean: Boolean = true, debug: Boolean = false)
   fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>)
 }
 
@@ -113,13 +113,12 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	theBind = TheBind(source = source, listener = listener)
   }
 
-  @Synchronized override fun bindBidirectional(source: Var<T>, checkEquality: Boolean) {
-	unbind()
-	source.unbind()
+  @Synchronized override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean) {
+	if (clean) {
+	  unbind()
+	  source.unbind()
+	}
 	if (!checkEquality || source.value != wProp.value) {
-//	  println("checkEquality=$checkEquality")
-//	  println("source.value=${source.value}")
-//	  println("wProp.value=${wProp.value}")
 	  wProp setCorrectlyTo { source.value }
 	}
 
@@ -132,6 +131,8 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	  }
 
 	}
+
+
 	val targetListener = wProp.observe {
 	  if (!checkEquality || source.value != wProp.value) {
 		rBlocker.with {
@@ -141,7 +142,9 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	}
 
 	theBind =
-	  BiTheBind(source = source, target = wProp, sourceListener = sourceListener, targetListener = targetListener)
+	  BiTheBind(
+		source = source, target = wProp, sourceListener = sourceListener, targetListener = targetListener, debug = debug
+	  )
 	source.theBind = theBind
   }
 
@@ -183,10 +186,15 @@ class TheBind(
 }
 
 class BiTheBind(
-  val source: Var<*>, val target: Var<*>, private val sourceListener: Listener, private val targetListener: Listener
+  val source: Var<*>,
+  val target: Var<*>,
+  private val sourceListener: Listener,
+  private val targetListener: Listener,
+  private val debug: Boolean = false
 ): ABind {
 
   override fun cut() {
+	if (debug) println("cutting $this")
 	source.removeListener(sourceListener)
 	target.removeListener(targetListener)
 	source.theBind = null

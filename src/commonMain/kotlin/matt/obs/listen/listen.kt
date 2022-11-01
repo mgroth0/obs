@@ -3,7 +3,7 @@ package matt.obs.listen
 import matt.lang.NEVER
 import matt.lang.ifTrue
 import matt.lang.weak.WeakRef
-import matt.model.debug.DebugLogger
+import matt.model.prints.Prints
 import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
@@ -44,7 +44,7 @@ typealias Listener = MyListener<*>
 	return r
   }
 
-  abstract fun notify(update: U, debugger: DebugLogger? = null)
+  abstract fun notify(update: U, debugger: Prints? = null)
 
   internal fun postInvocation() {
 	if (removeAfterInvocation) {
@@ -63,7 +63,7 @@ internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
 sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>() {
   var untilInclusive: ((U)->Boolean)? = null
   var untilExclusive: ((U)->Boolean)? = null
-  final override fun notify(update: U, debugger: DebugLogger?) {
+  final override fun notify(update: U, debugger: Prints?) {
 	debugger?.println("ValueListener.notify 1")
 	untilExclusive?.invoke(update)?.ifTrue {
 	  removeListener()
@@ -76,14 +76,14 @@ sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>() {
 	debugger?.println("ValueListener.notify 4")
   }
 
-  abstract fun subNotify(update: U, debugger: DebugLogger? = null)
+  abstract fun subNotify(update: U, debugger: Prints? = null)
 }
 
 sealed class NewOrLessListener<T, U: ValueUpdate<T>>: ValueListener<T, U>()
 
 class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit): NewOrLessListener<T, ValueUpdate<T>>() {
-  var listenerDebugger: DebugLogger? = null
-  override fun subNotify(update: ValueUpdate<T>, debugger: DebugLogger?) {
+  var listenerDebugger: Prints? = null
+  override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) {
 	listenerDebugger = debugger
 	debugger?.println("subNotify 1")
 	invoke()
@@ -93,31 +93,31 @@ class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit): NewOr
 }
 
 class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit): NewOrLessListener<T, ValueUpdate<T>>() {
-  override fun subNotify(update: ValueUpdate<T>, debugger: DebugLogger?) = invoke(update.new)
+  override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) = invoke(update.new)
 }
 
 class OldAndNewListener<T>(internal val invoke: OldAndNewListener<T>.(old: T, new: T)->Unit):
   ValueListener<T, ValueChange<T>>() {
-  override fun subNotify(update: ValueChange<T>, debugger: DebugLogger?) = invoke(update.old, update.new)
+  override fun subNotify(update: ValueChange<T>, debugger: Prints?) = invoke(update.old, update.new)
 }
 
 class CollectionListener<E>(internal val invoke: CollectionListener<E>.(change: CollectionChange<E>)->Unit):
   MyListener<CollectionUpdate<E>>() {
-  override fun notify(update: CollectionUpdate<E>, debugger: DebugLogger?) = invoke(update.change)
+  override fun notify(update: CollectionUpdate<E>, debugger: Prints?) = invoke(update.change)
 }
 
 class MapListener<K, V>(internal val invoke: MapListener<K, V>.(change: MapChange<K, V>)->Unit):
   MyListener<MapUpdate<K, V>>() {
-  override fun notify(update: MapUpdate<K, V>, debugger: DebugLogger?) = invoke(update.change)
+  override fun notify(update: MapUpdate<K, V>, debugger: Prints?) = invoke(update.change)
 }
 
 class ContextListener<C>(private val obj: C, private val invocation: C.()->Unit): MyListener<ContextUpdate>() {
-  final override fun notify(update: ContextUpdate, debugger: DebugLogger?) {
+  final override fun notify(update: ContextUpdate, debugger: Prints?) {
 	obj.invocation()
   }
 }
 
 class ObsHolderListener: MyListener<ObsHolderUpdate>() {
   internal val subListeners = mutableListOf<MyListener<*>>()
-  override fun notify(update: ObsHolderUpdate, debugger: DebugLogger?) = NEVER
+  override fun notify(update: ObsHolderUpdate, debugger: Prints?) = NEVER
 }

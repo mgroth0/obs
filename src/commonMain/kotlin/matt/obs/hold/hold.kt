@@ -6,6 +6,7 @@ import matt.lang.go
 import matt.lang.setAll
 import matt.model.debug.DebugLogger
 import matt.model.delegate.SimpleGetter
+import matt.model.prints.Prints
 import matt.obs.MObservable
 import matt.obs.col.change.CollectionChange
 import matt.obs.col.olist.basicMutableObservableListOf
@@ -40,7 +41,7 @@ sealed class ObservableHolderImplBase<O: MObservable>: NamedObsHolder<O> {
   @PublishedApi
   internal val _observables = mutableMapOf<String, O>()
   final override fun namedObservables(): Map<String, O> = _observables
-  final override var debugger: DebugLogger?
+  final override var debugger: Prints?
 	get() = observables.map { it.debugger }.filterNotNull().let {
 	  if (it.isEmpty()) null
 	  else DebugLogger("for ${it.size} observables")
