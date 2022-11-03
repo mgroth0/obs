@@ -67,7 +67,14 @@ fun <E, R> BasicOCollection<E>.binding(
 ): MyBinding<R> = MyBinding(this, *dependencies) { op(this) }
 
 
-fun <T, R> ObsVal<T>.deepBinding(propGetter: (T)->ObsVal<R>) = MyBinding(this) {
+fun <T, R> ObsVal<T>.deepBinding(
+  vararg dependencies: MObservable,
+  propGetter: (T)->ObsVal<R>
+) = MyBinding(
+  *dependencies,
+  this
+) {
+
   propGetter(value).value
 }.apply {
   addDependency(this@deepBinding, { propGetter(it.value) })
