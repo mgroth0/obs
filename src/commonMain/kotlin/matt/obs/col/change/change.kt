@@ -125,3 +125,4 @@ fun <E> MutableList<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
 
 fun <S, T> MutableList<T>.mirror(c: CollectionChange<S>, convert: (S)->T) =
   mirror(c.convert(this, convert))
+

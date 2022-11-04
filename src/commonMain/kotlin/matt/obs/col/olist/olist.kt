@@ -8,10 +8,12 @@ import matt.collect.itr.ItrDir.PREVIOUS
 import matt.collect.itr.MutableListIteratorWithSomeMemory
 import matt.lang.ILLEGAL
 import matt.lang.NEVER
+import matt.lang.NOT_IMPLEMENTED
 import matt.lang.NeedsTest
 import matt.lang.comparableComparator
 import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
+import matt.model.prints.Prints
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableList
 import matt.obs.bindhelp.BindableListImpl
@@ -33,11 +35,15 @@ import matt.obs.col.olist.dynamic.BasicFilteredList
 import matt.obs.col.olist.dynamic.BasicSortedList
 import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
+import matt.obs.listen.CollectionListener
+import matt.obs.listen.Listener
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
 
-interface ObsList<E>: BasicOCollection<E>, BindableList<E>, List<E> {
+interface ImmutableObsList<E>: BasicOCollection<E>, List<E>
+
+interface ObsList<E>: ImmutableObsList<E>, BindableList<E> {
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
   fun dynamicallyFiltered(filter: (E)->ObsB): BasicFilteredList<E> = DynamicList(this, dynamicFilter = filter)
 
@@ -233,7 +239,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  changedFromOuter(
 		ReplaceAt(
 		  list, lastReturned!!, element, index = when (lastItrDir) {
-			NEXT -> {
+			NEXT     -> {
 			  currentIndex - 1
 			}
 
@@ -241,7 +247,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 			  currentIndex
 			}
 
-			else -> NEVER
+			else     -> NEVER
 		  }
 		)
 	  )
@@ -378,37 +384,14 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  })
 	}
 
-	override fun listIterator(): MutableListIterator<E> {
-	  TODO("Not yet implemented")
-	}
-
-	override fun listIterator(index: Int): MutableListIterator<E> {
-	  TODO("Not yet implemented")
-	}
-
-	override fun removeAt(index: Int): E {
-	  TODO("Not yet implemented")
-	}
-
-	override fun subList(fromIndex: Int, toIndex: Int): MutableList<E> {
-	  TODO("Not yet implemented")
-	}
-
-	override fun set(index: Int, element: E): E {
-	  TODO("Not yet implemented")
-	}
-
-	override fun retainAll(elements: Collection<E>): Boolean {
-	  TODO("Not yet implemented")
-	}
-
-	override fun removeAll(elements: Collection<E>): Boolean {
-	  TODO("Not yet implemented")
-	}
-
-	override fun remove(element: E): Boolean {
-	  TODO("Not yet implemented")
-	}
+	override fun listIterator() = NOT_IMPLEMENTED
+	override fun listIterator(index: Int) = NOT_IMPLEMENTED
+	override fun removeAt(index: Int) = NOT_IMPLEMENTED
+	override fun subList(fromIndex: Int, toIndex: Int) = NOT_IMPLEMENTED
+	override fun set(index: Int, element: E) = NOT_IMPLEMENTED
+	override fun retainAll(elements: Collection<E>) = NOT_IMPLEMENTED
+	override fun removeAll(elements: Collection<E>) = NOT_IMPLEMENTED
+	override fun remove(element: E) = NOT_IMPLEMENTED
 
 	override fun lastIndexOf(element: E): Int {
 	  require(isValid)
@@ -431,6 +414,92 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	}
   }
 
+
+  fun <R> view(converter: (E)->R) = object: ImmutableObsList<R> {
+	override fun onChange(listenerName: String?, op: (CollectionChange<R>)->Unit): CollectionListener<R> {
+	  TODO("Not yet implemented")
+	}
+
+	override val size: Int
+	  get() = this@BasicObservableListImpl.size
+
+	override fun isEmpty(): Boolean {
+	  return this@BasicObservableListImpl.isEmpty()
+	}
+
+	override fun iterator(): Iterator<R> = listIterator()
+
+	override fun addListener(listener: CollectionListener<R>): CollectionListener<R> {
+	  TODO("Not yet implemented")
+	}
+
+	override var nam: String?
+	  get() = this@BasicObservableListImpl.nam
+	  set(value) {
+		this@BasicObservableListImpl.nam = value
+	  }
+
+	override fun removeListener(listener: Listener) {
+	  TODO("Not yet implemented")
+	}
+
+	override var debugger: Prints?
+	  get() = this@BasicObservableListImpl.debugger
+	  set(value) {
+		this@BasicObservableListImpl.debugger = value
+	  }
+
+	override fun get(index: Int): R {
+	  return converter(this@BasicObservableListImpl.get(index))
+	}
+
+	override fun listIterator() = listIterator(0)
+
+	override fun listIterator(index: Int) = object: ListIterator<R> {
+	  private val itr = this@BasicObservableListImpl.listIterator(index)
+	  override fun hasNext() = itr.hasNext()
+
+	  override fun hasPrevious(): Boolean {
+		TODO("Not yet implemented")
+	  }
+
+	  override fun next() = converter(itr.next())
+
+	  override fun nextIndex(): Int {
+		TODO("Not yet implemented")
+	  }
+
+	  override fun previous(): R {
+		TODO("Not yet implemented")
+	  }
+
+	  override fun previousIndex(): Int {
+		TODO("Not yet implemented")
+	  }
+
+	}
+
+	override fun subList(fromIndex: Int, toIndex: Int): List<R> {
+	  TODO("Not yet implemented")
+	}
+
+	override fun lastIndexOf(element: R): Int {
+	  TODO("Not yet implemented")
+	}
+
+	override fun indexOf(element: R): Int {
+	  TODO("Not yet implemented")
+	}
+
+	override fun containsAll(elements: Collection<R>): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+	override fun contains(element: R): Boolean {
+	  TODO("Not yet implemented")
+	}
+
+  }
 
 }
 

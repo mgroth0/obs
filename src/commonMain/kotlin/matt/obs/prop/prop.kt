@@ -1,12 +1,12 @@
 package matt.obs.prop
 
 import matt.lang.TemporaryCode
+import matt.lang.model.value.ValueWrapper
 import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
 import matt.model.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
-import matt.model.value.ValueWrapper
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.binding
