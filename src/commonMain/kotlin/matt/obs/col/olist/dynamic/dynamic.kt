@@ -2,6 +2,7 @@ package matt.obs.col.olist.dynamic
 
 import matt.collect.map.lazyMap
 import matt.lang.setAll
+import matt.model.debug.DebugLogger
 import matt.model.tostringbuilder.toStringBuilder
 import matt.obs.MObservable
 import matt.obs.bindings.bool.ObsB
@@ -71,8 +72,13 @@ class DynamicList<E>(
 
   private val dependencyHelper by lazy { DependencyHelper(this) }
 
-  override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?) =
-	dependencyHelper.addDependency(o, *deepDependencies)
+  override fun <O: MObservable> addDependency(
+	mainDep: O,
+	moreDeps: List<MObservable>,
+	debugLogger: DebugLogger?,
+	vararg deepDependencies: (O)->MObservable?
+  ) =
+	dependencyHelper.addDependency(mainDep = mainDep, moreDeps = moreDeps, debugLogger = debugLogger, *deepDependencies)
 
   override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =
 	dependencyHelper.addDependencyWithDeepList(o, deepDependencies)

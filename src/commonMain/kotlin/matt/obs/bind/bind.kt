@@ -2,6 +2,7 @@ package matt.obs.bind
 
 import matt.lang.setAll
 import matt.model.convert.Converter
+import matt.model.debug.DebugLogger
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MObservable
 import matt.obs.bindhelp.BindableValue
@@ -69,15 +70,17 @@ fun <E, R> BasicOCollection<E>.binding(
 
 fun <T, R> ObsVal<T>.deepBinding(
   vararg dependencies: MObservable,
+  debugLogger: DebugLogger? = null,
   propGetter: (T)->ObsVal<R>
 ) = MyBinding(
   *dependencies,
   this
 ) {
-
   propGetter(value).value
 }.apply {
-  addDependency(this@deepBinding, { propGetter(it.value) })
+  addDependency(
+	mainDep = this@deepBinding,
+	moreDeps = listOf(*dependencies), debugLogger = debugLogger, { propGetter(it.value) })
 }
 
 fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->ObsVal<R>?) = MyBinding(this) {
@@ -108,8 +111,13 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T):
 
   private val depHelper by lazy { DependencyHelper(this) }
 
-  final override fun <O: MObservable> addDependency(o: O, vararg deepDependencies: (O)->MObservable?) =
-	depHelper.addDependency(o, *deepDependencies)
+  final override fun <O: MObservable> addDependency(
+	mainDep: O,
+	moreDeps: List<MObservable>,
+	debugLogger: DebugLogger?,
+	/*vararg dependencies: MObservable,*/
+	vararg deepDependencies: (O)->MObservable?
+  ) = depHelper.addDependency(mainDep = mainDep, moreDeps = moreDeps, debugLogger = debugLogger, *deepDependencies)
 
   final override fun <O: MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O)->List<MObservable>) =
 	depHelper.addDependencyWithDeepList(o, deepDependencies)
