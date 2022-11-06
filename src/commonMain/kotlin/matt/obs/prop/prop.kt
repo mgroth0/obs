@@ -1,6 +1,6 @@
 package matt.obs.prop
 
-import matt.lang.TemporaryCode
+import matt.lang.anno.TemporaryCode
 import matt.lang.model.value.ValueWrapper
 import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef

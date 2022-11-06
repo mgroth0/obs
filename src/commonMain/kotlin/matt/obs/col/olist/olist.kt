@@ -9,7 +9,7 @@ import matt.collect.itr.MutableListIteratorWithSomeMemory
 import matt.lang.ILLEGAL
 import matt.lang.NEVER
 import matt.lang.NOT_IMPLEMENTED
-import matt.lang.NeedsTest
+import matt.lang.anno.NeedsTest
 import matt.lang.comparableComparator
 import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
