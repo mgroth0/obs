@@ -43,7 +43,7 @@ import kotlin.jvm.Synchronized
 
 interface ImmutableObsList<E>: BasicOCollection<E>, List<E>
 
-interface ObsList<E>: ImmutableObsList<E>, BindableList<E> {
+interface ObsList<E>: ImmutableObsList<E>, BindableList<E>, MutableList<E> {
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
   fun dynamicallyFiltered(filter: (E)->ObsB): BasicFilteredList<E> = DynamicList(this, dynamicFilter = filter)
 

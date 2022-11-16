@@ -65,24 +65,14 @@ abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor
   private var currentUpdateCount = 0
 
   protected fun notifyListeners(update: U) {
-	val t = debugger?.local("notifyListeners")
-	t?.println("waiting to use internal data")
 	synchronizer.useInternalData {
-	  t?.println("using internal data")
 	  listeners.forEach { listener ->
-		t?.println("invoking listener 1: $listener")
-		if (listener.preInvocation()) {
-		  t?.println("invoking listener 2")
+		if (listener.preInvocation(update) != null) {
 		  listener.notify(update, debugger = debugger)
-		  t?.println("invoking listener 3")
 		  listener.postInvocation()
-		  t?.println("invoking listener 4")
 		}
-		t?.println("invoking listener 5")
 	  }
-	  t?.println("invoked all listeners")
 	}
-	t?.println("done using internal data")
   }
 
   override fun removeListener(listener: Listener) {

@@ -91,8 +91,10 @@ fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->
 
 interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
+
+
 abstract class MyBindingBaseImpl<T>(calc: ()->T):
-  MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>>>(),
+  MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>,out ValueUpdate<T>>>(),
   MyBindingBase<T>,
   CustomDependencies {
 
@@ -133,6 +135,9 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T):
 	super<CustomDependencies>.addDependencies(*obs)
   }
 
+
+  fun removeAllDependencies() = depHelper.removeAllDependencies()
+
 }
 
 open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBaseImpl<T>(calc) {
@@ -149,7 +154,7 @@ open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindin
 
 open class LazyBindableProp<T>(
   calc: ()->T
-): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>>> {
+): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
 
   constructor(t: T): this({ t })
 

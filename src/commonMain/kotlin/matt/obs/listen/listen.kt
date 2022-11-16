@@ -14,14 +14,17 @@ import matt.obs.listen.update.ObsHolderUpdate
 import matt.obs.listen.update.Update
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
+import matt.obs.listen.update.ValueUpdateWithWeakObj
+import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
 
 @DslMarker annotation class ListenerDSL
 
 typealias Listener = MyListener<*>
 
+interface MyListenerInter
 
-@ListenerDSL sealed class MyListener<U: Update> {
+@ListenerDSL sealed class MyListener<U: Update>: MyListenerInter {
 
   var name: String? = null
 
@@ -35,13 +38,12 @@ typealias Listener = MyListener<*>
   fun tryRemovingListener() = currentObservable?.deref()?.removeListener(this) ?: false
 
 
-  internal fun preInvocation(): Boolean {
-	var r = true
+  internal fun preInvocation(update: U): U? {
 	removeCondition?.invoke()?.ifTrue {
 	  removeListener()
-	  r = false
+	  return null
 	}
-	return r
+	return update
   }
 
   abstract fun notify(update: U, debugger: Prints? = null)
@@ -60,46 +62,95 @@ internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
   o.addListener(this)
 }
 
-sealed class ValueListener<T, U: ValueUpdate<T>>: MyListener<U>() {
-  var untilInclusive: ((U)->Boolean)? = null
-  var untilExclusive: ((U)->Boolean)? = null
-  final override fun notify(update: U, debugger: Prints?) {
-	debugger?.println("ValueListener.notify 1")
-	untilExclusive?.invoke(update)?.ifTrue {
-	  removeListener()
-	  return
-	}
-	debugger?.println("ValueListener.notify 2")
-	subNotify(update, debugger)
-	debugger?.println("ValueListener.notify 3")
-	untilInclusive?.invoke(update)?.ifTrue { removeListener() }
-	debugger?.println("ValueListener.notify 4")
-  }
-
-  abstract fun subNotify(update: U, debugger: Prints? = null)
-}
-
-sealed class NewOrLessListener<T, U: ValueUpdate<T>>: ValueListener<T, U>()
-
-class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit): NewOrLessListener<T, ValueUpdate<T>>() {
+class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit):
+  NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
   var listenerDebugger: Prints? = null
   override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) {
 	listenerDebugger = debugger
-	debugger?.println("subNotify 1")
 	invoke()
-	debugger?.println("subNotify 2")
 	listenerDebugger = null
   }
+
+  override fun transformUpdate(u: ValueUpdate<T>) = u
 }
 
-class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit): NewOrLessListener<T, ValueUpdate<T>>() {
+sealed class ValueListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyListener<U_IN>() {
+  var untilInclusive: ((U_OUT)->Boolean)? = null
+  var untilExclusive: ((U_OUT)->Boolean)? = null
+  protected abstract fun transformUpdate(u: U_IN): U_OUT?
+
+
+  final override fun notify(update: U_IN, debugger: Prints?) {
+	val u = transformUpdate(update)
+	if (u == null) removeListener()
+	else {
+	  untilExclusive?.invoke(u)?.ifTrue {
+		removeListener()
+		return
+	  }
+	  subNotify(u, debugger)
+	  untilInclusive?.invoke(u)?.ifTrue { removeListener() }
+	}
+  }
+
+
+  abstract fun subNotify(update: U_OUT, debugger: Prints? = null)
+}
+
+
+sealed class NewOrLessListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: ValueListener<T, U_IN, U_OUT>()
+
+class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit):
+  NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
+  override fun transformUpdate(u: ValueUpdate<T>) = u
   override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) = invoke(update.new)
 }
 
-class OldAndNewListener<T>(internal val invoke: OldAndNewListener<T>.(old: T, new: T)->Unit):
-  ValueListener<T, ValueChange<T>>() {
+
+interface MyWeakListener: MyListenerInter
+
+class WeakListenerWithNewValue<W: Any, T>(
+  private val wref: WeakRef<W>,
+  internal val invoke: WeakListenerWithNewValue<W, T>.(ref: W, new: T)->Unit
+): NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(), MyWeakListener {
+
+  override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<W, T>? {
+	return wref.deref()?.let {
+	  ValueUpdateWithWeakObj(u.new, it)
+	}
+  }
+
+  override fun subNotify(update: ValueUpdateWithWeakObj<W, T>, debugger: Prints?) {
+	invoke(this, update.weakObj, update.new)
+  }
+
+}
+
+typealias OldNewListener<T> = OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>
+abstract class OldAndNewListener<T, U_IN: ValueChange<T>, U_OUT: ValueChange<T>>: ValueListener<T, U_IN, U_OUT>()
+
+class WeakListenerWithOld<W: Any, T>(
+  private val wref: WeakRef<W>, internal val invoke: WeakListenerWithOld<W, T>.(ref: W, old: T, new: T)->Unit
+): OldAndNewListener<T, ValueChange<T>, ValueUpdateWithWeakObjAndOld<W, T>>(), MyWeakListener {
+
+  override fun transformUpdate(u: ValueChange<T>): ValueUpdateWithWeakObjAndOld<W, T>? {
+	return wref.deref()?.let {
+	  ValueUpdateWithWeakObjAndOld(new = u.new, old = u.old, weakObj = it)
+	}
+  }
+
+  override fun subNotify(update: ValueUpdateWithWeakObjAndOld<W, T>, debugger: Prints?) {
+	invoke(this, update.weakObj, update.old, update.new)
+  }
+
+}
+
+class OldAndNewListenerImpl<T>(internal val invoke: OldAndNewListenerImpl<T>.(old: T, new: T)->Unit):
+  OldAndNewListener<T, ValueChange<T>, ValueChange<T>>() {
+  override fun transformUpdate(u: ValueChange<T>) = u
   override fun subNotify(update: ValueChange<T>, debugger: Prints?) = invoke(update.old, update.new)
 }
+
 
 class CollectionListener<E>(internal val invoke: CollectionListener<E>.(change: CollectionChange<E>)->Unit):
   MyListener<CollectionUpdate<E>>() {

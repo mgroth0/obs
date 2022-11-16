@@ -37,8 +37,9 @@ private val EMPTY_MORE_DEPS_LIST by lazy { listOf<MObservable>() }
 
 class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 												   CustomInvalidations by main {
-  private val deps = mutableListOf<DepListenerSet>()
 
+
+  private val deps = mutableListOf<DepListenerSet>()
 
 
   @Synchronized override fun <O: MObservable> addDependency(
@@ -103,24 +104,38 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 
   @Synchronized override fun removeDependency(o: MObservable) {
 	deps.filter { it.obs == o }.toList().forEach {
-	  it.mainListeners.forEach {
-		removeListener(it)
-	  }
-	  it.subListeners.forEach {
-		removeListener(it)
-	  }
-	  deps.remove(it)
+	  removeDep(it)
 	}
   }
+
+
+  @Synchronized
+  fun removeAllDependencies() {
+	val depsCopy = deps.toList()
+	depsCopy.forEach {
+	  removeDep(it)
+	}
+  }
+
+  private fun removeDep(dep: DepListenerSet) {
+	dep.mainListeners.forEach {
+	  it.removeListener()
+	}
+	dep.subListeners.forEach {
+	  it.removeListener()
+	}
+	deps.remove(dep)
+  }
+
 }
 
 private open class DepListenerSet(
   val obs: CustomInvalidations,
-  open val mainDep: MObservable,
-  val moreDeps: List<MObservable>,
+  mainDep: MObservable,
+  moreDeps: List<MObservable>,
   getDeepDeps: (dep: MObservable)->List<MObservable>,
   var subListeners: List<Listener>,
-  val debugLogger: DebugLogger? = null
+  @Suppress("UNUSED_PARAMETER") debugLogger: DebugLogger? = null
 ) {
   open val mainListeners = (listOf(mainDep) + moreDeps).mapIndexed { index, it ->
 	it.observe {
@@ -139,7 +154,7 @@ private open class DepListenerSet(
 
 private class DepListenerSetIgnoringNullOuterValues(
   obs: CustomInvalidations,
-  override val mainDep: ObsVal<*>,
+  mainDep: ObsVal<*>,
   getDeepDeps: (dep: MObservable)->List<MObservable>,
   subListeners: List<Listener>
 ): DepListenerSet(obs, mainDep = mainDep, moreDeps = EMPTY_MORE_DEPS_LIST, getDeepDeps, subListeners) {

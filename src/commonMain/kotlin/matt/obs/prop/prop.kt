@@ -17,7 +17,10 @@ import matt.obs.listen.Listener
 import matt.obs.listen.NewListener
 import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.OldAndNewListener
+import matt.obs.listen.OldAndNewListenerImpl
 import matt.obs.listen.ValueListener
+import matt.obs.listen.WeakListenerWithNewValue
+import matt.obs.listen.WeakListenerWithOld
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
@@ -27,8 +30,7 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
-@TemporaryCode
-typealias FakeObsVal<T> = BindableProperty<T>
+@TemporaryCode typealias FakeObsVal<T> = BindableProperty<T>
 
 private val later = 1.apply {
   if (KotlinVersion.CURRENT.isAtLeast(1, 8)) {
@@ -71,12 +73,13 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 }
 
 
-sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MListenable<L>, ValueWrapper<T>,
-																			   ReadOnlyProperty<Any?, T> {
+sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U, out ValueUpdate<T>>>: MListenable<L>,
+																								   ValueWrapper<T>,
+																								   ReadOnlyProperty<Any?, T> {
   override val value: T
 
+  @Suppress("UNCHECKED_CAST")
   fun <R> cast(): MObservableVal<R, *, *> = binding {
-	@Suppress("UNCHECKED_CAST")
 	it as R
   }
 
@@ -98,17 +101,13 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 	removeAfterInvocation = true
   }
 
-  fun onChangeWithWeak(o: Any, op: (T)->Unit) = run {
-	val weakRef = WeakRef(o)
-	onChange(op).apply {
-	  removeCondition = { weakRef.deref() == null }
-	}
-  }
 
   fun onChangeUntilInclusive(until: (T)->Boolean, op: (T)->Unit) = onChange {
 	op(it)
   }.apply {
-	this.untilInclusive = { until(it.new) }
+	this.untilInclusive = {
+	  until(it.new)
+	}
   }
 
   fun onChangeUntilExclusive(until: (T)->Boolean, op: (T)->Unit) = onChange {
@@ -131,6 +130,8 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: M
 
   infix fun <T> notEqNow(value: ObsVal<T>) = this.value != value.value
 
+  fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit): Listener
+  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit): Listener
 
 }
 
@@ -139,18 +140,61 @@ fun <T, O: ObsVal<T>> O.withChangeListener(op: (T)->Unit) = apply {
 }
 
 
-interface MObservableValNewAndOld<T>: MObservableVal<T, ValueChange<T>, OldAndNewListener<T>> {
-  override fun onChange(op: (T)->Unit) = addListener(OldAndNewListener { _, new ->
+
+
+interface MObservableValNewAndOld<T>:
+  MObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>> {
+
+  override fun onChange(op: (T)->Unit) = addListener(OldAndNewListenerImpl { _, new ->
 	op(new)
   })
 
+  override fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit) = run {
+	val weakRef = WeakRef(o)
+	onChangeWithAlreadyWeak(weakRef, op)
+  }
+
+  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit) = run {
+	val listener = WeakListenerWithOld(weakRef) { o: W, _: T, new: T ->
+	  op(o, new)
+	}.apply {
+	  removeCondition = { weakRef.deref() == null }
+	}
+	addListener(listener)
+  }
+
+  fun <W: Any> onChangeWithWeakAndOld(o: W, op: (W, T, T)->Unit) = run {
+	val weakRef = WeakRef(o)
+	val listener = WeakListenerWithOld(weakRef) { o: W, old: T, new: T ->
+	  op(o, old, new)
+	}.apply {
+	  removeCondition = { weakRef.deref() == null }
+	}
+	addListener(listener)
+  }
 
 }
 
-interface MObservableValNewOnly<T>: MObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>>> {
+interface MObservableValNewOnly<T>:
+  MObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
   override fun onChange(op: (T)->Unit) = addListener(NewListener { new ->
 	op(new)
   })
+
+  override fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit) = run {
+	val weakRef = WeakRef(o)
+	onChangeWithAlreadyWeak(weakRef, op)
+  }
+
+  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit) = run {
+	val listener = WeakListenerWithNewValue(weakRef) { o: W, new: T ->
+	  op(o, new)
+	}.apply {
+	  removeCondition = { weakRef.deref() == null }
+	}
+	addListener(listener)
+  }
+
 }
 
 
@@ -160,8 +204,8 @@ interface FXBackedPropBase {
 
 typealias Var<T> = WritableMObservableVal<T, *, *>
 
-interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableVal<T, U, L>,
-																				BindableValue<T> {
+interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U, *>>: MObservableVal<T, U, L>,
+																				   BindableValue<T> {
 
 
   override var value: T
@@ -220,8 +264,8 @@ fun <T, O: Var<T>> O.withUpdatesFromWhen(o: ObsVal<out T>, predicate: ()->Boolea
   takeChangesFromWhen(o, predicate)
 }
 
-abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>>: MObservableImpl<U, L>(),
-																				   MObservableVal<T, U, L> {
+abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U, *>>: MObservableImpl<U, L>(),
+																					  MObservableVal<T, U, L> {
 
 
   infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
@@ -253,8 +297,9 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U>
 
 typealias ValProp<T> = ReadOnlyBindableProperty<T>
 
-open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T>>(),
-												  MObservableValNewAndOld<T> {
+open class ReadOnlyBindableProperty<T>(value: T):
+  MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>(),
+  MObservableValNewAndOld<T> {
 
   override var value = value
 	protected set(v) {
@@ -271,8 +316,13 @@ open class ReadOnlyBindableProperty<T>(value: T): MObservableROValBase<T, ValueC
 typealias VarProp<T> = BindableProperty<T>
 
 
+typealias GoodVar<T> = MWritableValNewAndOld<T>
+interface MWritableValNewAndOld<T>:
+  WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>,
+  MObservableValNewAndOld<T>
+
 open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
-										  WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T>>,
+										  MWritableValNewAndOld<T>,
 										  BindableValue<T> {
 
 
