@@ -2,8 +2,8 @@ package matt.obs.col.olist.dynamic
 
 import matt.collect.map.lazyMap
 import matt.lang.setAll
-import matt.model.debug.DebugLogger
-import matt.model.tostringbuilder.toStringBuilder
+import matt.model.op.debug.DebugLogger
+import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.obs.MObservable
 import matt.obs.bindings.bool.ObsB
 import matt.obs.col.olist.MutableObsList

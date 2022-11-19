@@ -3,8 +3,8 @@ package matt.obs.listen
 import matt.lang.NEVER
 import matt.lang.ifTrue
 import matt.lang.weak.WeakRef
-import matt.model.prints.Prints
-import matt.model.tostringbuilder.toStringBuilder
+import matt.model.op.prints.Prints
+import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.update.CollectionUpdate

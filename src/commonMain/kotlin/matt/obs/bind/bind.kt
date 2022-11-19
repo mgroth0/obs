@@ -1,8 +1,8 @@
 package matt.obs.bind
 
 import matt.lang.setAll
-import matt.model.convert.Converter
-import matt.model.debug.DebugLogger
+import matt.model.op.convert.Converter
+import matt.model.op.debug.DebugLogger
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MObservable
 import matt.obs.bindhelp.BindableValue

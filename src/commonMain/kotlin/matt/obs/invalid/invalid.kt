@@ -1,6 +1,6 @@
 package matt.obs.invalid
 
-import matt.model.debug.DebugLogger
+import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.listen.Listener
 import matt.obs.prop.ObsVal

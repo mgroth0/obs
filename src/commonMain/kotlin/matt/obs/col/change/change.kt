@@ -1,6 +1,6 @@
 package matt.obs.col.change
 
-import matt.model.tostringbuilder.toStringBuilder
+import matt.model.obj.tostringbuilder.toStringBuilder
 
 sealed interface CollectionChange<E> {
   val collection: Collection<E>

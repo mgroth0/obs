@@ -13,7 +13,7 @@ import matt.lang.anno.NeedsTest
 import matt.lang.comparableComparator
 import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
-import matt.model.prints.Prints
+import matt.model.op.prints.Prints
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableList
 import matt.obs.bindhelp.BindableListImpl

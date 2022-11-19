@@ -1,9 +1,8 @@
 package matt.obs.col.olist.mappedlist
 
 
-import matt.collect.lazy.basic.MutableLazyList
 import matt.lang.model.value.LazyValue
-import matt.model.convert.Converter
+import matt.model.op.convert.Converter
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl

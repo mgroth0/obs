@@ -1,6 +1,6 @@
 package matt.obs.math.mathable.op
 
-import matt.model.mathable.Mathable
+import matt.model.data.mathable.Mathable
 import matt.obs.bind.binding
 import matt.obs.prop.ObsVal
 import matt.obs.prop.Var

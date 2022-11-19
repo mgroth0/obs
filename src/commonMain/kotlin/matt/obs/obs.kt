@@ -2,9 +2,9 @@ package matt.obs
 
 import matt.lang.function.MetaFunction
 import matt.lang.weak.WeakRef
-import matt.model.prints.Prints
-import matt.model.syncop.AntiDeadlockSynchronizer
-import matt.model.tostringbuilder.toStringBuilder
+import matt.model.op.prints.Prints
+import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
+import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Update

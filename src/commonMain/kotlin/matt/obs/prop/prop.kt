@@ -5,7 +5,7 @@ import matt.lang.model.value.ValueWrapper
 import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
-import matt.model.convert.Converter
+import matt.model.op.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl

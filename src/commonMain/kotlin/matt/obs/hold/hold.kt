@@ -4,9 +4,9 @@ import matt.collect.itr.filterNotNull
 import matt.lang.delegation.provider
 import matt.lang.go
 import matt.lang.setAll
-import matt.model.debug.DebugLogger
-import matt.model.delegate.SimpleGetter
-import matt.model.prints.Prints
+import matt.model.op.debug.DebugLogger
+import matt.model.code.delegate.SimpleGetter
+import matt.model.op.prints.Prints
 import matt.obs.MObservable
 import matt.obs.col.change.CollectionChange
 import matt.obs.col.olist.basicMutableObservableListOf
