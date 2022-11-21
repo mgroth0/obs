@@ -4,7 +4,9 @@ import matt.lang.function.Op
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ObsVal
 import matt.obs.prop.Var
+import matt.time.UnixTime
 import matt.time.dur.sleep
+import java.util.concurrent.Semaphore
 import kotlin.concurrent.thread
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -12,13 +14,89 @@ import kotlin.time.Duration.Companion.seconds
 
 fun <T> watchProp(checkInterval: Duration, op: ()->T): ObsVal<T> {
   val prop = BindableProperty(op())
-  thread(isDaemon = true) {
-	while (true) {
-	  prop.value = op()
-	  sleep(checkInterval)
+  /*  thread(isDaemon = true) {
+	  while (true) {
+		prop.value = op()
+		sleep(checkInterval)
+	  }
+	}*/
+  Watcher.add(
+	prop,
+	checkInterval,
+	op
+  )
+  return prop
+}
+
+
+private object Watcher {
+  private val watchProps = mutableListOf<WatchProp<*>>()
+
+  private class WatchProp<T>(
+	val prop: BindableProperty<T>,
+	val interval: Duration,
+	val updateOp: ()->T,
+  ) {
+	var lastUpdate: UnixTime? = null
+	  set(value) {
+		field = value
+		nextUpdate = lazy { (lastUpdate ?: UnixTime(Duration.ZERO)) + interval }
+	  }
+	var nextUpdate = lazy { (lastUpdate ?: UnixTime(Duration.ZERO)) + interval }
+	  private set
+
+	fun update() {
+	  prop.value = updateOp()
 	}
   }
-  return prop
+
+  private val interruptSem = Semaphore(1)
+  fun <T> add(
+	prop: BindableProperty<T>,
+	interval: Duration,
+	updateOp: ()->T
+  ) {
+	synchronized(watchProps) {
+	  watchProps.add(
+		WatchProp(
+		  prop = prop,
+		  interval = interval,
+		  updateOp = updateOp
+		)
+	  )
+	  sort()
+	}
+	interruptSem.acquire()
+	myThread.interrupt()
+  }
+
+  private fun sort() {
+	watchProps.sortBy { it.nextUpdate.value }
+  }
+
+  private val myThread = thread(name = "Watcher", isDaemon = true) {
+	while (true) {
+	  try {
+		if (interruptSem.availablePermits() == 0) {
+		  interruptSem.release()
+		}
+		val next = synchronized(watchProps) {
+		  watchProps.first()
+		}
+		val nextUpdate = next.nextUpdate.value
+		while (UnixTime() < nextUpdate) {
+		  sleep(nextUpdate - UnixTime()) /*should only happen once*/
+		}
+		next.update()
+		next.lastUpdate = UnixTime()
+		synchronized(watchProps) {
+		  sort()
+		}
+	  } catch (e: InterruptedException) {
+		/*do nothing*/
+	  }
+	}
+  }
 }
 
 fun <T: Any> ObsVal<T>.watchedFrom(watcher: PropertyWatcher) = watcher.watch(this)

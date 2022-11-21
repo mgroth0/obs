@@ -11,6 +11,7 @@ import matt.lang.NEVER
 import matt.lang.NOT_IMPLEMENTED
 import matt.lang.anno.NeedsTest
 import matt.lang.comparableComparator
+import matt.lang.function.Consume
 import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
 import matt.model.op.prints.Prints
@@ -22,10 +23,12 @@ import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.AddAt
 import matt.obs.col.change.AddAtEnd
+import matt.obs.col.change.AdditionBase
 import matt.obs.col.change.Clear
 import matt.obs.col.change.CollectionChange
 import matt.obs.col.change.MultiAddAt
 import matt.obs.col.change.MultiAddAtEnd
+import matt.obs.col.change.RemovalBase
 import matt.obs.col.change.RemoveAt
 import matt.obs.col.change.RemoveElementFromList
 import matt.obs.col.change.RemoveElements
@@ -60,6 +63,23 @@ interface ObsList<E>: ImmutableObsList<E>, BindableList<E>, MutableList<E> {
 	}
   }
 
+
+  fun onAdd(op: Consume<E>) = listen(onAdd = op, onRemove = {})
+  fun onRemove(op: Consume<E>) = listen(onAdd = { }, onRemove = op)
+
+  fun listen(
+	onAdd: ((E)->Unit),
+	onRemove: ((E)->Unit),
+  ) {
+	addListener(CollectionListener {
+	  (it as? AdditionBase)?.addedElements?.forEach { e ->
+		onAdd(e)
+	  }
+	  (it as? RemovalBase)?.removedElements?.forEach { e ->
+		onRemove(e)
+	  }
+	})
+  }
 
 }
 
@@ -307,7 +327,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
   inner class SubList(
 	private val fromIndex: Int,
-	toIndexExclusive: Int
+	private var toIndexExclusive: Int
   ):
 	MutableList<E> {
 	internal var isValid = true
@@ -334,13 +354,22 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 		subList.clear()
 
+		toIndexExclusive = fromIndex
+
 		emitChange(RemoveElements(collection = this@BasicObservableListImpl, removed = copy))
 	  }
 
 	}
 
 	override fun addAll(elements: Collection<E>): Boolean {
-	  TODO("Not yet implemented")
+	  return inSync(this@BasicObservableListImpl) {
+		require(isValid)
+		val addIndex = toIndexExclusive
+		toIndexExclusive += elements.size
+		val r = subList.addAll(elements)
+		emitChange(MultiAddAt(collection = this@BasicObservableListImpl, added = elements, index = addIndex))
+		r
+	  }
 	}
 
 	override fun addAll(index: Int, elements: Collection<E>): Boolean {
@@ -355,6 +384,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  require(isValid)
 	  val b = subList.add(element)
 	  require(b)
+	  toIndexExclusive++
 	  emitChange(AddAt(this@BasicObservableListImpl, element, fromIndex + subList.size - 1))
 	  return b
 	}

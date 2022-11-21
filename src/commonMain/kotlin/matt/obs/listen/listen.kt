@@ -3,8 +3,8 @@ package matt.obs.listen
 import matt.lang.NEVER
 import matt.lang.ifTrue
 import matt.lang.weak.WeakRef
-import matt.model.op.prints.Prints
 import matt.model.obj.tostringbuilder.toStringBuilder
+import matt.model.op.prints.Prints
 import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.update.CollectionUpdate
@@ -17,6 +17,7 @@ import matt.obs.listen.update.ValueUpdate
 import matt.obs.listen.update.ValueUpdateWithWeakObj
 import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
+import matt.obs.prop.ObsVal
 
 @DslMarker annotation class ListenerDSL
 
@@ -127,6 +128,7 @@ class WeakListenerWithNewValue<W: Any, T>(
 }
 
 typealias OldNewListener<T> = OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>
+
 abstract class OldAndNewListener<T, U_IN: ValueChange<T>, U_OUT: ValueChange<T>>: ValueListener<T, U_IN, U_OUT>()
 
 class WeakListenerWithOld<W: Any, T>(
@@ -171,4 +173,14 @@ class ContextListener<C>(private val obj: C, private val invocation: C.()->Unit)
 class ObsHolderListener: MyListener<ObsHolderUpdate>() {
   internal val subListeners = mutableListOf<MyListener<*>>()
   override fun notify(update: ObsHolderUpdate, debugger: Prints?) = NEVER
+}
+
+
+fun <T> ObsVal<T>.whenEqualsOnce(t: T, op: ()->Unit) {
+  if (value == t) op()
+  else {
+	onChangeUntilInclusive({ it == t }, {
+	  if (it == t) op()
+	})
+  }
 }

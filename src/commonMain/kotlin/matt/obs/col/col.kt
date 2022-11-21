@@ -14,6 +14,8 @@ interface BasicOCollection<E>: Collection<E>, MListenable<CollectionListener<E>>
   override fun observe(op: ()->Unit) = onChange { op() }
   fun onChange(listenerName: String? = null, op: (CollectionChange<E>)->Unit): CollectionListener<E>
 
+
+
 }
 
 abstract class InternallyBackedOCollection<E> internal constructor():

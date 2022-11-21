@@ -1,9 +1,9 @@
 package matt.obs.bind
 
 import matt.lang.setAll
+import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
 import matt.model.op.debug.DebugLogger
-import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MObservable
 import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
@@ -18,6 +18,7 @@ import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.update.LazyNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.oobj.MObservableObject
+import matt.obs.prop.BindableProperty
 import matt.obs.prop.MObservableROValBase
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.MObservableValNewOnly
@@ -89,12 +90,18 @@ fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->
   addDependencyIgnoringFutureNullOuterChanges(this@deepBindingIgnoringFutureNullOuterChanges, { propGetter(it.value) })
 }
 
+
+fun <T> MyBinding<T>.eager() = BindableProperty(value).also { prop ->
+  onChange {
+	prop.value = it
+  }
+}
+
 interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
 
-
 abstract class MyBindingBaseImpl<T>(calc: ()->T):
-  MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>,out ValueUpdate<T>>>(),
+  MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>(),
   MyBindingBase<T>,
   CustomDependencies {
 
@@ -154,7 +161,8 @@ open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindin
 
 open class LazyBindableProp<T>(
   calc: ()->T
-): MyBindingBaseImpl<T>(calc), WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
+): MyBindingBaseImpl<T>(calc),
+   WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
 
   constructor(t: T): this({ t })
 
