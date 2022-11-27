@@ -140,14 +140,19 @@ fun <T, O: ObsVal<T>> O.withChangeListener(op: (T)->Unit) = apply {
 }
 
 
-
-
 interface MObservableValNewAndOld<T>:
   MObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>> {
 
   override fun onChange(op: (T)->Unit) = addListener(OldAndNewListenerImpl { _, new ->
 	op(new)
   })
+
+  fun onChangeWithOld( op: (old: T, new: T)->Unit) = run {
+	val listener = OldAndNewListenerImpl { old: T, new: T ->
+	  op(old, new)
+	}
+	addListener(listener)
+  }
 
   override fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit) = run {
 	val weakRef = WeakRef(o)
@@ -317,6 +322,7 @@ typealias VarProp<T> = BindableProperty<T>
 
 
 typealias GoodVar<T> = MWritableValNewAndOld<T>
+
 interface MWritableValNewAndOld<T>:
   WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>,
   MObservableValNewAndOld<T>
