@@ -82,6 +82,13 @@ sealed class ValueListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyLi
 
 
   final override fun notify(update: U_IN, debugger: Prints?) {
+
+//	val ss = stackSize()
+//	println("ss=$ss")
+//	if (ss > 1000) {
+//	  error("here?")
+//	}
+
 	val u = transformUpdate(update)
 	if (u == null) removeListener()
 	else {
