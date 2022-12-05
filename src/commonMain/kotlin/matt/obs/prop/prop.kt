@@ -1,12 +1,14 @@
 package matt.obs.prop
 
 import matt.lang.anno.TemporaryCode
+import matt.lang.function.Produce
 import matt.lang.model.value.ValueWrapper
+import matt.lang.sync.inSync
 import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
-import matt.model.op.convert.Converter
 import matt.model.flowlogic.keypass.KeyPass
+import matt.model.op.convert.Converter
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.binding
@@ -147,7 +149,7 @@ interface MObservableValNewAndOld<T>:
 	op(new)
   })
 
-  fun onChangeWithOld( op: (old: T, new: T)->Unit) = run {
+  fun onChangeWithOld(op: (old: T, new: T)->Unit) = run {
 	val listener = OldAndNewListenerImpl { old: T, new: T ->
 	  op(old, new)
 	}
@@ -326,6 +328,21 @@ typealias GoodVar<T> = MWritableValNewAndOld<T>
 interface MWritableValNewAndOld<T>:
   WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>,
   MObservableValNewAndOld<T>
+
+class SynchronizedProperty<T>(value: T): BindableProperty<T>(value) {
+  @PublishedApi
+  internal val monitor = {}
+  fun <R> with(op: Produce<R>) = inSync(monitor, op)
+
+
+  override var value: T
+	get() = inSync(monitor) { super.value }
+	set(value) {
+	  inSync(monitor) {
+		super.value = value
+	  }
+	}
+}
 
 open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 										  MWritableValNewAndOld<T>,

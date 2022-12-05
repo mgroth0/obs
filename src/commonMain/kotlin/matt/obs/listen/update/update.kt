@@ -4,6 +4,9 @@ import matt.obs.col.change.CollectionChange
 import matt.obs.map.change.MapChange
 
 sealed interface Update
+interface Event: Update
+object Beep: Event
+class PagerMessage<M>(val message: M): Event
 sealed interface ValueUpdate<T>: Update {
   val new: T
 }

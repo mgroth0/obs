@@ -39,7 +39,7 @@ import matt.obs.listen.update.Update
   fun addListener(listener: L): L
 }
 
-abstract class MObservableImpl<U: Update, L: MyListener<U>> internal constructor(): MListenable<L> {
+abstract class MObservableImpl<U: Update, L: MyListener<in U>> internal constructor(): MListenable<L> {
 
   override var nam: String? = null
 

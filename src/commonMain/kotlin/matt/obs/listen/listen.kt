@@ -1,6 +1,9 @@
 package matt.obs.listen
 
 import matt.lang.NEVER
+import matt.lang.function.Consume
+import matt.lang.function.Op
+import matt.lang.go
 import matt.lang.ifTrue
 import matt.lang.weak.WeakRef
 import matt.model.obj.tostringbuilder.toStringBuilder
@@ -9,6 +12,7 @@ import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ContextUpdate
+import matt.obs.listen.update.Event
 import matt.obs.listen.update.MapUpdate
 import matt.obs.listen.update.ObsHolderUpdate
 import matt.obs.listen.update.Update
@@ -18,6 +22,8 @@ import matt.obs.listen.update.ValueUpdateWithWeakObj
 import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
 import matt.obs.prop.ObsVal
+import matt.obs.subscribe.Channel
+import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ListenerDSL
 
@@ -25,7 +31,7 @@ typealias Listener = MyListener<*>
 
 interface MyListenerInter
 
-@ListenerDSL sealed class MyListener<U: Update>: MyListenerInter {
+@ListenerDSL abstract class MyListener<U: Update>: MyListenerInter {
 
   var name: String? = null
 
@@ -83,11 +89,11 @@ sealed class ValueListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyLi
 
   final override fun notify(update: U_IN, debugger: Prints?) {
 
-//	val ss = stackSize()
-//	println("ss=$ss")
-//	if (ss > 1000) {
-//	  error("here?")
-//	}
+	//	val ss = stackSize()
+	//	println("ss=$ss")
+	//	if (ss > 1000) {
+	//	  error("here?")
+	//	}
 
 	val u = transformUpdate(update)
 	if (u == null) removeListener()
@@ -191,3 +197,4 @@ fun <T> ObsVal<T>.whenEqualsOnce(t: T, op: ()->Unit) {
 	})
   }
 }
+

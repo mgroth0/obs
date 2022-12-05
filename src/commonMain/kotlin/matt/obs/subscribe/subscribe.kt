@@ -1,58 +1,35 @@
 package matt.obs.subscribe
 
 import matt.lang.function.Consume
-import matt.lang.function.Op
-import kotlin.jvm.Synchronized
+import matt.obs.MObservableImpl
+import matt.obs.listen.event.BasicEventListener
+import matt.obs.listen.event.MyEventListener
+import matt.obs.listen.event.Subscription
+import matt.obs.listen.update.Beep
+import matt.obs.listen.update.Event
+import matt.obs.listen.update.PagerMessage
 
-class Channel<U> {
-  fun post(u: U) {
-	val removeSafeCopy = subscribers.toList()
-	removeSafeCopy.forEach {
-	  it.update(u)
-	}
-  }
+open class Channel<E: Event>: MObservableImpl<E, MyEventListener<in E>>() {
 
-  fun subscribe(): Subscription<U> {
-	val sub = Subscription(this)
-	subscribers += sub
-	return sub
-  }
+  fun post(u: E) = notifyListeners(u)
+  fun broadcast(e: E) = post(e)
 
-  internal val subscribers = mutableListOf<Subscription<U>>()
+
+  fun subscribe() = addListener(Subscription())
+
+  override fun observe(op: ()->Unit) = addListener(BasicEventListener { op() })
+
 }
 
-class Subscription<U>(
-  private val channel: Channel<U>,
-) {
-  internal val notifications = mutableListOf<U>()
 
-  @Synchronized
-  internal fun update(u: U) {
-	notifications += u
-	val removeSafeCopy = listeners.toList()
-	removeSafeCopy.forEach {
-	  it(u)
-	}
-  }
+class Beeper: Channel<Beep>() {
 
-  private val listeners = mutableListOf<Consume<U>>()
+  fun beep() = broadcast(Beep)
+}
 
-  fun unsubscribe() {
-	channel.subscribers.remove(this)
-  }
-
-  @Synchronized
-  fun whenItHasAtLeastOneNotification(op: Op) {
-	if (notifications.size >= 1) {
-	  op()
-	} else {
-	  var listener: Consume<U>? = null
-	  listener = {
-		op()
-		listeners.remove(listener!!)
-	  }
-	  listeners += listener
-	}
-  }
-
+class Pager<M>: Channel<PagerMessage<M>>() {
+  fun page(message: M) = broadcast(PagerMessage(message))
+  fun listen(op: Consume<M>) = addListener(BasicEventListener {
+	op(it.message)
+  })
 }
