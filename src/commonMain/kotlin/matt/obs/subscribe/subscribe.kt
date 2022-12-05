@@ -15,7 +15,7 @@ open class Channel<E: Event>: MObservableImpl<E, MyEventListener<in E>>() {
   fun broadcast(e: E) = post(e)
 
 
-  fun subscribe() = addListener(Subscription())
+  @Suppress("UNCHECKED_CAST") fun subscribe(): Subscription<E> = addListener(Subscription()) as Subscription<E>
 
   override fun observe(op: ()->Unit) = addListener(BasicEventListener { op() })
 
