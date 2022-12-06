@@ -3,8 +3,8 @@ package matt.obs.bindhelp
 import matt.lang.setAll
 import matt.lang.weak.WeakRef
 import matt.lang.weak.getValue
-import matt.model.op.convert.Converter
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
+import matt.model.op.convert.Converter
 import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
 import matt.obs.bind.binding
@@ -41,6 +41,7 @@ sealed class BindableImpl: Bindable {
 }
 
 interface BindableList<E>: Bindable {
+  fun bind(source: ObsList<E>) = bind(source) { it }
   fun <S> bind(source: ObsList<S>, converter: (S)->E)
   fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>)
 }

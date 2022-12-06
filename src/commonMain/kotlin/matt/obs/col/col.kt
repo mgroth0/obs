@@ -6,22 +6,23 @@ import matt.obs.MObservableImpl
 import matt.obs.bindhelp.BindableList
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.CollectionListener
+import matt.obs.listen.CollectionListenerBase
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 
-interface BasicOCollection<E>: Collection<E>, MListenable<CollectionListener<E>> {
+interface BasicOCollection<E>: Collection<E>, MListenable<CollectionListenerBase<E>> {
   override fun observe(op: ()->Unit) = onChange { op() }
-  fun onChange(listenerName: String? = null, op: (CollectionChange<E>)->Unit): CollectionListener<E>
+  fun onChange(listenerName: String? = null, op: (CollectionChange<E>)->Unit): CollectionListenerBase<E>
 
 
 
 }
 
 abstract class InternallyBackedOCollection<E> internal constructor():
-  MObservableImpl<CollectionUpdate<E>, CollectionListener<E>>(), BasicOCollection<E> {
+  MObservableImpl<CollectionUpdate<E>, CollectionListenerBase<E>>(), BasicOCollection<E> {
 
-  override fun onChange(listenerName: String?, op: (CollectionChange<E>)->Unit): CollectionListener<E> {
+  override fun onChange(listenerName: String?, op: (CollectionChange<E>)->Unit): CollectionListenerBase<E> {
 	return addListener(CollectionListener {    //	  println("addListener c = $it")
 	  op(it)
 	}.also {
@@ -47,3 +48,5 @@ abstract class InternallyBackedOCollection<E> internal constructor():
 }
 
 interface BasicOMutableCollection<E>: BasicOCollection<E>, MutableCollection<E>
+
+

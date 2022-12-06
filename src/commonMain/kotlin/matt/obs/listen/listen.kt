@@ -1,9 +1,6 @@
 package matt.obs.listen
 
 import matt.lang.NEVER
-import matt.lang.function.Consume
-import matt.lang.function.Op
-import matt.lang.go
 import matt.lang.ifTrue
 import matt.lang.weak.WeakRef
 import matt.model.obj.tostringbuilder.toStringBuilder
@@ -12,7 +9,6 @@ import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ContextUpdate
-import matt.obs.listen.update.Event
 import matt.obs.listen.update.MapUpdate
 import matt.obs.listen.update.ObsHolderUpdate
 import matt.obs.listen.update.Update
@@ -22,8 +18,6 @@ import matt.obs.listen.update.ValueUpdateWithWeakObj
 import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
 import matt.obs.prop.ObsVal
-import matt.obs.subscribe.Channel
-import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ListenerDSL
 
@@ -123,6 +117,20 @@ class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit):
 
 interface MyWeakListener: MyListenerInter
 
+class WeakCollectionListener<W: Any, E>(
+  private val wref: WeakRef<W>,
+  private val invoke: MyListener<*>.(ref: W, change: CollectionChange<E>)->Unit
+): CollectionListenerBase<E>(), MyWeakListener {
+
+  override fun subNotify(change: CollectionChange<E>) {
+	val w = wref.deref()
+	if (w == null) removeListener()
+	else invoke(this, w, change)
+  }
+
+}
+
+
 class WeakListenerWithNewValue<W: Any, T>(
   private val wref: WeakRef<W>,
   internal val invoke: WeakListenerWithNewValue<W, T>.(ref: W, new: T)->Unit
@@ -166,10 +174,14 @@ class OldAndNewListenerImpl<T>(internal val invoke: OldAndNewListenerImpl<T>.(ol
   override fun subNotify(update: ValueChange<T>, debugger: Prints?) = invoke(update.old, update.new)
 }
 
+abstract class CollectionListenerBase<E>(): MyListener<CollectionUpdate<E>>() {
+  final override fun notify(update: CollectionUpdate<E>, debugger: Prints?) = subNotify(update.change)
+  abstract fun subNotify(change: CollectionChange<E>)
+}
 
 class CollectionListener<E>(internal val invoke: CollectionListener<E>.(change: CollectionChange<E>)->Unit):
-  MyListener<CollectionUpdate<E>>() {
-  override fun notify(update: CollectionUpdate<E>, debugger: Prints?) = invoke(update.change)
+  CollectionListenerBase<E>() {
+  override fun subNotify(change: CollectionChange<E>) = invoke(change)
 }
 
 class MapListener<K, V>(internal val invoke: MapListener<K, V>.(change: MapChange<K, V>)->Unit):

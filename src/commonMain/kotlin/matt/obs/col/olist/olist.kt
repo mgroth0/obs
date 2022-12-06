@@ -39,7 +39,10 @@ import matt.obs.col.olist.dynamic.BasicSortedList
 import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
 import matt.obs.listen.CollectionListener
+import matt.obs.listen.CollectionListenerBase
 import matt.obs.listen.Listener
+import matt.obs.listen.WeakCollectionListener
+import matt.obs.listen.WeakListenerWithNewValue
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
@@ -52,15 +55,20 @@ interface ObsList<E>: ImmutableObsList<E>, BindableList<E>, MutableList<E> {
 
   fun sorted(comparator: Comparator<in E>? = null): BasicSortedList<E> = DynamicList(this, comparator = comparator)
 
-  fun onChangeWithWeak(
-	o: Any, op: ()->Unit
+  fun <W: Any> onChangeWithWeak(
+	o: W, op: (W)->Unit
   ) = run {
 	val weakRef = WeakRef(o)
-	onChange {
-	  op()
-	}.apply {
-	  removeCondition = { weakRef.deref() == null }
+	onChangeWithAlreadyWeak(weakRef) {
+	  op(it)
 	}
+  }
+
+  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W)->Unit) = run {
+	val listener = WeakCollectionListener<W, E>(weakRef) { o: W, _ ->
+	  op(o)
+	}
+	addListener(listener)
   }
 
 
@@ -446,7 +454,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 
   fun <R> view(converter: (E)->R) = object: ImmutableObsList<R> {
-	override fun onChange(listenerName: String?, op: (CollectionChange<R>)->Unit): CollectionListener<R> {
+	override fun onChange(listenerName: String?, op: (CollectionChange<R>)->Unit): CollectionListenerBase<R> {
 	  TODO("Not yet implemented")
 	}
 
@@ -459,7 +467,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 	override fun iterator(): Iterator<R> = listIterator()
 
-	override fun addListener(listener: CollectionListener<R>): CollectionListener<R> {
+	override fun addListener(listener: CollectionListenerBase<R>): CollectionListenerBase<R> {
 	  TODO("Not yet implemented")
 	}
 

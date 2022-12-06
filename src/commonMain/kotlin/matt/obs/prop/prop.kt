@@ -409,3 +409,13 @@ fun <T> ObsVal<T>.wrapWithScheduledUpdates(scheduler: Scheduler? = null): ObsVal
   }
   return w
 }
+
+
+
+/**
+ * Listen to changes and update the value of the property if the given mutator results in a different value
+ */
+fun <T> Var<T>.mutateOnChange(mutator: (T)->T) = onChange {
+  val changed = mutator(value)
+  if (changed != value) value = changed
+}
