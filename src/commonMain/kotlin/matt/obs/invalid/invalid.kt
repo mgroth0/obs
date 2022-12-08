@@ -119,10 +119,10 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 
   private fun removeDep(dep: DepListenerSet) {
 	dep.mainListeners.forEach {
-	  it.removeListener()
+	  it.tryRemovingListener()
 	}
 	dep.subListeners.forEach {
-	  it.removeListener()
+	  it.tryRemovingListener()
 	}
 	deps.remove(dep)
   }
