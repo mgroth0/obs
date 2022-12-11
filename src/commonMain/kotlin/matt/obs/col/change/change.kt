@@ -1,5 +1,6 @@
 package matt.obs.col.change
 
+import matt.log.taball
 import matt.model.obj.tostringbuilder.toStringBuilder
 
 sealed interface CollectionChange<E> {
@@ -75,8 +76,8 @@ sealed class MultiRemoval<E>(override val collection: Collection<E>, val removed
 class RemoveElements<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<E>(collection, removed) {
 
 
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = RemoveElements(collection, removed.map(convert))
-
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	RemoveElements(collection, removed.map(convert))
 
 
 }
@@ -107,22 +108,30 @@ class Clear<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<
 
 
 fun <E> MutableList<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
-//  println("mirror c = $c")
-  when (c) {
-	is AddAt          -> add(index = c.index, element = c.added)
-	is AddAtEnd       -> add(c.added)
-	is MultiAddAt     -> addAll(index = c.index, elements = c.added)
-	is MultiAddAtEnd  -> addAll(c.added)
-	is ReplaceAt      -> set(index = c.index, c.added)
-	is Clear          -> clear()
-	is RemoveElements -> removeAll(c.removed)
-	is RetainAll      -> retainAll(c.retained)
-	is RemoveAt       -> removeAt(c.index)
-	is RemoveElement  -> remove(c.removed)
+  try {
+	when (c) {
+	  is AddAt          -> add(index = c.index, element = c.added)
+	  is AddAtEnd       -> add(c.added)
+	  is MultiAddAt     -> addAll(index = c.index, elements = c.added)
+	  is MultiAddAtEnd  -> addAll(c.added)
+	  is ReplaceAt      -> set(index = c.index, c.added)
+	  is Clear          -> clear()
+	  is RemoveElements -> removeAll(c.removed)
+	  is RetainAll      -> retainAll(c.retained)
+	  is RemoveAt       -> removeAt(c.index)
+	  is RemoveElement  -> remove(c.removed)
+	}
+  } catch (e: IllegalArgumentException) {
+	/*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
+	println("c=$c")
+	taball("mirroring list", this)
+	throw e
   }
+
   return c
 }
 
-fun <S, T> MutableList<T>.mirror(c: CollectionChange<S>, convert: (S)->T) =
+fun <S, T> MutableList<T>.mirror(c: CollectionChange<S>, convert: (S)->T) {
   mirror(c.convert(this, convert))
+}
 

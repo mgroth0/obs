@@ -30,6 +30,12 @@ import matt.obs.prop.VarProp
 import matt.obs.prop.WritableMObservableVal
 import kotlin.jvm.Synchronized
 
+
+infix fun <T: Any> ObsVal<T?>.coalesceNull(backup: ObsVal<T?>) = MyBinding(this, backup) {
+  this@coalesceNull.value ?: backup.value
+}
+
+
 fun <T> BindableValue<T>.smartBind(property: ValProp<T>, readonly: Boolean) {
   if (readonly || (property !is VarProp<*>)) bind(property) else bindBidirectional(property as VarProp)
 }
@@ -84,11 +90,13 @@ fun <T, R> ObsVal<T>.deepBinding(
 	moreDeps = listOf(*dependencies), debugLogger = debugLogger, { propGetter(it.value) })
 }
 
-fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(propGetter: (T)->ObsVal<R>?) = MyBinding(this) {
-  propGetter(value)?.value
-}.apply {
-  addDependencyIgnoringFutureNullOuterChanges(this@deepBindingIgnoringFutureNullOuterChanges, { propGetter(it.value) })
-}
+fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(vararg deps: MObservable, propGetter: (T)->ObsVal<R>?) =
+  MyBinding(this, *deps) {
+	propGetter(value)?.value
+  }.apply {
+	addDependencyIgnoringFutureNullOuterChanges(
+	  this@deepBindingIgnoringFutureNullOuterChanges, { propGetter(it.value) })
+  }
 
 
 fun <T> MyBinding<T>.eager() = BindableProperty(value).also { prop ->
@@ -206,3 +214,4 @@ open class LazyBindableProp<T>(
   override fun unbind() = bindManager.unbind()
 
 }
+
