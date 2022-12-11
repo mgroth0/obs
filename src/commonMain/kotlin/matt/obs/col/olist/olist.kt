@@ -30,6 +30,7 @@ import matt.obs.col.change.MultiAddAt
 import matt.obs.col.change.MultiAddAtEnd
 import matt.obs.col.change.RemovalBase
 import matt.obs.col.change.RemoveAt
+import matt.obs.col.change.RemoveElement
 import matt.obs.col.change.RemoveElementFromList
 import matt.obs.col.change.RemoveElements
 import matt.obs.col.change.ReplaceAt
@@ -42,7 +43,6 @@ import matt.obs.listen.CollectionListener
 import matt.obs.listen.CollectionListenerBase
 import matt.obs.listen.Listener
 import matt.obs.listen.WeakCollectionListener
-import matt.obs.listen.WeakListenerWithNewValue
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
@@ -429,7 +429,13 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	override fun set(index: Int, element: E) = NOT_IMPLEMENTED
 	override fun retainAll(elements: Collection<E>) = NOT_IMPLEMENTED
 	override fun removeAll(elements: Collection<E>) = NOT_IMPLEMENTED
-	override fun remove(element: E) = NOT_IMPLEMENTED
+	override fun remove(element: E): Boolean {
+	  require(isValid)
+	  val b = subList.remove(element)
+	  if (b) toIndexExclusive--
+	  if (b) emitChange(RemoveElement(this@BasicObservableListImpl, element))
+	  return b
+	}
 
 	override fun lastIndexOf(element: E): Int {
 	  require(isValid)
