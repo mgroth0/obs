@@ -13,8 +13,7 @@ import matt.obs.hold.NamedObsHolder
 import matt.obs.prop.BindableProperty
 import kotlin.reflect.KClass
 
-class BindablePropertySerializer<T>(val serializer: KSerializer<T>):
-  MyJsonSerializer<BindableProperty<T>>(BindableProperty::class) {
+class BindablePropertySerializer<T>(val serializer: KSerializer<T>): MyJsonSerializer<BindableProperty<T>>(BindableProperty::class) {
   override fun deserialize(jsonElement: JsonElement): BindableProperty<T> {
 	return BindableProperty(Json.decodeFromJsonElement(serializer, jsonElement))
   }
