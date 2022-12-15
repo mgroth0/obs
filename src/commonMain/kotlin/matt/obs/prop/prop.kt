@@ -362,7 +362,9 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
   override var value = value
 	set(v) {
 	  if (v != field) {
-		require(!this.isBoundUnidirectionally || bindWritePass.isHeld)
+		require(!this.isBoundUnidirectionally || bindWritePass.isHeld) {
+		  "isBoundUnidirectionally=$isBoundUnidirectionally, bindWritePass.isHeld=${bindWritePass.isHeld}"
+		}
 		inSyncOrJustRun(monitorForSetting) {
 		  val old = field
 		  field = v
