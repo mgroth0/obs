@@ -30,7 +30,6 @@ import matt.obs.col.change.MultiAddAt
 import matt.obs.col.change.MultiAddAtEnd
 import matt.obs.col.change.RemovalBase
 import matt.obs.col.change.RemoveAt
-import matt.obs.col.change.RemoveElement
 import matt.obs.col.change.RemoveElementFromList
 import matt.obs.col.change.RemoveElements
 import matt.obs.col.change.ReplaceAt
@@ -56,17 +55,17 @@ interface ObsList<E>: ImmutableObsList<E>, BindableList<E>, MutableList<E> {
   fun sorted(comparator: Comparator<in E>? = null): BasicSortedList<E> = DynamicList(this, comparator = comparator)
 
   fun <W: Any> onChangeWithWeak(
-	o: W, op: (W)->Unit
+	o: W, op: (W, CollectionChange<E>)->Unit
   ) = run {
 	val weakRef = WeakRef(o)
-	onChangeWithAlreadyWeak(weakRef) {
-	  op(it)
+	onChangeWithAlreadyWeak(weakRef) { w, c ->
+	  op(w, c)
 	}
   }
 
-  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W)->Unit) = run {
-	val listener = WeakCollectionListener<W, E>(weakRef) { o: W, _ ->
-	  op(o)
+  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, CollectionChange<E>)->Unit) = run {
+	val listener = WeakCollectionListener<W, E>(weakRef) { o: W, c: CollectionChange<E> ->
+	  op(o, c)
 	}
 	addListener(listener)
   }
@@ -426,14 +425,31 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	override fun listIterator(index: Int) = NOT_IMPLEMENTED
 	override fun removeAt(index: Int) = NOT_IMPLEMENTED
 	override fun subList(fromIndex: Int, toIndex: Int) = NOT_IMPLEMENTED
-	override fun set(index: Int, element: E) = NOT_IMPLEMENTED
+	override fun set(index: Int, element: E): E {
+	  require(isValid)
+	  val prev = subList.set(index, element)
+	  emitChange(ReplaceAt(this@BasicObservableListImpl, removed = prev, added = element, index = fromIndex + index))
+	  return prev
+	}
+
 	override fun retainAll(elements: Collection<E>) = NOT_IMPLEMENTED
-	override fun removeAll(elements: Collection<E>) = NOT_IMPLEMENTED
+	override fun removeAll(elements: Collection<E>): Boolean {
+	  require(isValid)
+	  val prevSize = subList.size
+	  val b = subList.removeAll(elements)
+	  val newSize = subList.size
+	  val numRemoved = prevSize - newSize
+	  toIndexExclusive -= numRemoved
+	  if (b) emitChange(RemoveElements(this@BasicObservableListImpl, elements))
+	  return b
+	}
+
 	override fun remove(element: E): Boolean {
 	  require(isValid)
+	  val i = subList.indexOf(element)
 	  val b = subList.remove(element)
 	  if (b) toIndexExclusive--
-	  if (b) emitChange(RemoveElement(this@BasicObservableListImpl, element))
+	  if (b) emitChange(RemoveAt(this@BasicObservableListImpl, element, i + fromIndex))
 	  return b
 	}
 
