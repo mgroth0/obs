@@ -10,6 +10,7 @@ import matt.lang.weak.lazySoft
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
 import matt.model.op.debug.DebugLogger
+import matt.model.op.prints.Prints
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.binding
@@ -50,7 +51,7 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 	TODO("Not yet implemented")
   }
 
-  override var debugger: DebugLogger?
+  override var debugger: Prints?
 	get() = TODO("Not yet implemented")
 	set(value) {}
 
