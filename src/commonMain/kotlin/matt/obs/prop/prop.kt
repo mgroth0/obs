@@ -9,6 +9,7 @@ import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
+import matt.model.op.debug.DebugLogger
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.bind.binding
@@ -28,24 +29,13 @@ import matt.obs.listen.update.ValueUpdate
 import matt.obs.prop.cast.CastedWritableProp
 import matt.obs.prop.proxy.ProxyProp
 import matt.service.scheduler.Scheduler
+import kotlin.jvm.JvmInline
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
-@TemporaryCode typealias FakeObsVal<T> = BindableProperty<T>
 
-private val later = 1.apply {
-  if (KotlinVersion.CURRENT.isAtLeast(1, 8)) {
-	println(
-	  "now I can finally make FakeObsVal (and remve the temporary typealias a real inline class since I can have generic inline classes!"
-	)
-
-	/*
-	*
-	*
-	*
-	*
-	* @JvmInline
+@JvmInline
 value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 
   override fun addListener(listener: OldAndNewListener<T>): OldAndNewListener<T> {
@@ -65,14 +55,7 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 	set(value) {}
 
 }
-*
-*
-	*
-	*
-	* */
 
-  }
-}
 
 
 sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U, out ValueUpdate<T>>>: MListenable<L>,
