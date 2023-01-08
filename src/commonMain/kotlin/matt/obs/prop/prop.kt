@@ -38,7 +38,7 @@ typealias ObsVal<T> = MObservableVal<T, *, *>
 @JvmInline
 value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 
-  override fun addListener(listener: OldAndNewListener<T>): OldAndNewListener<T> {
+  override fun addListener(listener: OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>): OldAndNewListener<T, ValueChange<T>, out ValueChange<T>> {
 	TODO("Not yet implemented")
   }
 
@@ -55,7 +55,6 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 	set(value) {}
 
 }
-
 
 
 sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U, out ValueUpdate<T>>>: MListenable<L>,
@@ -126,7 +125,7 @@ fun <T, O: ObsVal<T>> O.withChangeListener(op: (T)->Unit) = apply {
 
 
 interface MObservableValNewAndOld<T>:
-  MObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>> {
+	MObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>> {
 
   override fun onChange(op: (T)->Unit) = addListener(OldAndNewListenerImpl { _, new ->
 	op(new)
@@ -166,7 +165,7 @@ interface MObservableValNewAndOld<T>:
 }
 
 interface MObservableValNewOnly<T>:
-  MObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
+	MObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
   override fun onChange(op: (T)->Unit) = addListener(NewListener { new ->
 	op(new)
   })
@@ -288,8 +287,8 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U,
 typealias ValProp<T> = ReadOnlyBindableProperty<T>
 
 open class ReadOnlyBindableProperty<T>(value: T):
-  MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>(),
-  MObservableValNewAndOld<T> {
+	MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>(),
+	MObservableValNewAndOld<T> {
 
   override var value = value
 	protected set(v) {
@@ -309,8 +308,8 @@ typealias VarProp<T> = BindableProperty<T>
 typealias GoodVar<T> = MWritableValNewAndOld<T>
 
 interface MWritableValNewAndOld<T>:
-  WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>,
-  MObservableValNewAndOld<T>
+	WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>,
+	MObservableValNewAndOld<T>
 
 class SynchronizedProperty<T>(value: T): BindableProperty<T>(value) {
   @PublishedApi
@@ -394,7 +393,6 @@ fun <T> ObsVal<T>.wrapWithScheduledUpdates(scheduler: Scheduler? = null): ObsVal
   }
   return w
 }
-
 
 
 /**
