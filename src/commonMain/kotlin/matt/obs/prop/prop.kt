@@ -53,7 +53,9 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 
   override var debugger: Prints?
 	get() = TODO("Not yet implemented")
-	set(value) {}
+	set(value) {
+	  TODO("Not yet implemented")
+	}
 
 }
 
