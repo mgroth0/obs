@@ -11,8 +11,9 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 @OptIn(InternalSerializationApi::class)
-open class TypedObsHolderSerializer<T: TypedObservableHolder>(private val cls: KClass<T>):
-  JsonObjectFXSerializer<T>(cls) {
+open class TypedObsHolderSerializer<T: TypedObservableHolder>(
+  private val cls: KClass<T>
+): JsonObjectFXSerializer<T>(cls) {
   override fun deserialize(jsonObject: JsonObject): T {
 	return cls.createInstance().apply {
 	  namedObservables().forEach { (k, v) ->

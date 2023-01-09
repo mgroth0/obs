@@ -1,13 +1,6 @@
 package matt.obs.hold
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.encodeToJsonElement
 import matt.collect.itr.filterNotNull
-import matt.json.decode
-import matt.json.oldfx.jsonObj
-import matt.json.prim.loadJson
-import matt.json.prim.loadOrSaveJson
 import matt.lang.delegation.provider
 import matt.lang.go
 import matt.lang.setAll
@@ -21,10 +14,8 @@ import matt.obs.col.olist.basicROObservableListOf
 import matt.obs.listen.Listener
 import matt.obs.listen.ObsHolderListener
 import matt.obs.prop.BindableProperty
-import matt.obs.prop.VarProp
+import matt.obs.prop.ObsVal
 import matt.obs.prop.typed.TypedBindableProperty
-import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
 
 interface MObsHolder<O: MObservable>: MObservable {
   val observables: List<O>
@@ -116,9 +107,12 @@ open class TypedObservableHolder: ObservableHolderImplBase<TypedBindableProperty
 	  fx.onChange { listener() }
 	}
 	_observables[it] = fx
+	postRegister(fx)
 	SimpleGetter(fx)
   }
+  open fun postRegister(prop: ObsVal<*>) = Unit
 }
+
 
 
 

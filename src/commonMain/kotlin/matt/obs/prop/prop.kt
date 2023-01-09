@@ -7,6 +7,8 @@ import matt.lang.sync.inSync
 import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
+import matt.log.warn.warn
+import matt.log.warn.warnOnce
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
 import matt.model.op.debug.DebugLogger
@@ -40,7 +42,8 @@ typealias ObsVal<T> = MObservableVal<T, *, *>
 value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 
   override fun addListener(listener: OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>): OldAndNewListener<T, ValueChange<T>, out ValueChange<T>> {
-	TODO("Not yet implemented")
+	warnOnce("listening to FakeObsVal")
+	return listener
   }
 
   override var nam: String?
@@ -367,7 +370,18 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
   }
 
   final override val bindManager by lazy { BindableValueHelper(this) }
+
+
   override infix fun bind(source: ObsVal<out T>) = bindManager.bind(source)
+
+  /*allows property to still be set by other means*/
+  fun pseudoBind(source: ObsVal<out T>) {
+	value = source.value
+	source.onChange {
+	  value = it
+	}
+  }
+
   override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean) =
 	bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug)
 
