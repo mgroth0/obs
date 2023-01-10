@@ -40,7 +40,7 @@ import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
 import matt.obs.listen.CollectionListener
 import matt.obs.listen.CollectionListenerBase
-import matt.obs.listen.Listener
+import matt.obs.listen.MyListenerInter
 import matt.obs.listen.WeakCollectionListener
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
@@ -499,7 +499,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 		this@BasicObservableListImpl.nam = value
 	  }
 
-	override fun removeListener(listener: Listener) {
+	override fun removeListener(listener: MyListenerInter) {
 	  TODO("Not yet implemented")
 	}
 

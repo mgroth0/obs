@@ -2,11 +2,13 @@ package matt.obs
 
 import matt.lang.function.MetaFunction
 import matt.lang.weak.WeakRef
-import matt.model.op.prints.Prints
 import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
 import matt.model.obj.tostringbuilder.toStringBuilder
+import matt.model.op.prints.Prints
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
+import matt.obs.listen.MyListenerInter
+import matt.obs.listen.MyWeakListener
 import matt.obs.listen.update.Update
 
 @DslMarker annotation class ObservableDSL
@@ -14,7 +16,7 @@ import matt.obs.listen.update.Update
 @ObservableDSL interface MObservable {
   var nam: String?
   fun observe(op: ()->Unit): Listener
-  fun removeListener(listener: Listener)
+  fun removeListener(listener: MyListenerInter)
 
   /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
   fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): Listener {
@@ -75,14 +77,24 @@ abstract class MObservableImpl<U: Update, L: MyListener<in U>> internal construc
 	}
   }
 
-  override fun removeListener(listener: Listener) {
+  override fun removeListener(listener: MyListenerInter) {
 	synchronizer.operateOnInternalDataNowOrLater {
 	  listeners.remove(listener)
-	  listener.currentObservable = null
+	  (listener as? MyListener<*>)?.currentObservable = null
 	}
   }
 
   private val changeQueue = mutableListOf<()->Unit>()
+
+  /*TODO: This should be done by a ReferencesQueue on JVM*/
+  fun cleanWeakListeners() {
+
+	listeners.filterIsInstance<MyWeakListener>().forEach {
+	  if (it.shouldBeCleaned()) {
+		removeListener(it)
+	  }
+	}
+  }
 
 }
 

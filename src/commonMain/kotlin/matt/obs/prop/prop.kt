@@ -20,6 +20,7 @@ import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.bindings.bool.not
 import matt.obs.listen.Listener
+import matt.obs.listen.MyListenerInter
 import matt.obs.listen.NewListener
 import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.OldAndNewListener
@@ -52,7 +53,7 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 	  TODO("Not yet implemented")
 	}
 
-  override fun removeListener(listener: Listener) {
+  override fun removeListener(listener: MyListenerInter) {
 	TODO("Not yet implemented")
   }
 

@@ -115,7 +115,9 @@ class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit):
 }
 
 
-interface MyWeakListener: MyListenerInter
+interface MyWeakListener: MyListenerInter {
+  fun shouldBeCleaned(): Boolean
+}
 
 class WeakCollectionListener<W: Any, E>(
   private val wref: WeakRef<W>,
@@ -128,6 +130,8 @@ class WeakCollectionListener<W: Any, E>(
 	else invoke(this, w, change)
   }
 
+  override fun shouldBeCleaned() = wref.deref() == null
+
 }
 
 
@@ -135,6 +139,8 @@ class WeakListenerWithNewValue<W: Any, T>(
   private val wref: WeakRef<W>,
   internal val invoke: WeakListenerWithNewValue<W, T>.(ref: W, new: T)->Unit
 ): NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(), MyWeakListener {
+
+  override fun shouldBeCleaned() = wref.deref() == null
 
   override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<W, T>? {
 	return wref.deref()?.let {
@@ -155,6 +161,8 @@ abstract class OldAndNewListener<T, U_IN: ValueChange<T>, U_OUT: ValueChange<T>>
 class WeakListenerWithOld<W: Any, T>(
   private val wref: WeakRef<W>, internal val invoke: WeakListenerWithOld<W, T>.(ref: W, old: T, new: T)->Unit
 ): OldAndNewListener<T, ValueChange<T>, ValueUpdateWithWeakObjAndOld<W, T>>(), MyWeakListener {
+
+  override fun shouldBeCleaned() = wref.deref() == null
 
   override fun transformUpdate(u: ValueChange<T>): ValueUpdateWithWeakObjAndOld<W, T>? {
 	return wref.deref()?.let {

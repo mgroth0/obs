@@ -11,7 +11,7 @@ import matt.obs.MObservable
 import matt.obs.col.change.CollectionChange
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.col.olist.basicROObservableListOf
-import matt.obs.listen.Listener
+import matt.obs.listen.MyListenerInter
 import matt.obs.listen.ObsHolderListener
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ObsVal
@@ -24,7 +24,7 @@ interface MObsHolder<O: MObservable>: MObservable {
 	subListeners.setAll(observables.map { it.observe(op) })
   }
 
-  override fun removeListener(listener: Listener) {
+  override fun removeListener(listener: MyListenerInter) {
 	(listener as? ObsHolderListener)?.subListeners?.forEach { it.tryRemovingListener() }
   }
 }
