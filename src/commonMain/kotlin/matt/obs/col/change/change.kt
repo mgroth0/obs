@@ -1,5 +1,6 @@
 package matt.obs.col.change
 
+import matt.lang.NEVER
 import matt.log.taball
 import matt.model.obj.tostringbuilder.toStringBuilder
 
@@ -104,6 +105,35 @@ class ReplaceAt<E>(collection: Collection<E>, removed: E, added: E, val index: I
 class Clear<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<E>(collection, removed) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	Clear(collection, removed = removed.map(convert))
+}
+
+
+fun <E> MutableSet<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
+  try {
+	when (c) {
+	  is AddAt          -> NEVER
+	  is AddAtEnd       -> add(c.added)
+	  is MultiAddAt     -> NEVER
+	  is MultiAddAtEnd  -> addAll(c.added)
+	  is ReplaceAt      -> NEVER
+	  is Clear          -> clear()
+	  is RemoveElements -> removeAll(c.removed)
+	  is RetainAll      -> retainAll(c.retained)
+	  is RemoveAt       -> NEVER
+	  is RemoveElement  -> remove(c.removed)
+	}
+  } catch (e: IllegalArgumentException) {
+	/*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
+	println("c=$c")
+	taball("mirroring set", this)
+	throw e
+  }
+
+  return c
+}
+
+fun <S, T> MutableSet<T>.mirror(c: CollectionChange<S>, convert: (S)->T) {
+  mirror(c.convert(this, convert))
 }
 
 
