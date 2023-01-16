@@ -33,11 +33,12 @@ interface MyListenerInter<U: Update> {
   fun notify(update: U, debugger: Prints? = null)
   fun removeListener()
   fun tryRemovingListener()
+  var name: String?
 }
 
 @ListenerDSL abstract class MyListener<U: Update>: MyListenerInter<U> {
 
-  var name: String? = null
+  override var name: String? = null
 
   override fun toString() = toStringBuilder("name" to name)
 
