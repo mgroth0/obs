@@ -246,7 +246,7 @@ class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): M
 	  )
 	}.toOrderedSet()
 
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T): ListChange<T> {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T): RemoveAtIndices<T> {
 	return RemoveAtIndices(collection as List<T>, removedWithIndicies.map { IndexedValue(it.index, convert(it.value)) })
   }
 
