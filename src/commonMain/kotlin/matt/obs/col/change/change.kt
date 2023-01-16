@@ -89,7 +89,7 @@ sealed class MultiAddition<E, COL: Collection<E>>(
 ): AdditionBase<E, COL>
 
 class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>): MultiAddition<E, Set<E>>(
-  collection as Set<E>
+  collection
 ),
 																		SetChange<E> {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
