@@ -215,7 +215,7 @@ abstract class CollectionListenerBase<E, C: CollectionChange<E, out Collection<E
   abstract fun subNotify(change: C)
 }
 
-sealed class CollectionListener<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>(
+abstract class CollectionListener<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>(
   internal val invoke: CollectionListener<E, C,U>.(change: C)->Unit
 ): CollectionListenerBase<E, C, U>() {
   override fun subNotify(change: C) = invoke(change)

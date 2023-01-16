@@ -15,7 +15,7 @@ import matt.model.data.index.withIndex
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.prim.str.elementsToString
 
-sealed interface CollectionChange<E, COL: Collection<E>> {
+interface CollectionChange<E, COL: Collection<E>> {
   val collection: Collection<E>
   fun <T> convert(collection: Collection<T>, convert: (E)->T): CollectionChange<T, out Collection<T>>
 }

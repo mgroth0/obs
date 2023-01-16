@@ -28,7 +28,7 @@ interface BasicOCollection<E, C: CollectionChange<E, out Collection<E>>, U: Coll
 
 typealias IBObsCol = InternallyBackedOCollection<*, *, *, *>
 
-sealed class InternallyBackedOCollection<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>, L: CollectionListenerBase<E, C, U>>:
+abstract class InternallyBackedOCollection<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>, L: CollectionListenerBase<E, C, U>>:
 	MObservableImpl<U, L>(),
 	BasicOCollection<E, C, U, L> {
 

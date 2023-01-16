@@ -1,8 +1,8 @@
 package matt.obs.queue
 
-import matt.obs.col.InternallyBackedOCollection
-import matt.obs.col.change.AddAtEnd
-import matt.obs.col.change.RemoveAt
+import matt.obs.col.col.InternallyBackedOQueue
+import matt.obs.col.change.QueueAdd
+import matt.obs.col.change.QueueRemove
 import java.util.Queue
 
 fun <E> Queue<E>.wrapInObservableQueue(): ObservableQueue<E> {
@@ -10,12 +10,11 @@ fun <E> Queue<E>.wrapInObservableQueue(): ObservableQueue<E> {
   return ObservableQueue(this)
 }
 
-class ObservableQueue<E> internal constructor(private val q: Queue<E>): InternallyBackedOCollection<E>(), Queue<E>,
-																		Collection<E> by q {
+class ObservableQueue<E> internal constructor(private val q: Queue<E>): InternallyBackedOQueue<E>(), Queue<E>, Collection<E> by q {
 
   override fun add(element: E): Boolean {
 	val b = q.add(element)
-	emitChange(AddAtEnd(added = element, collection = this))
+	emitChange(QueueAdd(added = element, collection = this))
 	return b
   }
 
@@ -33,7 +32,7 @@ class ObservableQueue<E> internal constructor(private val q: Queue<E>): Internal
 
   override fun poll(): E? {
 	val e = q.poll()
-	if (e != null) emitChange(RemoveAt(index = 0, removed = e, collection = this))
+	if (e != null) emitChange(QueueRemove(removed = e, collection = this))
 	return e
   }
 
