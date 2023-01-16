@@ -86,16 +86,16 @@ interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>,
   }
 }
 
-interface ObsList<E>: ImmutableObsList<E>, BindableList<E>, MutableList<E>
+interface MutableObsList<E>: ImmutableObsList<E>, BindableList<E>, MutableList<E>
 
 
-fun <E: Comparable<E>> ObsList<E>.sorted(): BasicSortedList<E> =
+fun <E: Comparable<E>> MutableObsList<E>.sorted(): BasicSortedList<E> =
   DynamicList(this, comparator = comparableComparator())
 
-fun <E> ObsList<E>.toFakeMutableObsList() = FakeMutableObsList(this)
+fun <E> MutableObsList<E>.toFakeMutableObsList() = FakeMutableObsList(this)
 
 
-class FakeMutableObsList<E>(private val o: ObsList<E>): ObsList<E> by o, MutableObsList<E> {
+class FakeMutableObsList<E>(private val o: MutableObsList<E>): MutableObsList<E> by o, MutableObsList<E> {
   override fun add(element: E) = ILLEGAL
 
   override fun add(index: Int, element: E) = ILLEGAL
@@ -133,16 +133,16 @@ class FakeMutableObsList<E>(private val o: ObsList<E>): ObsList<E> by o, Mutable
   }
 }
 
-interface MutableObsList<E>: MutableList<E>, ObsList<E>
+
 
 
 abstract class BaseBasicWritableOList<E>: InternallyBackedOList<E>(),
-										  ObsList<E>,
+										  MutableObsList<E>,
 										  MutableObsList<E>,
 										  BindableList<E> {
 
   val bindableListHelper by lazy { BindableListImpl(this) }
-  override fun <S> bind(source: ObsList<S>, converter: (S)->E) = bindableListHelper.bind(source, converter)
+  override fun <S> bind(source: MutableObsList<S>, converter: (S)->E) = bindableListHelper.bind(source, converter)
   override fun <T> bind(source: ObsVal<T>, converter: (T)->List<E>) = bindableListHelper.bind(source, converter)
   final override val bindManager get() = bindableListHelper.bindManager
   override var theBind
@@ -190,14 +190,14 @@ fun <E> Sequence<E>.toBasicObservableList(): BasicObservableListImpl<E> {
 }
 
 
-fun <E> basicROObservableListOf(vararg elements: E): ObsList<E> =
+fun <E> basicROObservableListOf(vararg elements: E): MutableObsList<E> =
   BasicObservableListImpl(elements.toList())
 
 fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
   BasicObservableListImpl(elements.toList())
 
 
-fun <E> ObsList<E>.toMutableObsList() = toBasicObservableList()
+fun <E> MutableObsList<E>.toMutableObsList() = toBasicObservableList()
 
 open class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>):
 	BaseBasicWritableOList<E>(),

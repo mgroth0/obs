@@ -4,16 +4,16 @@ import matt.lang.setAll
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
-import matt.obs.col.olist.ObsList
+import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.basicMutableObservableListOf
 
-fun <E> ObsList<E>.concatenatedTo(other: ImmutableObsList<E>) = ConcatList(this, other)
+fun <E> MutableObsList<E>.concatenatedTo(other: ImmutableObsList<E>) = ConcatList(this, other)
 
 class ConcatList<E>(
   firstList: ImmutableObsList<E>,
   secondList: ImmutableObsList<E>,
   private val target: MutableObsList<E> = basicMutableObservableListOf()
-): ObsList<E> by target {
+): MutableObsList<E> by target {
   init {
 	var annoPartStart = 0
 	var annoPartEndExclusive = firstList.size

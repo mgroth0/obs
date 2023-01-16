@@ -6,11 +6,11 @@ import matt.obs.col.change.ListRemoval
 import matt.obs.col.change.MultiAdditionIntoList
 import matt.obs.col.change.MultiRemovalFromList
 import matt.obs.col.change.Replacement
-import matt.obs.col.olist.ObsList
+import matt.obs.col.olist.MutableObsList
 import matt.obs.map.BasicOMap
 import matt.obs.map.BasicOMutableMapImpl
 
-fun <V, K> ObsList<V>.toMappedMap(keySelectorFun: (V)->K): BasicOMap<K, V> {
+fun <V, K> MutableObsList<V>.toMappedMap(keySelectorFun: (V)->K): BasicOMap<K, V> {
   /*WARNING/TODO: this must be limited to sets to work as expected...*/
   val map = BasicOMutableMapImpl<K, V>()
   onChange {

@@ -9,7 +9,7 @@ import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.col.BasicOCollection
 import matt.obs.col.olist.BasicObservableListImpl
-import matt.obs.col.olist.ObsList
+import matt.obs.col.olist.MutableObsList
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.lazy.DependentValue
@@ -46,7 +46,7 @@ fun <T> BindableValue<T>.smartBind(property: MObservableVal<T, *, *>, readonly: 
 	bindBidirectional(property)
 }
 
-fun <T, E> ObsVal<T>.boundList(propGetter: (T)->Iterable<E>): ObsList<E> =
+fun <T, E> ObsVal<T>.boundList(propGetter: (T)->Iterable<E>): MutableObsList<E> =
   BasicObservableListImpl(propGetter(value)).apply {
 	this@boundList.onChange {
 	  setAll(propGetter(it).toList())
