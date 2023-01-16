@@ -31,9 +31,10 @@ typealias Listener = MyListener<*>
 
 interface MyListenerInter<U: Update> {
   fun notify(update: U, debugger: Prints? = null)
-  fun removeListener()
-  fun tryRemovingListener()
+  fun removeListener(): Boolean
+  fun tryRemovingListener(): Boolean
   var name: String?
+  /*var currentObservable: WeakRef<MListenable<*>>*/
 }
 
 @ListenerDSL abstract class MyListener<U: Update>: MyListenerInter<U> {

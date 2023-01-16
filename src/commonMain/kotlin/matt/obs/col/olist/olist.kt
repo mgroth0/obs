@@ -511,7 +511,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 		this@BasicObservableListImpl.nam = value
 	  }
 
-	override fun removeListener(listener: MyListenerInter) {
+	override fun removeListener(listener: MyListenerInter<*>) {
 	  TODO("Not yet implemented")
 	}
 

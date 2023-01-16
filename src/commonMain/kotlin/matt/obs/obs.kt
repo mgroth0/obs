@@ -55,6 +55,7 @@ abstract class MObservableImpl<U: Update, L: MyListenerInter<in U>> internal con
   final override fun addListener(listener: L): L {
 	synchronizer.operateOnInternalDataNowOrLater {
 	  listeners += listener
+	  listener as MyListener<*>
 	  require(listener.currentObservable == null)
 	  listener.currentObservable = WeakRef(this)
 	}
@@ -68,6 +69,8 @@ abstract class MObservableImpl<U: Update, L: MyListenerInter<in U>> internal con
   protected fun notifyListeners(update: U) {
 	synchronizer.useInternalData {
 	  listeners.forEach { listener ->
+		@Suppress("UNCHECKED_CAST")
+		listener as MyListener<U>
 		if (listener.preInvocation(update) != null) {
 		  listener.notify(update, debugger = debugger)
 		  listener.postInvocation()

@@ -3,6 +3,7 @@ package matt.obs.invalid
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.listen.Listener
+import matt.obs.listen.MyListenerInter
 import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
 
@@ -134,7 +135,7 @@ private open class DepListenerSet(
   mainDep: MObservable,
   moreDeps: List<MObservable>,
   getDeepDeps: (dep: MObservable)->List<MObservable>,
-  var subListeners: List<Listener>,
+  var subListeners: List<MyListenerInter<*>>,
   @Suppress("UNUSED_PARAMETER") debugLogger: DebugLogger? = null
 ) {
   open val mainListeners = (listOf(mainDep) + moreDeps).mapIndexed { index, it ->
