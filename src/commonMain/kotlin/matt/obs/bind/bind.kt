@@ -166,13 +166,6 @@ open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindin
   override val value: T get() = cVal.get()
 
 
-  fun onActualChange(op: (T) -> Unit): MyListenerInter<*> {
-	addListener(
-	  ChangeListener
-	)
-  }
-
-
 }
 
 

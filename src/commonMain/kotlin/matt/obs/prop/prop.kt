@@ -202,7 +202,7 @@ interface FXBackedPropBase {
 
 typealias Var<T> = WritableMObservableVal<T, *, *>
 
-interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U, *>>: MObservableVal<T, U, L>,
+interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, *>>: MObservableVal<T, U, L>,
 																				   BindableValue<T> {
 
 
