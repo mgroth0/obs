@@ -12,8 +12,10 @@ import matt.obs.col.change.ListChange
 import matt.obs.col.change.SetChange
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ContextUpdate
+import matt.obs.listen.update.ListUpdate
 import matt.obs.listen.update.MapUpdate
 import matt.obs.listen.update.ObsHolderUpdate
+import matt.obs.listen.update.SetUpdate
 import matt.obs.listen.update.Update
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
@@ -210,19 +212,20 @@ abstract class CollectionListenerBase<E, C: CollectionChange<E, out Collection<E
 	MyListener<U>() {
 
   final override fun notify(update: U, debugger: Prints?) = subNotify(update.change)
-  abstract fun subNotify(change: sC)
+  abstract fun subNotify(change: C)
 }
 
-sealed class CollectionListener<E, C: CollectionChange<E, out Collection<E>>>(internal val invoke: CollectionListener<E, C>.(change: C)->Unit):
-	CollectionListenerBase<E, C, CollectionUpdate<E, C>>() {
+sealed class CollectionListener<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>(
+  internal val invoke: CollectionListener<E, C,U>.(change: C)->Unit
+): CollectionListenerBase<E, C, U>() {
   override fun subNotify(change: C) = invoke(change)
 }
 
-class SetListener<E>(invoke: CollectionListener<E, SetChange<E>>.(change: SetChange<E>)->Unit): CollectionListener<E, SetChange<E>>(
+class SetListener<E>(invoke: CollectionListener<E, SetChange<E>,SetUpdate<E>>.(change: SetChange<E>)->Unit): CollectionListener<E, SetChange<E>, SetUpdate<E>>(
   invoke
 )
 
-class ListListener<E>(invoke: CollectionListener<E, ListChange<E>>.(change: ListChange<E>)->Unit): CollectionListener<E, ListChange<E>>(
+class ListListener<E>(invoke: CollectionListener<E, ListChange<E>,ListUpdate<E>>.(change: ListChange<E>)->Unit): CollectionListener<E, ListChange<E>, ListUpdate<E>>(
   invoke
 )
 

@@ -8,6 +8,7 @@ import matt.model.op.convert.Converter
 import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
 import matt.obs.bind.binding
+import matt.obs.col.IBObsCol
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.MutableObsList
@@ -59,26 +60,26 @@ class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl()
 
   @Synchronized override fun <S> bind(source: ObsList<S>, converter: (S)->E) {
 	unbind()
-	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(source.map(converter))
-	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	(target as? IBObsCol)?.bindWritePass?.release()
 	val listener = source.onChange {
-	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	  (target as? IBObsCol)?.bindWritePass?.hold()
 	  target.mirror(it, converter)
-	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	  (target as? IBObsCol)?.bindWritePass?.release()
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
 
   @Synchronized override fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>) {
 	unbind()
-	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(converter(source.value))
-	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	(target as? IBObsCol)?.bindWritePass?.release()
 	val listener = source.onChange {
-	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	  (target as? IBObsCol)?.bindWritePass?.hold()
 	  target.setAll(converter(it))
-	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	  (target as? IBObsCol)?.bindWritePass?.release()
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
@@ -89,26 +90,26 @@ class BindableSetImpl<E>(private val target: MutableObsSet<E>): BindableImpl(), 
 
   @Synchronized override fun <S> bind(source: ObsSet<S>, converter: (S)->E) {
 	unbind()
-	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(source.map(converter))
-	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	(target as? IBObsCol)?.bindWritePass?.release()
 	val listener = source.onChange {
-	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	  (target as? IBObsCol)?.bindWritePass?.hold()
 	  target.mirror(it, converter)
-	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	  (target as? IBObsCol)?.bindWritePass?.release()
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
 
   @Synchronized override fun <S> bind(source: ObsVal<S>, converter: (S)->Set<E>) {
 	unbind()
-	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(converter(source.value))
-	(target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	(target as? IBObsCol)?.bindWritePass?.release()
 	val listener = source.onChange {
-	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.hold()
+	  (target as? IBObsCol)?.bindWritePass?.hold()
 	  target.setAll(converter(it))
-	  (target as? InternallyBackedOCollection<*>)?.bindWritePass?.release()
+	  (target as? IBObsCol)?.bindWritePass?.release()
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
