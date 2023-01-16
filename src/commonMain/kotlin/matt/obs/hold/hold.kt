@@ -3,7 +3,7 @@ package matt.obs.hold
 import matt.collect.itr.filterNotNull
 import matt.lang.delegation.provider
 import matt.lang.go
-import matt.lang.setall.setAll
+import matt.lang.setall.setAll.setAll
 import matt.model.code.delegate.SimpleGetter
 import matt.model.op.debug.DebugLogger
 import matt.model.op.prints.Prints

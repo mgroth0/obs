@@ -1,6 +1,6 @@
 package matt.obs.bindhelp
 
-import matt.lang.setall.setAll
+import matt.lang.setall.setAll.setAll
 import matt.lang.weak.WeakRef
 import matt.lang.weak.getValue
 import matt.model.flowlogic.recursionblocker.RecursionBlocker

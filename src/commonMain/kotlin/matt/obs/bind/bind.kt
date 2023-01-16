@@ -1,6 +1,6 @@
 package matt.obs.bind
 
-import matt.lang.setall.setAll
+import matt.lang.setall.setAll.setAll
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
 import matt.model.op.debug.DebugLogger
