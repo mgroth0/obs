@@ -1,17 +1,14 @@
 package matt.obs.prop
 
-import matt.lang.anno.TemporaryCode
 import matt.lang.function.Produce
 import matt.lang.model.value.ValueWrapper
 import matt.lang.sync.inSync
 import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.WeakRef
 import matt.lang.weak.lazySoft
-import matt.log.warn.warn
 import matt.log.warn.warnOnce
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
-import matt.model.op.debug.DebugLogger
 import matt.model.op.prints.Prints
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
@@ -22,14 +19,12 @@ import matt.obs.bindings.bool.not
 import matt.obs.listen.ChangeListener
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListenerInter
-import matt.obs.listen.NewListener
 import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.OldAndNewListener
 import matt.obs.listen.OldAndNewListenerImpl
 import matt.obs.listen.ValueListener
 import matt.obs.listen.ValueListenerBase
 import matt.obs.listen.WeakChangeListenerWithNewValue
-import matt.obs.listen.WeakListenerWithNewValue
 import matt.obs.listen.WeakListenerWithOld
 import matt.obs.listen.update.ValueChange
 import matt.obs.listen.update.ValueUpdate
@@ -267,7 +262,7 @@ fun <T, O: Var<T>> O.withUpdatesFromWhen(o: ObsVal<out T>, predicate: ()->Boolea
   takeChangesFromWhen(o, predicate)
 }
 
-abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListener<T, U, *>>: MObservableImpl<U, L>(),
+abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U>>: MObservableImpl<U, L>(),
 																					  MObservableVal<T, U, L> {
 
 

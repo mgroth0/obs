@@ -15,6 +15,7 @@ import matt.obs.col.olist.MutableObsList
 import matt.obs.col.oset.MutableObsSet
 import matt.obs.col.oset.ObsSet
 import matt.obs.listen.Listener
+import matt.obs.listen.MyListener
 import matt.obs.listen.MyListenerInter
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.FXBackedPropBase
@@ -228,8 +229,8 @@ class TheBind(
 class BiTheBind(
   val source: Var<*>,
   val target: Var<*>,
-  private val sourceListener: Listener,
-  private val targetListener: Listener,
+  private val sourceListener: MyListenerInter<*>,
+  private val targetListener: MyListenerInter<*>,
   private val debug: Boolean = false
 ): ABind {
 

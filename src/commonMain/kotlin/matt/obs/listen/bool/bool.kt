@@ -4,17 +4,18 @@ package matt.obs.listen.bool
 
 import matt.obs.bindings.bool.ObsB
 import matt.obs.listen.Listener
+import matt.obs.listen.MyListenerInter
 import matt.obs.listen.whenEqualsOnce
 import kotlin.jvm.JvmName
 
-fun ObsB.whenTrue(op: ()->Unit): Listener {
+fun ObsB.whenTrue(op: ()->Unit): MyListenerInter<*> {
   if (value) op()
   return onChange {
 	if (it) op()
   }
 }
 
-fun ObsB.whenFalse(op: ()->Unit): Listener {
+fun ObsB.whenFalse(op: ()->Unit): MyListenerInter<*> {
   if (!value) op()
   return onChange {
 	if (!it) op()
