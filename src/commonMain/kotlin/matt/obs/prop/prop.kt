@@ -54,7 +54,7 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 	  TODO("Not yet implemented")
 	}
 
-  override fun removeListener(listener: MyListenerInter) {
+  override fun removeListener(listener: MyListenerInter<*>) {
 	TODO("Not yet implemented")
   }
 

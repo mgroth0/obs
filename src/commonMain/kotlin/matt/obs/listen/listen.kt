@@ -31,8 +31,8 @@ typealias Listener = MyListener<*>
 
 interface MyListenerInter<U: Update> {
   fun notify(update: U, debugger: Prints? = null)
-  fun removeListener(): Boolean
-  fun tryRemovingListener(): Boolean
+  fun removeListener()
+  fun tryRemovingListener()
   var name: String?
   /*var currentObservable: WeakRef<MListenable<*>>*/
 }
@@ -48,7 +48,9 @@ interface MyListenerInter<U: Update> {
 
   internal var currentObservable: WeakRef<MListenable<*>>? = null
   override fun removeListener() = currentObservable!!.deref()!!.removeListener(this)
-  override fun tryRemovingListener() = currentObservable?.deref()?.removeListener(this) ?: false
+  override fun tryRemovingListener() {
+	currentObservable?.deref()?.removeListener(this)
+  }
 
 
   internal fun preInvocation(update: U): U? {
