@@ -1,126 +1,356 @@
 package matt.obs.col.change
 
+import matt.collect.set.ordered.MutableOrderedSet
+import matt.collect.set.ordered.OrderedSet
+import matt.collect.set.ordered.orderedSetOf
+import matt.collect.set.ordered.toOrderedSet
 import matt.lang.NEVER
 import matt.log.taball
+import matt.model.data.index.AdditionIndex
+import matt.model.data.index.All
+import matt.model.data.index.End
+import matt.model.data.index.First
+import matt.model.data.index.Index
+import matt.model.data.index.MyIndexedValue
+import matt.model.data.index.RemovalIndex
+import matt.model.data.index.withIndex
 import matt.model.obj.tostringbuilder.toStringBuilder
+import matt.prim.str.elementsToString
 
-sealed interface CollectionChange<E> {
+sealed interface CollectionChange<E, COL: Collection<E>> {
   val collection: Collection<E>
-  fun <T> convert(collection: Collection<T>, convert: (E)->T): CollectionChange<T>
+  fun <T> convert(collection: Collection<T>, convert: (E)->T): CollectionChange<T, out Collection<T>>
+}
+
+sealed interface SetChange<E>: CollectionChange<E, Set<E>> {
+  override val collection: Set<E>
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T): SetChange<T>
+}
+
+sealed interface ListChange<E>: CollectionChange<E, List<E>> {
+  override val collection: List<E>
+  val lowestChangedIndex: Int
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T): ListChange<T>
 }
 
 
-sealed interface AdditionBase<E>: CollectionChange<E> {
+sealed interface AdditionBase<E, COL: Collection<E>>: CollectionChange<E, COL> {
   val addedElements: List<E>
 }
 
-sealed interface RemovalBase<E>: CollectionChange<E> {
+sealed interface SetAdditionBase<E>: SetChange<E>, AdditionBase<E, Set<E>>
+
+sealed interface ListAdditionBase<E>: ListChange<E>, AdditionBase<E, List<E>> {
+  val addedElementsIndexed: OrderedSet<out MyIndexedValue<E, out AdditionIndex>>
+  override val addedElements: List<E> get() = addedElementsIndexed.map { it.element }
+}
+
+
+sealed interface RemovalBase<E, COL: Collection<E>>: CollectionChange<E, COL> {
   val removedElements: List<E>
 }
 
-sealed class Addition<E>(override val collection: Collection<E>, val added: E): AdditionBase<E> {
-  override val addedElements get() = listOf(added)
+sealed interface ListRemovalBase<E>: RemovalBase<E, List<E>>, ListChange<E> {
+  val removedElementsIndexed: OrderedSet<out MyIndexedValue<E, out RemovalIndex>>
+  override val removedElements: List<E> get() = removedElementsIndexed.map { it.element }
 }
 
-class AddAtEnd<E>(collection: Collection<E>, added: E): Addition<E>(collection, added) {
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = AddAtEnd(collection, convert(added))
+sealed class SetAddition<E>(override val collection: Set<E>, val added: E): AdditionBase<E, Set<E>>, SetChange<E>
+sealed class ListAddition<E>(override val collection: List<E>, val added: E): ListAdditionBase<E>
+
+
+class AddIntoSet<E>(override val collection: Set<E>, added: E): SetAddition<E>(collection, added) {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T): SetChange<T> =
+	AddIntoSet(collection as Set<T>, convert(added))
+
   override fun toString() = toStringBuilder("added" to added)
+  override val addedElements = listOf(added)
 }
 
-class AddAt<E>(collection: Collection<E>, added: E, val index: Int): Addition<E>(collection, added) {
+class AddAtEnd<E>(override val collection: List<E>, added: E): ListAddition<E>(collection, added) {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = AddAtEnd(collection as List<T>, convert(added))
+  override fun toString() = toStringBuilder("added" to added)
+  override val addedElementsIndexed get() = orderedSetOf(added withIndex End)
+  override val lowestChangedIndex: Int = collection.size - 1
+}
+
+class AddAt<E>(override val collection: List<E>, added: E, val index: Int): ListAddition<E>(collection, added),
+																			ListAdditionBase<E> {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	AddAt(collection, convert(added), index = index)
+	AddAt(collection as List<T>, convert(added), index = index)
 
   override fun toString() = toStringBuilder("added" to added, "index" to index)
+
+  override val addedElementsIndexed get() = orderedSetOf(added withIndex index)
+  override val lowestChangedIndex: Int = index
 }
 
-sealed class MultiAddition<E>(override val collection: Collection<E>, val added: Collection<E>): AdditionBase<E> {
+
+sealed class MultiAddition<E, COL: Collection<E>>(
+  override val collection: COL,
+  added: Collection<E>
+): AdditionBase<E, COL>
+
+class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>): MultiAddition<E, Set<E>>(
+  collection as Set<E>,
+  added
+),
+																		SetChange<E> {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	MultiAddIntoSet(collection as Set<T>, added.map(convert))
+
+  override fun toString() = toStringBuilder("added" to added)
+
   override val addedElements get() = added.toList()
 }
 
-class MultiAddAtEnd<E>(collection: Collection<E>, added: Collection<E>): MultiAddition<E>(collection, added) {
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = MultiAddAtEnd(collection, added.map(convert))
-  override fun toString() = toStringBuilder("added" to added)
-}
+sealed class MultiAdditionIntoList<E>(override val collection: List<E>, added: Collection<E>): ListAdditionBase<E>
 
-class MultiAddAt<E>(collection: Collection<E>, added: Collection<E>, val index: Int):
-  MultiAddition<E>(collection, added) {
+class MultiAddAtEnd<E>(collection: List<E>, val added: Collection<E>): MultiAdditionIntoList<E>(collection, added) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	MultiAddAt(collection, added.map(convert), index)
+	MultiAddAtEnd(collection as List<T>, added.map(convert))
+
+
+  override fun toString() = toStringBuilder("added" to added)
+
+  override val addedElementsIndexed get() = added.map { it withIndex End }.toOrderedSet()
+
+  override val lowestChangedIndex = collection.size - added.size
+
 }
 
+class MultiAddAt<E>(collection: List<E>, val added: Collection<E>, val index: Int): MultiAdditionIntoList<E>(
+  collection,
+  added
+) {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	MultiAddAt(collection as List<T>, added.map(convert), index)
 
-sealed class Removal<E>(override val collection: Collection<E>, val removed: E): RemovalBase<E> {
+  override val addedElementsIndexed get() = added.mapIndexed { idx, it -> it withIndex index + idx }.toOrderedSet()
+
+
+  override val lowestChangedIndex = index
+}
+
+sealed class Removal<E, COL: Collection<E>>(override val collection: COL, val removed: E): RemovalBase<E, COL> {
+  //  override val removedElements get() = listOf(removed)
+}
+
+sealed class SetRemoval<E>(override val collection: Set<E>, removed: E): Removal<E, Set<E>>(collection, removed),
+																		 RemovalBase<E, Set<E>>,
+																		 SetChange<E>
+
+sealed class ListRemoval<E>(override val collection: List<E>, removed: E): Removal<E, List<E>>(collection, removed),
+																		   ListRemovalBase<E>
+
+
+class RemoveElementFromSet<E>(collection: Set<E>, removed: E): SetRemoval<E>(collection, removed) {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	RemoveElementFromSet(collection as Set<T>, convert(removed))
+
   override val removedElements get() = listOf(removed)
 }
 
-open class RemoveElement<E>(collection: Collection<E>, removed: E): Removal<E>(collection, removed) {
+//open class RemoveElement<E>(collection: Collection<E>, removed: E, override val lowestChangedIndex: Int): Removal<E>(
+//  collection,
+//  removed
+//), ListRemovalBase<E> {
+//  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+//	RemoveElement(collection, convert(removed), lowestChangedIndex)
+//
+//  override val removedElementsIndexed get() = orderedSetOf(removed withIndex First)
+//
+//}
+
+
+class RemoveElementFromList<E>(collection: List<E>, removed: E, val index: Int): ListRemoval<E>(collection, removed) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	RemoveElement(collection, convert(removed))
+	RemoveElementFromList(collection as List<T>, convert(removed), index)
+
+  override val removedElementsIndexed get() = orderedSetOf(removed withIndex First)
+
+  override val lowestChangedIndex: Int = index
 }
 
-class RemoveElementFromList<E>(collection: Collection<E>, removed: E, val index: Int):
-  RemoveElement<E>(collection, removed) {
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	RemoveElementFromList(collection, convert(removed), index)
-}
 
-class RemoveAt<E>(collection: Collection<E>, removed: E, val index: Int): Removal<E>(collection, removed) {
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = RemoveAt(collection, convert(removed), index)
+class RemoveAt<E>(collection: List<E>, removed: E, val index: Int): ListRemoval<E>(collection, removed),
+																	ListRemovalBase<E> {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	RemoveAt(collection as List<T>, convert(removed), index)
+
+  override val removedElementsIndexed get() = orderedSetOf(removed withIndex index)
+
+  override val lowestChangedIndex = index
+
 }
 //class RemoveFirst<E>(collection: Collection<E>, removed: E): matt.obs.map.change.Removal<E>(collection, removed)
 
-sealed class MultiRemoval<E>(override val collection: Collection<E>, val removed: Collection<E>): RemovalBase<E> {
+sealed class MultiRemoval<E, COL: Collection<E>>(
+  override val collection: COL,
+  val removed: Collection<E>
+): RemovalBase<E, COL> {
+  //  override val removedElements get() = removed.toList()
+}
+
+sealed class MultiRemovalFromSet<E>(
+  override val collection: Set<E>,
+  val remvoced: Collection<E>
+): MultiRemoval<E, Set<E>>(collection, removed), RemovalBase<E, Set<E>>, SetChange<E>
+
+sealed class MultiRemovalFromList<E>(
+  override val collection: List<E>,
+  val remvoced: Collection<E>
+): MultiRemoval<E, List<E>>(collection, removed), ListRemovalBase<E>
+
+
+class RemoveElementsFromSet<E>(collection: Set<E>, removed: Collection<E>): MultiRemovalFromSet<E>(
+  collection,
+  removed
+) {
+
   override val removedElements get() = removed.toList()
-}
-
-class RemoveElements<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<E>(collection, removed) {
-
 
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	RemoveElements(collection, removed.map(convert))
+	RemoveElementsFromSet(collection as Set<T>, removed.map(convert))
 
+  override fun toString() = toStringBuilder(
+	mapOf(
+	  "removed" to removed.elementsToString()
+	)
+  )
 
 }
 
-class RetainAll<E>(collection: Collection<E>, removed: Collection<E>, val retained: Collection<E>):
-  MultiRemoval<E>(collection, removed) {
+
+class RemoveElements<E>(collection: List<E>, removed: Collection<E>, override val lowestChangedIndex: Int):
+	MultiRemovalFromList<E>(collection, removed) {
+
+  override val removedElementsIndexed get() = removed.map { it withIndex All }.toOrderedSet()
+
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	RetainAll(collection, removed.map(convert), retained = retained.map(convert))
+	RemoveElements(collection as List<T>, removed.map(convert), lowestChangedIndex = lowestChangedIndex)
+
+  override fun toString() = toStringBuilder(
+	mapOf(
+	  "removed" to removed.elementsToString()
+	)
+  )
+
 }
 
 
-sealed class Replacement<E>(override val collection: Collection<E>, val removed: E, val added: E): AdditionBase<E>,
-																								   RemovalBase<E> {
-  override val addedElements get() = listOf(added)
-  override val removedElements get() = listOf(removed)
+class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): MultiRemovalFromList<E>(
+  collection,
+  removed.map { it.value }) {
+  private val removedWithIndicies = removed
+  override val removedElementsIndexed
+	get() = removedWithIndicies.map {
+	  MyIndexedValue(
+		element = it.value,
+		index = Index(it.index)
+	  )
+	}.toOrderedSet()
+
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T): ListChange<T> {
+	return RemoveAtIndices(collection as List<T>, removedWithIndicies.map { IndexedValue(it.index, convert(it.value)) })
+  }
+
+  override val lowestChangedIndex: Int = removed.minOfOrNull { it.index }!!
 }
 
-class ReplaceAt<E>(collection: Collection<E>, removed: E, added: E, val index: Int):
-  Replacement<E>(collection, removed, added) {
+
+class RetainAllSet<E>(collection: Set<E>, removed: Collection<E>, val retained: Collection<E>):
+	MultiRemovalFromSet<E>(collection, removed), SetChange<E> {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	ReplaceAt(collection, convert(removed), added = convert(added), index = index)
+	RetainAllSet(collection as Set<T>, removed.map(convert), retained = retained.map(convert))
+
+  override val removedElements = removed.toList()
 }
 
-class Clear<E>(collection: Collection<E>, removed: Collection<E>): MultiRemoval<E>(collection, removed) {
+
+class RetainAllList<E>(
+  collection: List<E>,
+  removed: Collection<E>,
+  val retained: Collection<E>,
+  override val lowestChangedIndex: Int
+):
+	MultiRemovalFromList<E>(collection, removed), ListRemovalBase<E> {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	Clear(collection, removed = removed.map(convert))
+	RetainAllList(
+	  collection as List<T>,
+	  removed.map(convert),
+	  retained = retained.map(convert),
+	  lowestChangedIndex = lowestChangedIndex
+	)
+
+  override val removedElementsIndexed: OrderedSet<MyIndexedValue<E, out RemovalIndex>>
+	get() = removed.map { it withIndex All }.toOrderedSet()
+
+
 }
 
 
-fun <E> MutableSet<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
+sealed class Replacement<E>(override val collection: List<E>, val removed: E, val added: E): ListAdditionBase<E>,
+																							 ListRemovalBase<E> {
+  //  override val addedElements get() = listOf(added)
+  //  override val removedElements get() = listOf(removed)
+
+
+}
+
+class ReplaceAt<E>(collection: List<E>, removed: E, added: E, val index: Int): Replacement<E>(
+  collection,
+  removed,
+  added
+) {
+
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	ReplaceAt(collection as List<T>, convert(removed), added = convert(added), index = index)
+
+  override val removedElementsIndexed get() = orderedSetOf(removed.withIndex(index))
+  override val addedElementsIndexed get() = orderedSetOf(added withIndex index)
+  override val lowestChangedIndex: Int
+	get() = index
+
+  override fun toString() = toStringBuilder(
+	mapOf(
+	  "removed" to removed,
+	  "added" to added,
+	  "index" to index
+	)
+  )
+
+}
+
+class ClearSet<E>(collection: Set<E>, removed: Collection<E>): MultiRemovalFromSet<E>(collection, removed),
+															   SetChange<E> {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	ClearSet(collection as Set<T>, removed = removed.map(convert))
+
+  override val removedElements = removed.toList()
+}
+
+class ClearList<E>(collection: List<E>, removed: Collection<E>): MultiRemovalFromList<E>(collection, removed),
+																 ListRemovalBase<E> {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
+	ClearList(collection as List<T>, removed = removed.map(convert))
+
+  override val removedElementsIndexed: OrderedSet<MyIndexedValue<E, out RemovalIndex>>
+	get() = removed.map { it withIndex All }.toOrderedSet()
+
+  override val lowestChangedIndex: Int get() = 0
+}
+
+
+fun <E> MutableSet<E>.mirror(c: SetChange<E>): SetChange<E> {
   try {
 	when (c) {
-	  is AddAt          -> NEVER
-	  is AddAtEnd       -> add(c.added)
-	  is MultiAddAt     -> NEVER
-	  is MultiAddAtEnd  -> addAll(c.added)
-	  is ReplaceAt      -> NEVER
-	  is Clear          -> clear()
-	  is RemoveElements -> removeAll(c.removed)
-	  is RetainAll      -> retainAll(c.retained)
-	  is RemoveAt       -> NEVER
-	  is RemoveElement  -> remove(c.removed)
+	  is ClearSet              -> clear()
+	  is RetainAllSet          -> retainAll(c.retained)
+	  is RemoveElementFromSet  -> remove(c.removed)
+	  is AddIntoSet            -> add(c.added)
+	  is MultiAddIntoSet       -> addAll(c.added)
+	  is RemoveElementsFromSet -> removeAll(c.removed)
 	}
   } catch (e: IllegalArgumentException) {
 	/*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
@@ -132,24 +362,27 @@ fun <E> MutableSet<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
   return c
 }
 
-fun <S, T> MutableSet<T>.mirror(c: CollectionChange<S>, convert: (S)->T) {
+fun <S, T> MutableSet<T>.mirror(c: SetChange<S>, convert: (S)->T) {
   mirror(c.convert(this, convert))
 }
 
 
-fun <E> MutableList<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
+fun <E> MutableList<E>.mirror(c: ListChange<E>): ListChange<E> {
   try {
 	when (c) {
-	  is AddAt          -> add(index = c.index, element = c.added)
-	  is AddAtEnd       -> add(c.added)
-	  is MultiAddAt     -> addAll(index = c.index, elements = c.added)
-	  is MultiAddAtEnd  -> addAll(c.added)
-	  is ReplaceAt      -> set(index = c.index, c.added)
-	  is Clear          -> clear()
-	  is RemoveElements -> removeAll(c.removed)
-	  is RetainAll      -> retainAll(c.retained)
-	  is RemoveAt       -> removeAt(c.index)
-	  is RemoveElement  -> remove(c.removed)
+	  is AddAt                 -> add(index = c.index, element = c.added)
+	  is AddAtEnd              -> add(c.added)
+	  is MultiAddAt            -> addAll(index = c.index, elements = c.added)
+	  is MultiAddAtEnd         -> addAll(c.added)
+	  is ReplaceAt             -> set(index = c.index, c.added)
+	  is ClearList             -> clear()
+	  is RemoveElements        -> removeAll(c.removed)
+	  is RetainAllList         -> retainAll(c.retained)
+	  is RemoveAt              -> removeAt(c.index)
+	  is RemoveElementFromList -> remove(c.removed)
+	  is RemoveAtIndices       -> c.removedElementsIndexed.sortedBy { it.index }.forEach {
+		removeAt(it.index.i)
+	  }
 	}
   } catch (e: IllegalArgumentException) {
 	/*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
@@ -161,7 +394,7 @@ fun <E> MutableList<E>.mirror(c: CollectionChange<E>): CollectionChange<E> {
   return c
 }
 
-fun <S, T> MutableList<T>.mirror(c: CollectionChange<S>, convert: (S)->T) {
+fun <S, T> MutableList<T>.mirror(c: ListChange<S>, convert: (S)->T) {
   mirror(c.convert(this, convert))
 }
 

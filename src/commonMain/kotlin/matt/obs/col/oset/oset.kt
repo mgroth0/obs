@@ -3,12 +3,11 @@ package matt.obs.col.oset
 import matt.collect.itr.MutableIteratorWithSomeMemory
 import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOCollection
-import matt.obs.col.change.AddAtEnd
-import matt.obs.col.change.Clear
-import matt.obs.col.change.MultiAddAtEnd
-import matt.obs.col.change.RemoveElement
-import matt.obs.col.change.RemoveElements
-import matt.obs.col.change.RetainAll
+import matt.obs.col.change.AddIntoSet
+import matt.obs.col.change.ClearSet
+import matt.obs.col.change.MultiAddIntoSet
+import matt.obs.col.change.RemoveElementFromSet
+import matt.obs.col.change.RetainAllSet
 import matt.obs.fx.requireNotObservable
 
 interface ObsSet<E>: Set<E>, BasicOCollection<E>
@@ -56,7 +55,7 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBacked
 	override fun remove(): Unit {
 	  super.remove()
 	  emitChange(
-		RemoveElement(theSet, lastReturned!!)
+		RemoveElementFromSet(theSet, lastReturned!!)
 	  )
 	}
   }
@@ -65,7 +64,7 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBacked
 	val b = theSet.add(element)
 	//        println("BasicObservableSet.add(${element})")
 	if (b) {
-	  emitChange(AddAtEnd(theSet, element))
+	  emitChange(AddIntoSet(theSet, element))
 	}
 	return b
   }
@@ -73,7 +72,7 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBacked
   override fun addAll(elements: Collection<E>): Boolean {
 	val b = theSet.addAll(elements)
 	//        taball("set addAll",elements)
-	if (b) emitChange(MultiAddAtEnd(theSet, elements))
+	if (b) emitChange(MultiAddIntoSet(theSet, elements))
 	return b
   }
 
@@ -81,20 +80,20 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBacked
 	//        println("BasicObservableSet.clear")
 	val removed = theSet.toSet()
 	theSet.clear()
-	emitChange(Clear(theSet, removed = removed))
+	emitChange(ClearSet(theSet, removed = removed))
   }
 
   override fun remove(element: E): Boolean {
 	val b = theSet.remove(element)
 	//        println("BasicObservableSet.remove(${element})")
-	if (b) emitChange(RemoveElement(theSet, element))
+	if (b) emitChange(RemoveElementFromSet(theSet, element))
 	return b
   }
 
   override fun removeAll(elements: Collection<E>): Boolean {
 	val b = theSet.removeAll(elements)
 	//        taball("set removeAll",elements)
-	if (b) emitChange(RemoveElements(theSet, elements))
+	if (b) emitChange(RemoveElementFromSet(theSet, elements))
 	return b
   }
 
@@ -103,7 +102,7 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBacked
 	val toRemove = theSet.filter { it !in elements }
 	val b = theSet.retainAll(elements)
 	//        taball("set retainAll",elements)
-	if (b) emitChange(RetainAll(theSet, toRemove, retained = elements))
+	if (b) emitChange(RetainAllSet(theSet, toRemove, retained = elements))
 	return b
   }
 

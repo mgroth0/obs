@@ -2,8 +2,9 @@ package matt.obs.col.olist.mappedlist
 
 
 import matt.lang.model.value.LazyValue
-import matt.model.op.convert.Converter
+import matt.lang.weak.WeakRef
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
+import matt.model.op.convert.Converter
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.col.olist.ImmutableObsList
@@ -39,6 +40,23 @@ fun <S, T> ObsList<S>.toLazyMappedList(mapFun: (S)->T): ImmutableObsList<T> {
 	  ) {
 		LazyValue {
 		  mapFun(it)
+		}
+	  }
+	)
+  }
+  return r.view { it.value }
+}
+
+fun <S, T, W: Any> ImmutableObsList<S>.toLazyMappedListWithWeak(w: W, mapFun: (W, S)->T): ImmutableObsList<T> {
+  val weakRef = WeakRef(w)
+  val r = BasicObservableListImpl(map { LazyValue { mapFun(w, it) } })
+  onChangeWithAlreadyWeak(weakRef) { w, it ->
+	r.mirror(
+	  it.convert(
+		r
+	  ) {
+		LazyValue {
+		  mapFun(w, it)
 		}
 	  }
 	)

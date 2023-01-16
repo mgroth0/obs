@@ -19,6 +19,7 @@ import matt.obs.bind.binding
 import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.bindings.bool.not
+import matt.obs.listen.ChangeListener
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.NewListener
@@ -175,7 +176,9 @@ interface MObservableValNewAndOld<T>:
 
 interface MObservableValNewOnly<T>:
 	MObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
-  override fun onChange(op: (T)->Unit) = addListener(NewListener { new ->
+
+
+  override fun onChange(op: (T)->Unit) = addListener(ChangeListener { new ->
 	op(new)
   })
 

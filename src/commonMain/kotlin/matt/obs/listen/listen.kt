@@ -2,11 +2,14 @@ package matt.obs.listen
 
 import matt.lang.NEVER
 import matt.lang.ifTrue
+import matt.lang.model.value.Value
 import matt.lang.weak.WeakRef
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.prints.Prints
 import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
+import matt.obs.col.change.ListChange
+import matt.obs.col.change.SetChange
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ContextUpdate
 import matt.obs.listen.update.MapUpdate
@@ -18,6 +21,7 @@ import matt.obs.listen.update.ValueUpdateWithWeakObj
 import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
 import matt.obs.prop.ObsVal
+import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ListenerDSL
 
@@ -64,7 +68,7 @@ internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
 }
 
 class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit):
-  NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
+	NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
   var listenerDebugger: Prints? = null
   override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) {
 	listenerDebugger = debugger
@@ -109,9 +113,28 @@ sealed class ValueListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyLi
 sealed class NewOrLessListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: ValueListener<T, U_IN, U_OUT>()
 
 class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit):
-  NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
+	NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
   override fun transformUpdate(u: ValueUpdate<T>) = u
   override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) = invoke(update.new)
+}
+
+
+class ChangeListener<T>(private val invoke: ChangeListener<T>.(new: T)->Unit):
+	NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
+
+  private var lastUpdate: Value<T>? = null
+
+  override fun transformUpdate(u: ValueUpdate<T>) = u
+
+  @Synchronized
+  override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) {
+	val new = update.new
+	val last = lastUpdate
+	if (last == null || last.value != new) {
+	  lastUpdate = Value(new)
+	  invoke(update.new)
+	}
+  }
 }
 
 
@@ -177,23 +200,25 @@ class WeakListenerWithOld<W: Any, T>(
 }
 
 class OldAndNewListenerImpl<T>(internal val invoke: OldAndNewListenerImpl<T>.(old: T, new: T)->Unit):
-  OldAndNewListener<T, ValueChange<T>, ValueChange<T>>() {
+	OldAndNewListener<T, ValueChange<T>, ValueChange<T>>() {
   override fun transformUpdate(u: ValueChange<T>) = u
   override fun subNotify(update: ValueChange<T>, debugger: Prints?) = invoke(update.old, update.new)
 }
 
-abstract class CollectionListenerBase<E>(): MyListener<CollectionUpdate<E>>() {
+abstract class CollectionListenerBase<E,C: CollectionChange<E, out Collection<E>>>(): MyListener<CollectionUpdate<E>>() {
   final override fun notify(update: CollectionUpdate<E>, debugger: Prints?) = subNotify(update.change)
-  abstract fun subNotify(change: CollectionChange<E>)
+  abstract fun subNotify(change: C)
 }
 
-class CollectionListener<E>(internal val invoke: CollectionListener<E>.(change: CollectionChange<E>)->Unit):
-  CollectionListenerBase<E>() {
-  override fun subNotify(change: CollectionChange<E>) = invoke(change)
+sealed class CollectionListener<E, C: CollectionChange<E,out Collection<E>>>(internal val invoke: CollectionListener<E,C>.(change: C)->Unit): CollectionListenerBase<E,C>() {
+  override fun subNotify(change: C) = invoke(change)
 }
+class SetListener<E>(invoke: CollectionListener<E,SetChange<E>>.(change: SetChange<E>)->Unit): CollectionListener<E,SetChange<E>>(invoke)
+class ListListener<E>(invoke: CollectionListener<E,ListChange<E>>.(change: ListChange<E>)->Unit): CollectionListener<E,ListChange<E>>(invoke)
+
 
 class MapListener<K, V>(internal val invoke: MapListener<K, V>.(change: MapChange<K, V>)->Unit):
-  MyListener<MapUpdate<K, V>>() {
+	MyListener<MapUpdate<K, V>>() {
   override fun notify(update: MapUpdate<K, V>, debugger: Prints?) = invoke(update.change)
 }
 

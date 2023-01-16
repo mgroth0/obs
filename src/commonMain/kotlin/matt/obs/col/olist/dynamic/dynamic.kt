@@ -1,11 +1,12 @@
 package matt.obs.col.olist.dynamic
 
 import matt.collect.map.lazyMap
-import matt.lang.setAll
-import matt.model.op.debug.DebugLogger
+import matt.lang.setAllOneByOne
 import matt.model.obj.tostringbuilder.toStringBuilder
+import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.bindings.bool.ObsB
+import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.ObsList
 import matt.obs.col.olist.basicMutableObservableListOf
@@ -23,7 +24,7 @@ interface BasicSortedList<E>: ObsList<E>, CustomDependencies, List<E> {
 }
 
 class DynamicList<E>(
-  private val source: ObsList<E>,
+  private val source: ImmutableObsList<E>,
   filter: ((E)->Boolean)? = null,
   private val dynamicFilter: ((E)->ObsB)? = null,
   comparator: Comparator<in E>? = null,
@@ -49,7 +50,7 @@ class DynamicList<E>(
 
   private fun refresh() {
 	require(predicate.value == null || dynamicFilter == null)
-	target.setAll(source.filter { predicate.value?.invoke(it) ?: dynamicPredicates?.get(it)?.value ?: true }.let {
+	target.setAllOneByOne(source.filter { predicate.value?.invoke(it) ?: dynamicPredicates?.get(it)?.value ?: true }.let {
 	  val c = comparator.value
 	  if (c != null) sortedWith(c)
 	  else it
