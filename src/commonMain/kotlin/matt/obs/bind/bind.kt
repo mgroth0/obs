@@ -69,9 +69,9 @@ fun <T, R> ObsVal<T>.binding(
 ) = MyBinding(this, *dependencies) { converter.convertToB(value) }
 
 
-fun <E, R> BasicOCollection<E>.binding(
+fun <E, R> BasicOCollection<E, *>.binding(
   vararg dependencies: MObservable,
-  op: (BasicOCollection<E>)->R,
+  op: (BasicOCollection<E, *>)->R,
 ): MyBinding<R> = MyBinding(this, *dependencies) { op(this) }
 
 
@@ -109,9 +109,9 @@ interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
 
 abstract class MyBindingBaseImpl<T>(calc: ()->T):
-  MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>(),
-  MyBindingBase<T>,
-  CustomDependencies {
+	MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>(),
+	MyBindingBase<T>,
+	CustomDependencies {
 
 
   final override fun observe(op: ()->Unit) = addListener(InvalidListener {

@@ -1,10 +1,8 @@
 package matt.obs.col.change
 
-import matt.collect.set.ordered.MutableOrderedSet
 import matt.collect.set.ordered.OrderedSet
 import matt.collect.set.ordered.orderedSetOf
 import matt.collect.set.ordered.toOrderedSet
-import matt.lang.NEVER
 import matt.log.taball
 import matt.model.data.index.AdditionIndex
 import matt.model.data.index.All
@@ -194,12 +192,12 @@ sealed class MultiRemoval<E, COL: Collection<E>>(
 
 sealed class MultiRemovalFromSet<E>(
   override val collection: Set<E>,
-  val remvoced: Collection<E>
+  removed: Collection<E>
 ): MultiRemoval<E, Set<E>>(collection, removed), RemovalBase<E, Set<E>>, SetChange<E>
 
 sealed class MultiRemovalFromList<E>(
   override val collection: List<E>,
-  val remvoced: Collection<E>
+  removed: Collection<E>
 ): MultiRemoval<E, List<E>>(collection, removed), ListRemovalBase<E>
 
 

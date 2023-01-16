@@ -142,18 +142,19 @@ interface MyWeakListener: MyListenerInter {
   fun shouldBeCleaned(): Boolean
 }
 
-class WeakCollectionListener<W: Any, E>(
+class WeakCollectionListener<W: Any, E, C: CollectionChange<E, *>>(
   private val wref: WeakRef<W>,
-  private val invoke: MyListener<*>.(ref: W, change: CollectionChange<E>)->Unit
-): CollectionListenerBase<E>(), MyWeakListener {
+  private val invoke: MyListener<*>.(ref: W, change: C)->Unit
+): CollectionListenerBase<E, C, CollectionUpdate<E, C>>(), MyWeakListener {
 
-  override fun subNotify(change: CollectionChange<E>) {
+  override fun subNotify(change: C) {
 	val w = wref.deref()
 	if (w == null) removeListener()
 	else invoke(this, w, change)
   }
 
   override fun shouldBeCleaned() = wref.deref() == null
+
 
 }
 
@@ -205,16 +206,25 @@ class OldAndNewListenerImpl<T>(internal val invoke: OldAndNewListenerImpl<T>.(ol
   override fun subNotify(update: ValueChange<T>, debugger: Prints?) = invoke(update.old, update.new)
 }
 
-abstract class CollectionListenerBase<E,C: CollectionChange<E, out Collection<E>>>(): MyListener<CollectionUpdate<E>>() {
-  final override fun notify(update: CollectionUpdate<E>, debugger: Prints?) = subNotify(update.change)
-  abstract fun subNotify(change: C)
+abstract class CollectionListenerBase<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>():
+	MyListener<U>() {
+
+  final override fun notify(update: U, debugger: Prints?) = subNotify(update.change)
+  abstract fun subNotify(change: sC)
 }
 
-sealed class CollectionListener<E, C: CollectionChange<E,out Collection<E>>>(internal val invoke: CollectionListener<E,C>.(change: C)->Unit): CollectionListenerBase<E,C>() {
+sealed class CollectionListener<E, C: CollectionChange<E, out Collection<E>>>(internal val invoke: CollectionListener<E, C>.(change: C)->Unit):
+	CollectionListenerBase<E, C, CollectionUpdate<E, C>>() {
   override fun subNotify(change: C) = invoke(change)
 }
-class SetListener<E>(invoke: CollectionListener<E,SetChange<E>>.(change: SetChange<E>)->Unit): CollectionListener<E,SetChange<E>>(invoke)
-class ListListener<E>(invoke: CollectionListener<E,ListChange<E>>.(change: ListChange<E>)->Unit): CollectionListener<E,ListChange<E>>(invoke)
+
+class SetListener<E>(invoke: CollectionListener<E, SetChange<E>>.(change: SetChange<E>)->Unit): CollectionListener<E, SetChange<E>>(
+  invoke
+)
+
+class ListListener<E>(invoke: CollectionListener<E, ListChange<E>>.(change: ListChange<E>)->Unit): CollectionListener<E, ListChange<E>>(
+  invoke
+)
 
 
 class MapListener<K, V>(internal val invoke: MapListener<K, V>.(change: MapChange<K, V>)->Unit):

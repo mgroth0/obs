@@ -16,9 +16,9 @@ interface BasicOCollection<E, C: CollectionChange<E, out Collection<E>>>: Collec
   fun onChange(listenerName: String? = null, op: (C)->Unit): CollectionListenerBase<E,C>
 }
 
-abstract class InternallyBackedOCollection<E> internal constructor(): MObservableImpl<CollectionUpdate<E>, CollectionListenerBase<E>>(), BasicOCollection<E> {
+abstract class InternallyBackedOCollection<E, C: CollectionChange<E,Collection<E>>> internal constructor(): MObservableImpl<CollectionUpdate<E>, CollectionListenerBase<E,*>>(), BasicOCollection<E,C> {
 
-  override fun onChange(listenerName: String?, op: (CollectionChange<E>)->Unit): CollectionListenerBase<E> {
+  override fun onChange(listenerName: String?, op: (CollectionChange<E>)->Unit): CollectionListenerBase<E,C> {
 	return addListener(CollectionListener {    //	  println("addListener c = $it")
 	  op(it)
 	}.also {

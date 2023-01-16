@@ -3,6 +3,8 @@ package matt.obs.bindings.str.mybuildobs
 import matt.obs.bind.MyBinding
 import matt.obs.bindings.str.ObsS
 import matt.obs.col.change.AdditionBase
+import matt.obs.col.change.ListAdditionBase
+import matt.obs.col.change.ListRemovalBase
 import matt.obs.col.change.RemovalBase
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.prop.BindableProperty
@@ -27,10 +29,10 @@ class MyObsStringDSL: StringDSL {
 	stringM.addDependency(delimiter)
 	parts.onChange { c ->
 	  stringM.markInvalid()
-	  (c as? AdditionBase)?.addedElements?.forEach {
+	  (c as? ListAdditionBase)?.addedElements?.forEach {
 		stringM.addDependency(it)
 	  }
-	  (c as? RemovalBase)?.removedElements?.forEach {
+	  (c as? ListRemovalBase)?.removedElements?.forEach {
 		stringM.removeDependency(it)
 	  }
 	}

@@ -35,9 +35,9 @@ class ValueUpdateWithWeakObjAndOld<W: Any, T>(new: T, old: T, override val weakO
 	  old = old, new = new
 	), WeakUpdate<W>
 
-sealed class CollectionUpdate<E>(internal open val change: CollectionChange<E, *>): Update
-class SetUpdate<E>(override val change: SetChange<E>): CollectionUpdate<E>(change)
-class ListUpdate<E>(override val change: ListChange<E>): CollectionUpdate<E>(change)
+sealed class CollectionUpdate<E, C: CollectionChange<E, *>>(internal open val change: C): Update
+class SetUpdate<E>(override val change: SetChange<E>): CollectionUpdate<E,SetChange<E>>(change)
+class ListUpdate<E>(override val change: ListChange<E>): CollectionUpdate<E,ListChange<E>>(change)
 class MapUpdate<K, V>(internal val change: MapChange<K, V>): Update
 
 object ContextUpdate: Update

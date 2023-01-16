@@ -42,13 +42,14 @@ import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
 import matt.obs.listen.CollectionListener
 import matt.obs.listen.CollectionListenerBase
+import matt.obs.listen.ListListener
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.WeakCollectionListener
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
 
-interface ImmutableObsList<E>: BasicOCollection<E>, List<E> {
+interface ImmutableObsList<E>: BasicOCollection<E,ListChange<E>>, List<E> {
   fun <W: Any> onChangeWithWeak(
 	o: W, op: (W, ListChange<E>)->Unit
   ) = run {
@@ -74,7 +75,7 @@ interface ImmutableObsList<E>: BasicOCollection<E>, List<E> {
 	onAdd: ((E)->Unit),
 	onRemove: ((E)->Unit),
   ) {
-	addListener(CollectionListener {
+	addListener(ListListener {
 	  (it as? ListAdditionBase)?.addedElements?.forEach { e ->
 		onAdd(e)
 	  }
