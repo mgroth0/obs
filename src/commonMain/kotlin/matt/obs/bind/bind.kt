@@ -13,9 +13,7 @@ import matt.obs.col.olist.MutableObsList
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.lazy.DependentValue
-import matt.obs.listen.ChangeListener
 import matt.obs.listen.InvalidListener
-import matt.obs.listen.MyListenerInter
 import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.update.LazyMaybeNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
