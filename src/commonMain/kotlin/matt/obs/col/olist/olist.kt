@@ -23,6 +23,7 @@ import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOList
 import matt.obs.col.change.AddAt
 import matt.obs.col.change.AddAtEnd
+import matt.obs.col.change.AtomicListChange
 import matt.obs.col.change.ClearList
 import matt.obs.col.change.ListAdditionBase
 import matt.obs.col.change.ListChange
@@ -84,9 +85,13 @@ interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>,
 	  }
 	})
   }
+
+
 }
 
-interface MutableObsList<E>: ImmutableObsList<E>, BindableList<E>, MutableList<E>
+interface MutableObsList<E>: ImmutableObsList<E>, BindableList<E>, MutableList<E> {
+  fun atomicChange(op: MutableObsList<E>.()->Unit)
+}
 
 
 fun <E: Comparable<E>> MutableObsList<E>.sorted(): BasicSortedList<E> =
@@ -321,9 +326,29 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	return oldElement
   }
 
+  override fun atomicChange(op: MutableObsList<E>.()->Unit) {
+	val changes = mutableListOf<ListChange<E>>()
+	atomicChanges = changes
+	isAtomicallyChanging = true
+	op()
+	isAtomicallyChanging = false
+	atomicChanges = null
+	emitChange(AtomicListChange(this, changes))
+  }
+
   fun changedFromOuter(c: ListChange<E>) {
 	invalidateSubLists()
-	emitChange(c)
+	processChange(c)
+  }
+
+  private var isAtomicallyChanging = false
+  private var atomicChanges: MutableList<ListChange<E>>? = null
+  fun processChange(c: ListChange<E>) {
+	if (isAtomicallyChanging) {
+	  atomicChanges!!.add(c)
+	} else {
+	  emitChange(c)
+	}
   }
 
 
@@ -370,7 +395,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 		  val copyWithIndices2 = copyWithIndices.map { IndexedValue(it.second, it.first) }
 		  subList.clear()
 		  toIndexExclusive = fromIndex
-		  emitChange(RemoveAtIndices(collection = this@BasicObservableListImpl, removed = copyWithIndices2))
+		  processChange(RemoveAtIndices(collection = this@BasicObservableListImpl, removed = copyWithIndices2))
 		}
 	  }
 
@@ -382,7 +407,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 		val addIndex = toIndexExclusive
 		toIndexExclusive += elements.size
 		val r = subList.addAll(elements)
-		emitChange(MultiAddAt(collection = this@BasicObservableListImpl, added = elements, index = addIndex))
+		processChange(MultiAddAt(collection = this@BasicObservableListImpl, added = elements, index = addIndex))
 		r
 	  }
 	}
@@ -400,7 +425,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  val b = subList.add(element)
 	  require(b)
 	  toIndexExclusive++
-	  emitChange(AddAt(this@BasicObservableListImpl, element, fromIndex + subList.size - 1))
+	  processChange(AddAt(this@BasicObservableListImpl, element, fromIndex + subList.size - 1))
 	  return b
 	}
 
@@ -436,7 +461,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	override fun set(index: Int, element: E): E {
 	  require(isValid)
 	  val prev = subList.set(index, element)
-	  emitChange(ReplaceAt(this@BasicObservableListImpl, removed = prev, added = element, index = fromIndex + index))
+	  processChange(ReplaceAt(this@BasicObservableListImpl, removed = prev, added = element, index = fromIndex + index))
 	  return prev
 	}
 
@@ -449,7 +474,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  val newSize = subList.size
 	  val numRemoved = prevSize - newSize
 	  toIndexExclusive -= numRemoved
-	  if (b) emitChange(
+	  if (b) processChange(
 		RemoveAtIndices(
 		  this@BasicObservableListImpl,
 		  willRemove.map { IndexedValue(it.index + fromIndex, it.value) })
@@ -462,7 +487,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  val i = subList.indexOf(element)
 	  val b = subList.remove(element)
 	  if (b) toIndexExclusive--
-	  if (b) emitChange(RemoveAt(this@BasicObservableListImpl, element, i + fromIndex))
+	  if (b) processChange(RemoveAt(this@BasicObservableListImpl, element, i + fromIndex))
 	  return b
 	}
 

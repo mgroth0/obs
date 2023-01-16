@@ -13,6 +13,7 @@ import matt.model.data.index.MyIndexedValue
 import matt.model.data.index.RemovalIndex
 import matt.model.data.index.withIndex
 import matt.model.obj.tostringbuilder.toStringBuilder
+import matt.obs.col.change.atomic.compile
 import matt.prim.str.elementsToString
 
 
@@ -55,8 +56,6 @@ class AtomicListChange<E>(
 	  changes.map { it.convert(collection, convert) }
 	)
   }
-
-
 }
 
 
@@ -407,9 +406,8 @@ fun <E> MutableList<E>.mirror(c: ListChange<E>): ListChange<E> {
 	  is RemoveAtIndices       -> c.removedElementsIndexed.sortedBy { it.index }.forEach {
 		removeAt(it.index.i)
 	  }
-
 	  is AtomicListChange      -> {
-		c.changes.forEach {
+		c.compile().changes.forEach {
 		  mirror(it)
 		}
 	  }

@@ -53,12 +53,18 @@ class DynamicList<E>(
 
   override fun refresh() {
 	require(predicate.value == null || dynamicFilter == null)
+
+
+
 	target.setAllOneByOne(source.filter { predicate.value?.invoke(it) ?: dynamicPredicates?.get(it)?.value ?: true }
 							.let {
 							  val c = comparator.value
 							  if (c != null) sortedWith(c)
 							  else it
 							})
+
+
+
   }
 
 
