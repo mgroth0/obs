@@ -29,9 +29,12 @@ import kotlin.jvm.Synchronized
 
 typealias Listener = MyListener<*>
 
-interface MyListenerInter
+interface MyListenerInter<U: Update> {
+  fun notify(update: U, debugger: Prints? = null)
+  fun removeListener()
+}
 
-@ListenerDSL abstract class MyListener<U: Update>: MyListenerInter {
+@ListenerDSL abstract class MyListener<U: Update>: MyListenerInter<U> {
 
   var name: String? = null
 
@@ -41,7 +44,7 @@ interface MyListenerInter
   var removeAfterInvocation: Boolean = false
 
   internal var currentObservable: WeakRef<MListenable<*>>? = null
-  fun removeListener() = currentObservable!!.deref()!!.removeListener(this)
+  override fun removeListener() = currentObservable!!.deref()!!.removeListener(this)
   fun tryRemovingListener() = currentObservable?.deref()?.removeListener(this) ?: false
 
 
@@ -52,8 +55,6 @@ interface MyListenerInter
 	}
 	return update
   }
-
-  abstract fun notify(update: U, debugger: Prints? = null)
 
   internal fun postInvocation() {
 	if (removeAfterInvocation) {
@@ -140,14 +141,14 @@ class ChangeListener<T>(private val invoke: ChangeListener<T>.(new: T)->Unit):
 }
 
 
-interface MyWeakListener: MyListenerInter {
+interface MyWeakListener<U: Update>: MyListenerInter<U> {
   fun shouldBeCleaned(): Boolean
 }
 
-class WeakCollectionListener<W: Any, E, C: CollectionChange<E, *>>(
+abstract class WeakCollectionListener<W: Any, E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>(
   private val wref: WeakRef<W>,
-  private val invoke: MyListener<*>.(ref: W, change: C)->Unit
-): CollectionListenerBase<E, C, CollectionUpdate<E, C>>(), MyWeakListener {
+  private val invoke: MyListenerInter<*>.(ref: W, change: C)->Unit
+): MyListener<U>(), CollectionListenerBase<E, C, U>, MyWeakListener<U> {
 
   override fun subNotify(change: C) {
 	val w = wref.deref()
@@ -156,15 +157,23 @@ class WeakCollectionListener<W: Any, E, C: CollectionChange<E, *>>(
   }
 
   override fun shouldBeCleaned() = wref.deref() == null
-
-
 }
+
+class WeakListListener<W: Any, E>(
+  wref: WeakRef<W>,
+  invoke: MyListenerInter<*>.(ref: W, change: ListChange<E>)->Unit
+): WeakCollectionListener<W, E, ListChange<E>, ListUpdate<E>>(wref, invoke), ListListenerBase<E>
+
+class WeakSetListener<W: Any, E>(
+  wref: WeakRef<W>,
+  invoke: MyListenerInter<*>.(ref: W, change: SetChange<E>)->Unit
+): WeakCollectionListener<W, E, SetChange<E>, SetUpdate<E>>(wref, invoke)
 
 
 class WeakListenerWithNewValue<W: Any, T>(
   private val wref: WeakRef<W>,
   internal val invoke: WeakListenerWithNewValue<W, T>.(ref: W, new: T)->Unit
-): NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(), MyWeakListener {
+): NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(), MyWeakListener<ValueUpdate<T>> {
 
   override fun shouldBeCleaned() = wref.deref() == null
 
@@ -186,7 +195,7 @@ abstract class OldAndNewListener<T, U_IN: ValueChange<T>, U_OUT: ValueChange<T>>
 
 class WeakListenerWithOld<W: Any, T>(
   private val wref: WeakRef<W>, internal val invoke: WeakListenerWithOld<W, T>.(ref: W, old: T, new: T)->Unit
-): OldAndNewListener<T, ValueChange<T>, ValueUpdateWithWeakObjAndOld<W, T>>(), MyWeakListener {
+): OldAndNewListener<T, ValueChange<T>, ValueUpdateWithWeakObjAndOld<W, T>>(), MyWeakListener<ValueChange<T>> {
 
   override fun shouldBeCleaned() = wref.deref() == null
 
@@ -208,26 +217,29 @@ class OldAndNewListenerImpl<T>(internal val invoke: OldAndNewListenerImpl<T>.(ol
   override fun subNotify(update: ValueChange<T>, debugger: Prints?) = invoke(update.old, update.new)
 }
 
-abstract class CollectionListenerBase<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>():
-	MyListener<U>() {
-
-  final override fun notify(update: U, debugger: Prints?) = subNotify(update.change)
+interface CollectionListenerBase<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>:
+	MyListenerInter<U> {
+  override fun notify(update: U, debugger: Prints?) = subNotify(update.change)
   abstract fun subNotify(change: C)
 }
 
 abstract class CollectionListener<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>(
-  internal val invoke: CollectionListener<E, C,U>.(change: C)->Unit
-): CollectionListenerBase<E, C, U>() {
+  internal val invoke: CollectionListener<E, C, U>.(change: C)->Unit
+): MyListener<U>(), CollectionListenerBase<E, C, U> {
   override fun subNotify(change: C) = invoke(change)
 }
 
-class SetListener<E>(invoke: CollectionListener<E, SetChange<E>,SetUpdate<E>>.(change: SetChange<E>)->Unit): CollectionListener<E, SetChange<E>, SetUpdate<E>>(
-  invoke
-)
+class SetListener<E>(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>)->Unit):
+	CollectionListener<E, SetChange<E>, SetUpdate<E>>(
+	  invoke
+	)
 
-class ListListener<E>(invoke: CollectionListener<E, ListChange<E>,ListUpdate<E>>.(change: ListChange<E>)->Unit): CollectionListener<E, ListChange<E>, ListUpdate<E>>(
-  invoke
-)
+
+interface ListListenerBase<E>: CollectionListenerBase<E, ListChange<E>, ListUpdate<E>>
+class ListListener<E>(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>)->Unit):
+	CollectionListener<E, ListChange<E>, ListUpdate<E>>(
+	  invoke
+	), ListListenerBase<E>
 
 
 class MapListener<K, V>(internal val invoke: MapListener<K, V>.(change: MapChange<K, V>)->Unit):

@@ -16,7 +16,7 @@ import matt.obs.listen.update.Update
 @ObservableDSL interface MObservable {
   var nam: String?
   fun observe(op: ()->Unit): Listener
-  fun removeListener(listener: MyListenerInter)
+  fun removeListener(listener: MyListenerInter<*>)
 
   /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
   fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): Listener {
@@ -37,7 +37,7 @@ import matt.obs.listen.update.Update
 }
 
 
-@ObservableDSL interface MListenable<L: Listener>: MObservable {
+@ObservableDSL interface MListenable<L: MyListenerInter<*>>: MObservable {
   fun addListener(listener: L): L
 }
 
@@ -77,7 +77,7 @@ abstract class MObservableImpl<U: Update, L: MyListener<in U>> internal construc
 	}
   }
 
-  override fun removeListener(listener: MyListenerInter) {
+  override fun removeListener(listener: MyListenerInter<*>) {
 	synchronizer.operateOnInternalDataNowOrLater {
 	  listeners.remove(listener)
 	  (listener as? MyListener<*>)?.currentObservable = null
@@ -89,7 +89,7 @@ abstract class MObservableImpl<U: Update, L: MyListener<in U>> internal construc
   /*TODO: This should be done by a ReferencesQueue on JVM*/
   fun cleanWeakListeners() {
 
-	listeners.filterIsInstance<MyWeakListener>().forEach {
+	listeners.filterIsInstance<MyWeakListener<*>>().forEach {
 	  if (it.shouldBeCleaned()) {
 		removeListener(it)
 	  }

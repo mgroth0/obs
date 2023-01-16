@@ -11,7 +11,6 @@ import matt.lang.NEVER
 import matt.lang.NOT_IMPLEMENTED
 import matt.lang.anno.NeedsTest
 import matt.lang.comparableComparator
-import matt.lang.firstIndex
 import matt.lang.function.Consume
 import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
@@ -21,19 +20,15 @@ import matt.obs.bindhelp.BindableList
 import matt.obs.bindhelp.BindableListImpl
 import matt.obs.bindings.bool.ObsB
 import matt.obs.col.BasicOCollection
-import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.InternallyBackedOList
 import matt.obs.col.change.AddAt
 import matt.obs.col.change.AddAtEnd
-import matt.obs.col.change.AdditionBase
 import matt.obs.col.change.ClearList
-import matt.obs.col.change.CollectionChange
 import matt.obs.col.change.ListAdditionBase
 import matt.obs.col.change.ListChange
 import matt.obs.col.change.ListRemovalBase
 import matt.obs.col.change.MultiAddAt
 import matt.obs.col.change.MultiAddAtEnd
-import matt.obs.col.change.RemovalBase
 import matt.obs.col.change.RemoveAt
 import matt.obs.col.change.RemoveAtIndices
 import matt.obs.col.change.RemoveElementFromList
@@ -44,17 +39,17 @@ import matt.obs.col.olist.dynamic.BasicFilteredList
 import matt.obs.col.olist.dynamic.BasicSortedList
 import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotObservable
-import matt.obs.listen.CollectionListener
-import matt.obs.listen.CollectionListenerBase
 import matt.obs.listen.ListListener
+import matt.obs.listen.ListListenerBase
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.WeakCollectionListener
+import matt.obs.listen.WeakListListener
 import matt.obs.listen.update.ListUpdate
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
 
-interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>, ListListener<E>>, List<E> {
+interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>, ListListenerBase<E>>, List<E> {
   fun <W: Any> onChangeWithWeak(
 	o: W, op: (W, ListChange<E>)->Unit
   ) = run {
@@ -65,7 +60,7 @@ interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>,
   }
 
   fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, ListChange<E>)->Unit) = run {
-	val listener = WeakCollectionListener<W, E, ListChange<E>>(weakRef) { o: W, c: ListChange<E> ->
+	val listener = WeakListListener(weakRef) { o: W, c: ListChange<E> ->
 	  op(o, c)
 	}
 	addListener(listener)
