@@ -15,11 +15,11 @@ import matt.obs.listen.update.Update
 
 @ObservableDSL interface MObservable {
   var nam: String?
-  fun observe(op: ()->Unit): Listener
+  fun observe(op: ()->Unit): MyListenerInter<*>
   fun removeListener(listener: MyListenerInter<*>)
 
   /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
-  fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): Listener {
+  fun patientlyObserve(scheduleOp: MetaFunction, op: ()->Unit): MyListenerInter<*> {
 	var shouldScheduleAnother = true
 	return observe {
 	  if (shouldScheduleAnother) {
