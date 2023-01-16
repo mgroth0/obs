@@ -11,6 +11,7 @@ import matt.obs.listen.CollectionListener
 import matt.obs.listen.CollectionListenerBase
 import matt.obs.listen.ListListener
 import matt.obs.listen.ListListenerBase
+import matt.obs.listen.MyListenerInter
 import matt.obs.listen.SetListener
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ListUpdate
@@ -23,7 +24,7 @@ interface BasicOCollection<E, C: CollectionChange<E, out Collection<E>>, U: Coll
 	Collection<E>,
 	MListenable<L> {
   override fun observe(op: ()->Unit) = onChange { op() }
-  fun onChange(listenerName: String? = null, op: (C)->Unit): L
+  fun onChange(listenerName: String? = null, op: (C)->Unit): MyListenerInter<*>
 }
 
 

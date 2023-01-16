@@ -42,7 +42,6 @@ import matt.obs.fx.requireNotObservable
 import matt.obs.listen.ListListener
 import matt.obs.listen.ListListenerBase
 import matt.obs.listen.MyListenerInter
-import matt.obs.listen.WeakCollectionListener
 import matt.obs.listen.WeakListListener
 import matt.obs.listen.update.ListUpdate
 import matt.obs.prop.MObservableVal
@@ -292,7 +291,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	val lowestChangedIndex = withIndex().firstOrNull { it.value in elements }?.index
 	val b = list.removeAll(elements)
 	if (b) {
-	  changedFromOuter(RemoveElements(list, elements,lowestChangedIndex=lowestChangedIndex!!))
+	  changedFromOuter(RemoveElements(list, elements, lowestChangedIndex = lowestChangedIndex!!))
 	}
 	return b
   }
@@ -308,7 +307,14 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	val lowestChangedIndex = withIndex().firstOrNull { it.value !in elements }?.index
 	val toRemove = list.filter { it !in elements }
 	val b = list.retainAll(elements)
-	if (b) changedFromOuter(RetainAllList(list, toRemove, retained = elements,lowestChangedIndex=lowestChangedIndex!!))
+	if (b) changedFromOuter(
+	  RetainAllList(
+		list,
+		toRemove,
+		retained = elements,
+		lowestChangedIndex = lowestChangedIndex!!
+	  )
+	)
 	return b
   }
 
@@ -488,8 +494,12 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 
   fun <R> view(converter: (E)->R) = object: ImmutableObsList<R> {
-	override fun onChange(listenerName: String?, op: (ListChange<R>)->Unit): ListListener<R> {
-	  TODO("Not yet implemented")
+
+
+	override fun onChange(listenerName: String?, op: (ListChange<R>)->Unit): MyListenerInter<*> {
+	  return this@BasicObservableListImpl.onChange {
+		op(it.convert(this, converter))
+	  }
 	}
 
 	override val size: Int
@@ -522,7 +532,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	  }
 
 	override fun get(index: Int): R {
-	  return converter(this@BasicObservableListImpl.get(index))
+	  return converter(this@BasicObservableListImpl[index])
 	}
 
 	override fun listIterator() = listIterator(0)
