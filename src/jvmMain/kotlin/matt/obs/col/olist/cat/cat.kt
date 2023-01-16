@@ -1,6 +1,6 @@
 package matt.obs.col.olist.cat
 
-import matt.lang.setall.setAll.setAll
+import matt.lang.setall.setAll
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList

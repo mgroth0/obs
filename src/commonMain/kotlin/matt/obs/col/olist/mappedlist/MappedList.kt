@@ -2,7 +2,7 @@ package matt.obs.col.olist.mappedlist
 
 
 import matt.lang.model.value.LazyValue
-import matt.lang.setall.setAll.setAll
+import matt.lang.setall.setAll
 import matt.lang.weak.WeakRef
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl

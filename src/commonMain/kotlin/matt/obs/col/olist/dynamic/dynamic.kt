@@ -1,7 +1,7 @@
 package matt.obs.col.olist.dynamic
 
 import matt.collect.map.lazyMap
-import matt.lang.setall.setAll.setAllOneByOneNeverAllowingDuplicates
+import matt.lang.setall.setAllOneByOneNeverAllowingDuplicates
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
