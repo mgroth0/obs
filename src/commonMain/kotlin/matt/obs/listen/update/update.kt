@@ -28,6 +28,10 @@ open class LazyNewValueUpdate<T>(private val newOp: ()->T): ValueUpdate<T> {
   override val new by lazy { newOp() }
 }
 
+open class LazyMaybeNewValueUpdate<T>(private val newOp: ()->T): ValueUpdate<T> {
+  override val new by lazy { newOp() }
+}
+
 
 open class ValueChange<T>(internal val old: T, new: T): NewValueUpdate<T>(new)
 class ValueUpdateWithWeakObjAndOld<W: Any, T>(new: T, old: T, override val weakObj: W):

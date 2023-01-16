@@ -13,9 +13,11 @@ import matt.obs.col.olist.MutableObsList
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.lazy.DependentValue
+import matt.obs.listen.ChangeListener
 import matt.obs.listen.InvalidListener
+import matt.obs.listen.MyListenerInter
 import matt.obs.listen.NewOrLessListener
-import matt.obs.listen.update.LazyNewValueUpdate
+import matt.obs.listen.update.LazyMaybeNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.oobj.MObservableObject
 import matt.obs.prop.BindableProperty
@@ -123,7 +125,7 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T):
 
   final override fun markInvalid() {
 	cVal.markInvalid()
-	notifyListeners(LazyNewValueUpdate { value })
+	notifyListeners(LazyMaybeNewValueUpdate { value })
   }
 
   private val depHelper by lazy { DependencyHelper(this) }
@@ -162,6 +164,13 @@ open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindin
   }
 
   override val value: T get() = cVal.get()
+
+
+  fun onActualChange(op: (T) -> Unit): MyListenerInter<*> {
+	addListener(
+	  ChangeListener
+	)
+  }
 
 
 }

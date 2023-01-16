@@ -134,8 +134,6 @@ class FakeMutableObsList<E>(private val o: MutableObsList<E>): MutableObsList<E>
 }
 
 
-
-
 abstract class BaseBasicWritableOList<E>: InternallyBackedOList<E>(),
 										  MutableObsList<E>,
 										  BindableList<E> {
@@ -365,17 +363,15 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	override fun clear() {
 	  inSync(this@BasicObservableListImpl) {
 		require(isValid)
-
-		val copy = subList.toList()
-
-		subList.clear()
-
-		toIndexExclusive = fromIndex
-
-		val copyWithIndices = copy.zip(fromIndex..<toIndexExclusive)
-		val copyWithIndices2 = copyWithIndices.map { IndexedValue(it.second, it.first) }
-
-		emitChange(RemoveAtIndices(collection = this@BasicObservableListImpl, removed = copyWithIndices2))
+		val subListIsEmpty = isEmpty()
+		if (!subListIsEmpty) {
+		  val copy = subList.toList()
+		  val copyWithIndices = copy.zip(fromIndex..<toIndexExclusive)
+		  val copyWithIndices2 = copyWithIndices.map { IndexedValue(it.second, it.first) }
+		  subList.clear()
+		  toIndexExclusive = fromIndex
+		  emitChange(RemoveAtIndices(collection = this@BasicObservableListImpl, removed = copyWithIndices2))
+		}
 	  }
 
 	}

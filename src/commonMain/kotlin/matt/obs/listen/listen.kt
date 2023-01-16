@@ -33,8 +33,8 @@ interface MyListenerInter<U: Update> {
   fun notify(update: U, debugger: Prints? = null)
   fun removeListener()
   fun tryRemovingListener()
+  var removeAfterInvocation: Boolean
   var name: String?
-  /*var currentObservable: WeakRef<MListenable<*>>*/
 }
 
 @ListenerDSL abstract class MyListener<U: Update>: MyListenerInter<U> {
@@ -44,7 +44,7 @@ interface MyListenerInter<U: Update> {
   override fun toString() = toStringBuilder("name" to name)
 
   var removeCondition: (()->Boolean)? = null
-  var removeAfterInvocation: Boolean = false
+  override var removeAfterInvocation: Boolean = false
 
   internal var currentObservable: WeakRef<MListenable<*>>? = null
   override fun removeListener() = currentObservable!!.deref()!!.removeListener(this)
@@ -76,7 +76,7 @@ internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
 }
 
 class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit):
-	NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
+	NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>, ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
   var listenerDebugger: Prints? = null
   override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) {
 	listenerDebugger = debugger
@@ -87,73 +87,107 @@ class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit):
   override fun transformUpdate(u: ValueUpdate<T>) = u
 }
 
-sealed class ValueListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyListener<U_IN>() {
+sealed interface ValueListenerBase<T, U: ValueUpdate<T>>: MyListenerInter<U>
+
+sealed class ValueListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyListener<U_IN>(),
+																			ValueListenerBase<T, U_IN> {
   var untilInclusive: ((U_OUT)->Boolean)? = null
   var untilExclusive: ((U_OUT)->Boolean)? = null
   protected abstract fun transformUpdate(u: U_IN): U_OUT?
-
-
+  protected open fun shouldRemove() = false
   final override fun notify(update: U_IN, debugger: Prints?) {
-
-	//	val ss = stackSize()
-	//	println("ss=$ss")
-	//	if (ss > 1000) {
-	//	  error("here?")
-	//	}
-
 	val u = transformUpdate(update)
-	if (u == null) removeListener()
+	if (shouldRemove()) removeListener()
+	else if (u == null) removeListener()
 	else {
-	  untilExclusive?.invoke(u)?.ifTrue {
-		removeListener()
-		return
+	  if (shouldNotify(u)) {
+		untilExclusive?.invoke(u)?.ifTrue {
+		  removeListener()
+		  return
+		}
+		subNotify(u, debugger)
+		untilInclusive?.invoke(u)?.ifTrue { removeListener() }
 	  }
-	  subNotify(u, debugger)
-	  untilInclusive?.invoke(u)?.ifTrue { removeListener() }
 	}
   }
 
-
+  open fun shouldNotify(u: U_OUT) = true
   abstract fun subNotify(update: U_OUT, debugger: Prints? = null)
 }
 
 
-sealed class NewOrLessListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: ValueListener<T, U_IN, U_OUT>()
+sealed interface NewOrLessListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: ValueListenerBase<T, U_IN>
 
 class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit):
-	NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
+	ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>> {
   override fun transformUpdate(u: ValueUpdate<T>) = u
   override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) = invoke(update.new)
 }
 
 
 class ChangeListener<T>(private val invoke: ChangeListener<T>.(new: T)->Unit):
-	NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
+	ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>> {
 
   private var lastUpdate: Value<T>? = null
 
   override fun transformUpdate(u: ValueUpdate<T>) = u
 
-  @Synchronized
-  override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) {
-	val new = update.new
+  override fun shouldNotify(u: ValueUpdate<T>): Boolean {
+	val new = u.new
 	val last = lastUpdate
 	if (last == null || last.value != new) {
 	  lastUpdate = Value(new)
-	  invoke(update.new)
+	  return true
 	}
+	return false
   }
-}
 
+  @Synchronized
+  override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) = invoke(update.new)
+}
 
 interface MyWeakListener<U: Update>: MyListenerInter<U> {
   fun shouldBeCleaned(): Boolean
 }
 
+abstract class WeakListenerBase<W: Any, U: Update>(): MyListener<U>(), MyWeakListener<U> {
+  protected abstract val wref: WeakRef<W>
+  final override fun shouldBeCleaned() = wref.deref() == null
+}
+
+sealed class WeakValueListenerBase<W: Any, T>: ValueListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(),
+											   MyWeakListener<ValueUpdate<T>> {
+  protected abstract val wref: WeakRef<W>
+  final override fun shouldBeCleaned() = wref.deref() == null
+  override fun shouldRemove(): Boolean {
+	return shouldBeCleaned()
+  }
+}
+
+sealed class WeakChangeListenerBase<W: Any, T>: ValueListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(),
+												MyWeakListener<ValueUpdate<T>> {
+  protected abstract val wref: WeakRef<W>
+  private var lastUpdate: Value<T>? = null
+  override fun shouldNotify(u: ValueUpdateWithWeakObj<W, T>): Boolean {
+	val new = u.new
+	val last = lastUpdate
+	if (last == null || last.value != new) {
+	  lastUpdate = Value(new)
+	  return true
+	}
+	return false
+  }
+
+  final override fun shouldBeCleaned() = wref.deref() == null
+  override fun shouldRemove(): Boolean {
+	return shouldBeCleaned()
+  }
+}
+
 abstract class WeakCollectionListener<W: Any, E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>>(
-  private val wref: WeakRef<W>,
+  override val wref: WeakRef<W>,
   private val invoke: MyListenerInter<*>.(ref: W, change: C)->Unit
-): MyListener<U>(), CollectionListenerBase<E, C, U>, MyWeakListener<U> {
+): WeakListenerBase<W, U>(), CollectionListenerBase<E, C, U> {
 
   override fun subNotify(change: C) {
 	val w = wref.deref()
@@ -161,7 +195,6 @@ abstract class WeakCollectionListener<W: Any, E, C: CollectionChange<E, out Coll
 	else invoke(this, w, change)
   }
 
-  override fun shouldBeCleaned() = wref.deref() == null
 }
 
 class WeakListListener<W: Any, E>(
@@ -175,12 +208,10 @@ class WeakSetListener<W: Any, E>(
 ): WeakCollectionListener<W, E, SetChange<E>, SetUpdate<E>>(wref, invoke)
 
 
-class WeakListenerWithNewValue<W: Any, T>(
-  private val wref: WeakRef<W>,
-  internal val invoke: WeakListenerWithNewValue<W, T>.(ref: W, new: T)->Unit
-): NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(), MyWeakListener<ValueUpdate<T>> {
-
-  override fun shouldBeCleaned() = wref.deref() == null
+class WeakChangeListenerWithNewValue<W: Any, T>(
+  override val wref: WeakRef<W>,
+  internal val invoke: WeakChangeListenerWithNewValue<W, T>.(ref: W, new: T)->Unit
+): WeakChangeListenerBase<W, T>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>> {
 
   override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<W, T>? {
 	return wref.deref()?.let {

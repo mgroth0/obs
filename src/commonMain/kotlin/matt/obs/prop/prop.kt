@@ -27,6 +27,8 @@ import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.OldAndNewListener
 import matt.obs.listen.OldAndNewListenerImpl
 import matt.obs.listen.ValueListener
+import matt.obs.listen.ValueListenerBase
+import matt.obs.listen.WeakChangeListenerWithNewValue
 import matt.obs.listen.WeakListenerWithNewValue
 import matt.obs.listen.WeakListenerWithOld
 import matt.obs.listen.update.ValueChange
@@ -67,7 +69,7 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 }
 
 
-sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U, out ValueUpdate<T>>>: MListenable<L>,
+sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U>>: MListenable<L>,
 																								   ValueWrapper<T>,
 																								   ReadOnlyProperty<Any?, T> {
   override val value: T
@@ -77,7 +79,7 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListener<T, U, out
 	it as R
   }
 
-  override fun observe(op: ()->Unit): Listener = onChange { op() }
+  override fun observe(op: ()->Unit): MyListenerInter<*> = onChange { op() }
 
   fun onChange(op: (T)->Unit): L
 
@@ -188,7 +190,7 @@ interface MObservableValNewOnly<T>:
   }
 
   override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit) = run {
-	val listener = WeakListenerWithNewValue(weakRef) { o: W, new: T ->
+	val listener = WeakChangeListenerWithNewValue(weakRef) { o: W, new: T ->
 	  op(o, new)
 	}.apply {
 	  removeCondition = { weakRef.deref() == null }
