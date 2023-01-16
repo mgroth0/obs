@@ -10,6 +10,7 @@ import matt.obs.col.change.SetChange
 import matt.obs.listen.CollectionListener
 import matt.obs.listen.CollectionListenerBase
 import matt.obs.listen.ListListener
+import matt.obs.listen.ListListenerBase
 import matt.obs.listen.SetListener
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ListUpdate
@@ -75,12 +76,12 @@ abstract class InternallyBackedOSet<E> internal constructor(): InternallyBackedO
   }
 }
 
-abstract class InternallyBackedOList<E> internal constructor(): InternallyBackedOCollection<E, ListChange<E>, ListUpdate<E>, ListListener<E>>() {
+abstract class InternallyBackedOList<E> internal constructor(): InternallyBackedOCollection<E, ListChange<E>, ListUpdate<E>, ListListenerBase<E>>() {
   override fun updateFrom(c: ListChange<E>): ListUpdate<E> {
 	return ListUpdate(c)
   }
 
-  override fun createListener(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>)->Unit): ListListener<E> {
+  override fun createListener(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>)->Unit): ListListenerBase<E> {
 	val l = ListListener<E>(invoke)
 	return l
   }

@@ -501,7 +501,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 	override fun iterator(): Iterator<R> = listIterator()
 
-	override fun addListener(listener: ListListener<R>): ListListener<R> {
+	override fun addListener(listener: ListListenerBase<R>): ListListener<R> {
 	  TODO("Not yet implemented")
 	}
 
