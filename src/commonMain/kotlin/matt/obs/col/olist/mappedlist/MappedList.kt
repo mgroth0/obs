@@ -18,7 +18,9 @@ fun <S, T> ImmutableObsList<S>.toMappedList(mapFun: (S)->T): MappedList<T> {
   )
 }
 
-interface MappedList<T>: CalculatedList<T>
+interface MappedList<T>: CalculatedList<T> {
+
+}
 
 class BasicMappedList<S, T>(
   private val source: ImmutableObsList<S>, private val target: MutableObsList<T>, private val converter: (S)->T
@@ -38,15 +40,13 @@ class BasicMappedList<S, T>(
 }
 
 
-fun <W: Any, S, T> ImmutableObsList<S>.toWeakMappedList(w: W, mapFun: (W, S)->T): MutableObsList<T> {
-  val weakRef = WeakRef(w)
-  val r = BasicObservableListImpl(map { mapFun(w, it) })
-  onChangeWithAlreadyWeak(weakRef) { deRefed, it ->
-	r.mirror(it) {
-	  mapFun(deRefed, it)
-	}
-  }
-  return r
+fun <W: Any, S, T> ImmutableObsList<S>.toWeakMappedList(w: W, mapFun: (W, S)->T): CalculatedList<T> {
+  return WeakMappedList(
+	weakObj = w,
+	source = this,
+	target = basicMutableObservableListOf(),
+	converter = mapFun
+  )
 }
 
 
