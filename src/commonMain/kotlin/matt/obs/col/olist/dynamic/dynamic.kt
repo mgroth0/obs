@@ -1,7 +1,7 @@
 package matt.obs.col.olist.dynamic
 
 import matt.collect.map.lazyMap
-import matt.lang.setAllOneByOne
+import matt.lang.setall.setAllOneByOneNeverAllowingDuplicates
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
@@ -55,14 +55,22 @@ class DynamicList<E>(
 	require(predicate.value == null || dynamicFilter == null)
 
 
-
-	target.setAllOneByOne(source.filter { predicate.value?.invoke(it) ?: dynamicPredicates?.get(it)?.value ?: true }
-							.let {
-							  val c = comparator.value
-							  if (c != null) sortedWith(c)
-							  else it
-							})
-
+	target.atomicChange {
+	  println("starting atomic change of ${this@DynamicList}")
+	  setAllOneByOneNeverAllowingDuplicates(
+		this@DynamicList.source
+		  .filter {
+			this@DynamicList.predicate.value?.invoke(it)
+			?: this@DynamicList.dynamicPredicates?.get(it)?.value ?: true
+		  }
+		  .let {
+			val c = this@DynamicList.comparator.value
+			if (c != null) sortedWith(c)
+			else it
+		  }
+	  )
+	  println("finishing atomic change of ${this@DynamicList}")
+	}
 
 
   }

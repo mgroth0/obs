@@ -35,7 +35,8 @@ sealed interface ListChange<E>: CollectionChange<E, List<E>> {
 
 class AtomicListChange<E>(
   override val collection: List<E>,
-  val changes: List<ListChange<E>>
+  val changes: List<ListChange<E>>,
+  var isCompiled: Boolean = false
 ): ListChange<E>, ListAdditionBase<E>, ListRemovalBase<E> {
 
 
@@ -53,8 +54,14 @@ class AtomicListChange<E>(
   override fun <T> convert(collection: Collection<T>, convert: (E)->T): AtomicListChange<T> {
 	return AtomicListChange(
 	  collection as List<T>,
-	  changes.map { it.convert(collection, convert) }
+	  changes.map { it.convert(collection, convert) },
+	  isCompiled = isCompiled
 	)
+  }
+
+
+  override fun toString(): String {
+	return toStringBuilder(mapOf("changes" to changes.elementsToString()))
   }
 }
 
@@ -279,6 +286,12 @@ class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): M
   }
 
   override val lowestChangedIndex: Int = removed.minOfOrNull { it.index }!!
+
+  val isRange by lazy {
+		removedWithIndices
+		  .zipWithNext { a, b -> a.index == b.index - 1 }
+		  .all { it }
+	  }
 }
 
 
@@ -406,7 +419,9 @@ fun <E> MutableList<E>.mirror(c: ListChange<E>): ListChange<E> {
 	  is RemoveAtIndices       -> c.removedElementsIndexed.sortedBy { it.index }.forEach {
 		removeAt(it.index.i)
 	  }
+
 	  is AtomicListChange      -> {
+
 		c.compile().changes.forEach {
 		  mirror(it)
 		}

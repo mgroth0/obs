@@ -327,6 +327,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   }
 
   override fun atomicChange(op: MutableObsList<E>.()->Unit) {
+	require(!isAtomicallyChanging)
 	val changes = mutableListOf<ListChange<E>>()
 	atomicChanges = changes
 	isAtomicallyChanging = true
