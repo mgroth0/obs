@@ -4,7 +4,6 @@ import matt.lang.setAll
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
-import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.basicMutableObservableListOf
 
 fun <E> MutableObsList<E>.concatenatedTo(other: ImmutableObsList<E>) = ConcatList(this, other)

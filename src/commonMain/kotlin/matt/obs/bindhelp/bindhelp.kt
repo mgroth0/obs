@@ -12,7 +12,6 @@ import matt.obs.col.IBObsCol
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
-import matt.obs.col.olist.MutableObsList
 import matt.obs.col.oset.MutableObsSet
 import matt.obs.col.oset.ObsSet
 import matt.obs.listen.Listener

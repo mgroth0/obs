@@ -95,7 +95,7 @@ fun <E: Comparable<E>> MutableObsList<E>.sorted(): BasicSortedList<E> =
 fun <E> MutableObsList<E>.toFakeMutableObsList() = FakeMutableObsList(this)
 
 
-class FakeMutableObsList<E>(private val o: MutableObsList<E>): MutableObsList<E> by o, MutableObsList<E> {
+class FakeMutableObsList<E>(private val o: MutableObsList<E>): MutableObsList<E> by o {
   override fun add(element: E) = ILLEGAL
 
   override fun add(index: Int, element: E) = ILLEGAL
@@ -137,7 +137,6 @@ class FakeMutableObsList<E>(private val o: MutableObsList<E>): MutableObsList<E>
 
 
 abstract class BaseBasicWritableOList<E>: InternallyBackedOList<E>(),
-										  MutableObsList<E>,
 										  MutableObsList<E>,
 										  BindableList<E> {
 
