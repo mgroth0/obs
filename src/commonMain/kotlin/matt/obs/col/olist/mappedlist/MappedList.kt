@@ -50,13 +50,13 @@ fun <S, T> ObsList<S>.toLazyMappedList(mapFun: (S)->T): ImmutableObsList<T> {
 fun <S, T, W: Any> ImmutableObsList<S>.toLazyMappedListWithWeak(w: W, mapFun: (W, S)->T): ImmutableObsList<T> {
   val weakRef = WeakRef(w)
   val r = BasicObservableListImpl(map { LazyValue { mapFun(w, it) } })
-  onChangeWithAlreadyWeak(weakRef) { w, it ->
+  onChangeWithAlreadyWeak(weakRef) { derefed, it ->
 	r.mirror(
 	  it.convert(
 		r
 	  ) {
 		LazyValue {
-		  mapFun(w, it)
+		  mapFun(derefed, it)
 		}
 	  }
 	)
