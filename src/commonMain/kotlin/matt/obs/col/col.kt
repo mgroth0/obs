@@ -11,16 +11,12 @@ import matt.obs.listen.update.CollectionUpdate
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 
-interface BasicOCollection<E>: Collection<E>, MListenable<CollectionListenerBase<E>> {
+interface BasicOCollection<E, C: CollectionChange<E, out Collection<E>>>: Collection<E>, MListenable<CollectionListenerBase<E,C>> {
   override fun observe(op: ()->Unit) = onChange { op() }
-  fun onChange(listenerName: String? = null, op: (CollectionChange<E>)->Unit): CollectionListenerBase<E>
-
-
-
+  fun onChange(listenerName: String? = null, op: (C)->Unit): CollectionListenerBase<E,C>
 }
 
-abstract class InternallyBackedOCollection<E> internal constructor():
-  MObservableImpl<CollectionUpdate<E>, CollectionListenerBase<E>>(), BasicOCollection<E> {
+abstract class InternallyBackedOCollection<E> internal constructor(): MObservableImpl<CollectionUpdate<E>, CollectionListenerBase<E>>(), BasicOCollection<E> {
 
   override fun onChange(listenerName: String?, op: (CollectionChange<E>)->Unit): CollectionListenerBase<E> {
 	return addListener(CollectionListener {    //	  println("addListener c = $it")
