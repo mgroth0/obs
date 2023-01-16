@@ -196,7 +196,7 @@ fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
   BasicObservableListImpl(elements.toList())
 
 
-fun <E> MutableObsList<E>.toMutableObsList() = toBasicObservableList()
+fun <E> ImmutableObsList<E>.toMutableObsList() = toBasicObservableList()
 
 open class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>):
 	BaseBasicWritableOList<E>(),
