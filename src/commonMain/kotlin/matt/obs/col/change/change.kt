@@ -38,9 +38,10 @@ class AtomicListChange<E>(
 ): ListChange<E> {
 
 
-  override val lowestChangedIndex: Int get() = run {
-	changes.minOf { it.lowestChangedIndex }
-  }
+  override val lowestChangedIndex: Int
+	get() = run {
+	  changes.minOf { it.lowestChangedIndex }
+	}
 
   override fun <T> convert(collection: Collection<T>, convert: (E)->T): ListChange<T> {
 	return AtomicListChange(
@@ -399,6 +400,12 @@ fun <E> MutableList<E>.mirror(c: ListChange<E>): ListChange<E> {
 	  is RemoveElementFromList -> remove(c.removed)
 	  is RemoveAtIndices       -> c.removedElementsIndexed.sortedBy { it.index }.forEach {
 		removeAt(it.index.i)
+	  }
+
+	  is AtomicListChange      -> {
+		c.changes.forEach {
+		  mirror(it)
+		}
 	  }
 	}
   } catch (e: IllegalArgumentException) {
