@@ -1,10 +1,10 @@
 package matt.obs.col.olist.map
 
-import matt.obs.col.change.Addition
-import matt.obs.col.change.Clear
-import matt.obs.col.change.MultiAddition
-import matt.obs.col.change.MultiRemoval
-import matt.obs.col.change.Removal
+import matt.obs.col.change.ClearList
+import matt.obs.col.change.ListAddition
+import matt.obs.col.change.ListRemoval
+import matt.obs.col.change.MultiAdditionIntoList
+import matt.obs.col.change.MultiRemovalFromList
 import matt.obs.col.change.Replacement
 import matt.obs.col.olist.ObsList
 import matt.obs.map.BasicOMap
@@ -15,19 +15,19 @@ fun <V, K> ObsList<V>.toMappedMap(keySelectorFun: (V)->K): BasicOMap<K, V> {
   val map = BasicOMutableMapImpl<K, V>()
   onChange {
 	when (it) {
-	  is Addition      -> map[keySelectorFun(it.added)] = it.added
-	  is MultiAddition -> it.added.forEach { map[keySelectorFun(it)] }
-	  is Replacement   -> {
+	  is ListAddition          -> map[keySelectorFun(it.added)] = it.added
+	  is MultiAdditionIntoList -> it.addedElements.forEach { map[keySelectorFun(it)] }
+	  is Replacement           -> {
 		map[keySelectorFun(it.added)] = it.added
 		map.remove(keySelectorFun(it.removed))
 	  }
 
-	  is Clear         -> map.clear()
-	  is MultiRemoval  -> it.removed.forEach {
+	  is ClearList             -> map.clear()
+	  is MultiRemovalFromList  -> it.removed.forEach {
 		map.remove(keySelectorFun(it))
 	  }
 
-	  is Removal       -> map.remove(keySelectorFun(it.removed))
+	  is ListRemoval           -> map.remove(keySelectorFun(it.removed))
 	}
   }
   return map

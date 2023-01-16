@@ -43,7 +43,7 @@ sealed class InternallyBackedOCollection<E, C: CollectionChange<E, out Collectio
 	})
   }
 
-  protected abstract fun createListener(invoke: CollectionListener<E, C>.(change: C)->Unit): L
+  protected abstract fun createListener(invoke: CollectionListener<E, C, U>.(change: C)->Unit): L
 
   internal val bindWritePass = KeyPass()
 
