@@ -70,7 +70,7 @@ interface MyListenerInter<U: Update> {
   }
 }
 
-internal fun <U, L: MyListener<U>> L.moveTo(o: MListenable<L>) {
+internal fun <U, L: MyListenerInter<U>> L.moveTo(o: MListenable<L>) {
   tryRemovingListener()
   o.addListener(this)
 }
