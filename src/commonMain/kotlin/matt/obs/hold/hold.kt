@@ -8,7 +8,6 @@ import matt.model.code.delegate.SimpleGetter
 import matt.model.op.debug.DebugLogger
 import matt.model.op.prints.Prints
 import matt.obs.MObservable
-import matt.obs.col.change.CollectionChange
 import matt.obs.col.change.ListChange
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.col.olist.basicROObservableListOf

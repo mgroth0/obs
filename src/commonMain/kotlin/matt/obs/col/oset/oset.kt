@@ -3,14 +3,19 @@ package matt.obs.col.oset
 import matt.collect.itr.MutableIteratorWithSomeMemory
 import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOCollection
+import matt.obs.col.InternallyBackedOSet
 import matt.obs.col.change.AddIntoSet
 import matt.obs.col.change.ClearSet
 import matt.obs.col.change.MultiAddIntoSet
 import matt.obs.col.change.RemoveElementFromSet
+import matt.obs.col.change.RemoveElementsFromSet
 import matt.obs.col.change.RetainAllSet
+import matt.obs.col.change.SetChange
 import matt.obs.fx.requireNotObservable
+import matt.obs.listen.SetListener
+import matt.obs.listen.update.SetUpdate
 
-interface ObsSet<E>: Set<E>, BasicOCollection<E>
+interface ObsSet<E>: Set<E>, BasicOCollection<E, SetChange<E>, SetUpdate<E>, SetListener<E>>
 
 interface MutableObsSet<E>: ObsSet<E>, MutableSet<E>
 
@@ -28,7 +33,7 @@ fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> {
 
 fun <E> basicObservableSetOf(vararg values: E) = BasicObservableSet<E>(values.toMutableSet())
 
-class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBackedOCollection<E>(),
+class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBackedOSet<E>(),
 																MutableObsSet<E> {
 
 
@@ -93,7 +98,7 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>): InternallyBacked
   override fun removeAll(elements: Collection<E>): Boolean {
 	val b = theSet.removeAll(elements)
 	//        taball("set removeAll",elements)
-	if (b) emitChange(RemoveElementFromSet(theSet, elements))
+	if (b) emitChange(RemoveElementsFromSet(theSet, elements))
 	return b
   }
 
