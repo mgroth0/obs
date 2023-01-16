@@ -9,6 +9,7 @@ import matt.model.op.debug.DebugLogger
 import matt.model.op.prints.Prints
 import matt.obs.MObservable
 import matt.obs.col.change.CollectionChange
+import matt.obs.col.change.ListChange
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.col.olist.basicROObservableListOf
 import matt.obs.listen.MyListenerInter
@@ -76,7 +77,7 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
   }
 
 
-  fun <E> registeredMutableList(vararg default: E, listener: ((CollectionChange<E>)->Unit)? = null) = provider {
+  fun <E> registeredMutableList(vararg default: E, listener: ((ListChange<E>)->Unit)? = null) = provider {
 	val fx = basicMutableObservableListOf(*default).also {
 	  if (listener != null) it.onChange {
 		listener.invoke(it)
@@ -86,7 +87,7 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
 	SimpleGetter(fx)
   }
 
-  fun <E> registeredList(vararg default: E, listener: ((CollectionChange<E>)->Unit)? = null) = provider {
+  fun <E> registeredList(vararg default: E, listener: ((ListChange<E>)->Unit)? = null) = provider {
 	val fx = basicROObservableListOf(*default).also {
 	  if (listener != null) it.onChange {
 		listener.invoke(it)
