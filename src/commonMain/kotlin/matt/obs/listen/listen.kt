@@ -32,6 +32,7 @@ typealias Listener = MyListener<*>
 interface MyListenerInter<U: Update> {
   fun notify(update: U, debugger: Prints? = null)
   fun removeListener()
+  fun tryRemovingListener()
 }
 
 @ListenerDSL abstract class MyListener<U: Update>: MyListenerInter<U> {
@@ -45,7 +46,7 @@ interface MyListenerInter<U: Update> {
 
   internal var currentObservable: WeakRef<MListenable<*>>? = null
   override fun removeListener() = currentObservable!!.deref()!!.removeListener(this)
-  fun tryRemovingListener() = currentObservable?.deref()?.removeListener(this) ?: false
+  override fun tryRemovingListener() = currentObservable?.deref()?.removeListener(this) ?: false
 
 
   internal fun preInvocation(update: U): U? {
@@ -254,7 +255,7 @@ class ContextListener<C>(private val obj: C, private val invocation: C.()->Unit)
 }
 
 class ObsHolderListener: MyListener<ObsHolderUpdate>() {
-  internal val subListeners = mutableListOf<MyListener<*>>()
+  internal val subListeners = mutableListOf<MyListenerInter<*>>()
   override fun notify(update: ObsHolderUpdate, debugger: Prints?) = NEVER
 }
 

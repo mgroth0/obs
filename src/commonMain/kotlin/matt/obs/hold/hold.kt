@@ -24,7 +24,7 @@ interface MObsHolder<O: MObservable>: MObservable {
 	subListeners.setAll(observables.map { it.observe(op) })
   }
 
-  override fun removeListener(listener: MyListenerInter) {
+  override fun removeListener(listener: MyListenerInter<*>) {
 	(listener as? ObsHolderListener)?.subListeners?.forEach { it.tryRemovingListener() }
   }
 }

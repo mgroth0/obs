@@ -5,7 +5,6 @@ import matt.lang.weak.WeakRef
 import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.prints.Prints
-import matt.obs.listen.Listener
 import matt.obs.listen.MyListener
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.MyWeakListener
@@ -41,7 +40,7 @@ import matt.obs.listen.update.Update
   fun addListener(listener: L): L
 }
 
-abstract class MObservableImpl<U: Update, L: MyListener<in U>> internal constructor(): MListenable<L> {
+abstract class MObservableImpl<U: Update, L: MyListenerInter<in U>> internal constructor(): MListenable<L> {
 
   override var nam: String? = null
 
