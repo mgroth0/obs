@@ -35,7 +35,13 @@ sealed interface ListChange<E>: CollectionChange<E, List<E>> {
 class AtomicListChange<E>(
   override val collection: List<E>,
   val changes: List<ListChange<E>>
-): ListChange<E> {
+): ListChange<E>, ListAdditionBase<E>, ListRemovalBase<E> {
+
+
+  override val addedElementsIndexed: OrderedSet<out MyIndexedValue<E, out AdditionIndex>>
+	get() = changes.filterIsInstance<ListAdditionBase<E>>().flatMap { it.addedElementsIndexed }.toOrderedSet()
+  override val removedElementsIndexed: OrderedSet<out MyIndexedValue<E, out RemovalIndex>>
+	get() = changes.filterIsInstance<ListRemovalBase<E>>().flatMap { it.removedElementsIndexed }.toOrderedSet()
 
 
   override val lowestChangedIndex: Int
@@ -43,7 +49,7 @@ class AtomicListChange<E>(
 	  changes.minOf { it.lowestChangedIndex }
 	}
 
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T): ListChange<T> {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T): AtomicListChange<T> {
 	return AtomicListChange(
 	  collection as List<T>,
 	  changes.map { it.convert(collection, convert) }
