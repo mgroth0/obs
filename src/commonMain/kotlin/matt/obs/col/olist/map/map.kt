@@ -1,5 +1,6 @@
 package matt.obs.col.olist.map
 
+import matt.obs.col.change.AtomicListChange
 import matt.obs.col.change.ClearList
 import matt.obs.col.change.ListAddition
 import matt.obs.col.change.ListRemoval
@@ -28,6 +29,8 @@ fun <V, K> MutableObsList<V>.toMappedMap(keySelectorFun: (V)->K): BasicOMap<K, V
 	  }
 
 	  is ListRemoval           -> map.remove(keySelectorFun(it.removed))
+
+	  is AtomicListChange      -> TODO("AtomicListChange")
 	}
   }
   return map
