@@ -15,6 +15,7 @@ import matt.model.data.index.withIndex
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.prim.str.elementsToString
 
+
 interface CollectionChange<E, COL: Collection<E>> {
   val collection: Collection<E>
   fun <T> convert(collection: Collection<T>, convert: (E)->T): CollectionChange<T, out Collection<T>>
@@ -29,6 +30,26 @@ sealed interface ListChange<E>: CollectionChange<E, List<E>> {
   override val collection: List<E>
   val lowestChangedIndex: Int
   override fun <T> convert(collection: Collection<T>, convert: (E)->T): ListChange<T>
+}
+
+class AtomicListChange<E>(
+  override val collection: List<E>,
+  val changes: List<ListChange<E>>
+): ListChange<E> {
+
+
+  override val lowestChangedIndex: Int get() = run {
+	changes.minOf { it.lowestChangedIndex }
+  }
+
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T): ListChange<T> {
+	return AtomicListChange(
+	  collection as List<T>,
+	  changes.map { it.convert(collection, convert) }
+	)
+  }
+
+
 }
 
 
@@ -48,7 +69,7 @@ sealed interface RemovalBase<E, COL: Collection<E>>: CollectionChange<E, COL> {
   val removedElements: List<E>
 }
 
-sealed interface SetRemovalBase<E>: SetChange<E>, RemovalBase<E,Set<E>>
+sealed interface SetRemovalBase<E>: SetChange<E>, RemovalBase<E, Set<E>>
 
 sealed interface ListRemovalBase<E>: RemovalBase<E, List<E>>, ListChange<E> {
   val removedElementsIndexed: OrderedSet<out MyIndexedValue<E, out RemovalIndex>>
