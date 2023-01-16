@@ -1,6 +1,6 @@
 package matt.obs.bindhelp
 
-import matt.lang.setAll
+import matt.lang.setall.setAll
 import matt.lang.weak.WeakRef
 import matt.lang.weak.getValue
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
@@ -14,8 +14,6 @@ import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
 import matt.obs.col.oset.MutableObsSet
 import matt.obs.col.oset.ObsSet
-import matt.obs.listen.Listener
-import matt.obs.listen.MyListener
 import matt.obs.listen.MyListenerInter
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.FXBackedPropBase

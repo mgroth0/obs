@@ -57,6 +57,14 @@ class DynamicList<E>(
 
 	target.atomicChange {
 	  println("starting atomic change of ${this@DynamicList}")
+
+
+	  /*THERE MUST NEVER BE DUPLICATES GOING TO NODE LISTS
+	  *
+	  * 1. NOT ONLY DOES JAVAFX THROW A BUG FOR ADDING DUPLICATE NODES
+	  * 2. BUT ALSO, IF YOU "MOVE" A NODE BY ADDING IT SOMEWHERE THEN REMOVING IT SOMEWHERE ELSE, THE CODE COULD INTERPRET THE FINAL ACTION AS IT BEING REMOVED
+	  *
+	  * */
 	  setAllOneByOneNeverAllowingDuplicates(
 		this@DynamicList.source
 		  .filter {
