@@ -87,12 +87,15 @@ class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit):
   override fun transformUpdate(u: ValueUpdate<T>) = u
 }
 
-sealed interface ValueListenerBase<T, U: ValueUpdate<T>>: MyListenerInter<U>
+sealed interface ValueListenerBase<T, U: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyListenerInter<U> {
+  var untilInclusive: ((U_OUT)->Boolean)?
+  var untilExclusive: ((U_OUT)->Boolean)?
+}
 
 sealed class ValueListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyListener<U_IN>(),
-																			ValueListenerBase<T, U_IN> {
-  var untilInclusive: ((U_OUT)->Boolean)? = null
-  var untilExclusive: ((U_OUT)->Boolean)? = null
+																			ValueListenerBase<T, U_IN, U_OUT> {
+  override var untilInclusive: ((U_OUT)->Boolean)? = null
+  override var untilExclusive: ((U_OUT)->Boolean)? = null
   protected abstract fun transformUpdate(u: U_IN): U_OUT?
   protected open fun shouldRemove() = false
   final override fun notify(update: U_IN, debugger: Prints?) {
@@ -116,7 +119,7 @@ sealed class ValueListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyLi
 }
 
 
-sealed interface NewOrLessListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: ValueListenerBase<T, U_IN>
+sealed interface NewOrLessListener<T, U_IN: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: ValueListenerBase<T, U_IN, U_OUT>
 
 class NewListener<T>(private val invoke: NewListener<T>.(new: T)->Unit):
 	ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>> {
@@ -211,7 +214,7 @@ class WeakSetListener<W: Any, E>(
 class WeakChangeListenerWithNewValue<W: Any, T>(
   override val wref: WeakRef<W>,
   internal val invoke: WeakChangeListenerWithNewValue<W, T>.(ref: W, new: T)->Unit
-): WeakChangeListenerBase<W, T>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>> {
+): WeakChangeListenerBase<W, T>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>> {
 
   override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<W, T>? {
 	return wref.deref()?.let {
