@@ -85,13 +85,11 @@ class AddAt<E>(override val collection: List<E>, added: E, val index: Int): List
 
 
 sealed class MultiAddition<E, COL: Collection<E>>(
-  override val collection: COL,
-  added: Collection<E>
+  override val collection: COL
 ): AdditionBase<E, COL>
 
 class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>): MultiAddition<E, Set<E>>(
-  collection as Set<E>,
-  added
+  collection as Set<E>
 ),
 																		SetChange<E> {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
