@@ -2,80 +2,145 @@ package matt.obs.col.olist.mappedlist
 
 
 import matt.lang.model.value.LazyValue
+import matt.lang.setAll
 import matt.lang.weak.WeakRef
-import matt.model.flowlogic.recursionblocker.RecursionBlocker
-import matt.model.op.convert.Converter
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.col.olist.ImmutableObsList
-import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.ObsList
+import matt.obs.col.olist.basicMutableObservableListOf
+import matt.obs.col.olist.dynamic.CalculatedList
+import matt.obs.col.olist.view
 
-fun <S, T> ObsList<S>.toMappedList(mapFun: (S)->T): ObsList<T> {
-  val r = BasicObservableListImpl(map(mapFun))
-  onChange {
-	r.mirror(it, mapFun)
-  }
-  return r
+fun <S, T> ObsList<S>.toMappedList(mapFun: (S)->T): MappedList<T> {
+  return BasicMappedList(
+	source = this, target = BasicObservableListImpl(), converter = mapFun
+  )
 }
 
-/*fun <S, T> ObsList<S>.toSomewhatLazyMappedList(mapFun: (S)->T): ObsList<T> {
-  val r = BasicObservableListImpl(MutableLazyList(map {
-	LazyValue { mapFun(it) }
-  }))
-  onChange {
-	r.mirror(it, mapFun)
+interface MappedList<T>: CalculatedList<T>
+
+class BasicMappedList<S, T>(
+  private val source: ObsList<S>, private val target: ObsList<T>, private val converter: (S)->T
+): ImmutableObsList<T> by target, MappedList<T> {
+
+  override fun refresh() {
+	target.setAll(source.map(converter))
   }
-  return r
-}*/
 
-
-
-fun <S, T> ObsList<S>.toLazyMappedList(mapFun: (S)->T): ImmutableObsList<T> {
-  val r = BasicObservableListImpl(map { LazyValue { mapFun(it) } })
-  onChange {
-	r.mirror(
-	  it.convert(
-		r
-	  ) {
-		LazyValue {
-		  mapFun(it)
-		}
-	  }
-	)
+  init {
+	refresh()
+	source.onChange {
+	  target.mirror(it, converter)
+	}
   }
-  return r.view { it.value }
+
 }
 
-fun <S, T, W: Any> ImmutableObsList<S>.toLazyMappedListWithWeak(w: W, mapFun: (W, S)->T): ImmutableObsList<T> {
+
+fun <W: Any, S, T> ObsList<S>.toWeakMappedList(w: W, mapFun: (W, S)->T): ObsList<T> {
   val weakRef = WeakRef(w)
-  val r = BasicObservableListImpl(map { LazyValue { mapFun(w, it) } })
-  onChangeWithAlreadyWeak(weakRef) { derefed, it ->
-	r.mirror(
-	  it.convert(
-		r
-	  ) {
-		LazyValue {
-		  mapFun(derefed, it)
-		}
-	  }
-	)
-  }
-  return r.view { it.value }
-}
-
-fun <S, T> MutableObsList<S>.toSyncedList(converter: Converter<S, T>): MutableObsList<T> {
-  val r = BasicObservableListImpl(map { converter.convertToB(it) })
-  val rb = RecursionBlocker()
-  onChange("toSyncedList1") {
-	rb.with {
-	  r.mirror(it) { converter.convertToB(it) }
-	}
-  }
-  r.onChange("toSyncedList2") {
-	rb.with {
-	  mirror(it) { converter.convertToA(it) }
+  val r = BasicObservableListImpl(map { mapFun(w, it) })
+  onChangeWithAlreadyWeak(weakRef) { deRefed, it ->
+	r.mirror(it) {
+	  mapFun(deRefed, it)
 	}
   }
   return r
 }
+
+
+class WeakMappedList<W: Any, S, T>(
+  weakObj: W, private val source: ObsList<S>, private val target: ObsList<T>, private val converter: (W, S)->T
+): ImmutableObsList<T> by target, MappedList<T> {
+  private val weakRef = WeakRef(weakObj)
+
+  override fun refresh() {
+	target.setAll(source.map {
+	  converter(weakRef.deref()!!, it)
+	})
+  }
+
+  init {
+	refresh()
+	source.onChangeWithAlreadyWeak(weakRef) { w, it ->
+	  target.mirror(it) {
+		converter(w, it)
+	  }
+	}
+  }
+}
+
+
+fun <S, T> ObsList<S>.toLazyMappedList(mapFun: (S)->T): MappedList<T> {
+  return LazyMappedList(
+	source = this, target = BasicObservableListImpl(), converter = mapFun
+  )
+}
+
+class LazyMappedList<S, T>(
+  private val source: ObsList<S>, private val target: ObsList<LazyValue<T>>, private val converter: (S)->T
+): ImmutableObsList<T> by target.view({ it.value }), MappedList<T> {
+
+  override fun refresh() {
+	target.setAll(source.map {
+	  LazyValue { converter(it) }
+	})
+  }
+
+
+  init {
+	refresh()
+	source.onChange {
+	  target.mirror(it.convert(
+		target
+	  ) {
+		LazyValue {
+		  converter(it)
+		}
+	  })
+	}
+  }
+}
+
+
+fun <S, T, W: Any> ImmutableObsList<S>.toLazyMappedListWithWeak(w: W, mapFun: (W, S)->T): MappedList<T> {
+  return LazyWeakMappedList(
+	weakObject = w,
+	source = this,
+	target = basicMutableObservableListOf(),
+	converter = mapFun
+  )
+}
+
+class LazyWeakMappedList<W: Any, S, T>(
+  weakObject: W,
+  private val source: ImmutableObsList<S>,
+  private val target: ObsList<LazyValue<T>> = basicMutableObservableListOf<LazyValue<T>>(),
+  private val converter: (W, S)->T,
+): ImmutableObsList<T> by target.view({ it.value }), MappedList<T> {
+
+  private val weakRef = WeakRef(weakObject)
+
+  override fun refresh() {
+	target.setAll(source.map {
+	  LazyValue {
+		converter(weakRef.deref()!!, it)
+	  }
+	})
+  }
+
+  init {
+	refresh()
+	source.onChangeWithAlreadyWeak(weakRef) { deRefed, it ->
+	  target.mirror(it.convert(
+		target
+	  ) {
+		LazyValue {
+		  converter(deRefed, it)
+		}
+	  })
+	}
+  }
+}
+

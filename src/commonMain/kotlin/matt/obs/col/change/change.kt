@@ -238,9 +238,9 @@ class RemoveElements<E>(collection: List<E>, removed: Collection<E>, override va
 class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): MultiRemovalFromList<E>(
   collection,
   removed.map { it.value }) {
-  private val removedWithIndicies = removed
+  private val removedWithIndices = removed
   override val removedElementsIndexed
-	get() = removedWithIndicies.map {
+	get() = removedWithIndices.map {
 	  MyIndexedValue(
 		element = it.value,
 		index = Index(it.index)
@@ -248,7 +248,7 @@ class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): M
 	}.toOrderedSet()
 
   override fun <T> convert(collection: Collection<T>, convert: (E)->T): RemoveAtIndices<T> {
-	return RemoveAtIndices(collection as List<T>, removedWithIndicies.map { IndexedValue(it.index, convert(it.value)) })
+	return RemoveAtIndices(collection as List<T>, removedWithIndices.map { IndexedValue(it.index, convert(it.value)) })
   }
 
   override val lowestChangedIndex: Int = removed.minOfOrNull { it.index }!!

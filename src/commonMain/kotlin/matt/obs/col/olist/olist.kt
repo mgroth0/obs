@@ -493,98 +493,98 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   }
 
 
-  fun <R> view(converter: (E)->R) = object: ImmutableObsList<R> {
+}
 
 
-	override fun onChange(listenerName: String?, op: (ListChange<R>)->Unit): MyListenerInter<*> {
-	  return this@BasicObservableListImpl.onChange {
-		op(it.convert(this, converter))
-	  }
+fun <E, R> ImmutableObsList<E>.view(converter: (E)->R) = object: ImmutableObsList<R> {
+
+
+  override fun onChange(listenerName: String?, op: (ListChange<R>)->Unit): MyListenerInter<*> {
+	return this@view.onChange {
+	  op(it.convert(this, converter))
+	}
+  }
+
+  override val size: Int
+	get() = this@view.size
+
+  override fun isEmpty(): Boolean {
+	return this@view.isEmpty()
+  }
+
+  override fun iterator(): Iterator<R> = listIterator()
+
+  override fun addListener(listener: ListListenerBase<R>): ListListener<R> {
+	TODO("Not yet implemented")
+  }
+
+  override var nam: String?
+	get() = this@view.nam
+	set(value) {
+	  this@view.nam = value
 	}
 
-	override val size: Int
-	  get() = this@BasicObservableListImpl.size
+  override fun removeListener(listener: MyListenerInter<*>) {
+	TODO("Not yet implemented")
+  }
 
-	override fun isEmpty(): Boolean {
-	  return this@BasicObservableListImpl.isEmpty()
+  override var debugger: Prints?
+	get() = this@view.debugger
+	set(value) {
+	  this@view.debugger = value
 	}
 
-	override fun iterator(): Iterator<R> = listIterator()
+  override fun get(index: Int): R {
+	return converter(this@view[index])
+  }
 
-	override fun addListener(listener: ListListenerBase<R>): ListListener<R> {
+  override fun listIterator() = listIterator(0)
+
+  override fun listIterator(index: Int) = object: ListIterator<R> {
+	private val itr = this@view.listIterator(index)
+	override fun hasNext() = itr.hasNext()
+
+	override fun hasPrevious(): Boolean {
 	  TODO("Not yet implemented")
 	}
 
-	override var nam: String?
-	  get() = this@BasicObservableListImpl.nam
-	  set(value) {
-		this@BasicObservableListImpl.nam = value
-	  }
+	override fun next() = converter(itr.next())
 
-	override fun removeListener(listener: MyListenerInter<*>) {
+	override fun nextIndex(): Int {
 	  TODO("Not yet implemented")
 	}
 
-	override var debugger: Prints?
-	  get() = this@BasicObservableListImpl.debugger
-	  set(value) {
-		this@BasicObservableListImpl.debugger = value
-	  }
-
-	override fun get(index: Int): R {
-	  return converter(this@BasicObservableListImpl[index])
-	}
-
-	override fun listIterator() = listIterator(0)
-
-	override fun listIterator(index: Int) = object: ListIterator<R> {
-	  private val itr = this@BasicObservableListImpl.listIterator(index)
-	  override fun hasNext() = itr.hasNext()
-
-	  override fun hasPrevious(): Boolean {
-		TODO("Not yet implemented")
-	  }
-
-	  override fun next() = converter(itr.next())
-
-	  override fun nextIndex(): Int {
-		TODO("Not yet implemented")
-	  }
-
-	  override fun previous(): R {
-		TODO("Not yet implemented")
-	  }
-
-	  override fun previousIndex(): Int {
-		TODO("Not yet implemented")
-	  }
-
-	}
-
-	override fun subList(fromIndex: Int, toIndex: Int): List<R> {
+	override fun previous(): R {
 	  TODO("Not yet implemented")
 	}
 
-	override fun lastIndexOf(element: R): Int {
-	  TODO("Not yet implemented")
-	}
-
-	override fun indexOf(element: R): Int {
-	  TODO("Not yet implemented")
-	}
-
-	override fun containsAll(elements: Collection<R>): Boolean {
-	  TODO("Not yet implemented")
-	}
-
-	override fun contains(element: R): Boolean {
+	override fun previousIndex(): Int {
 	  TODO("Not yet implemented")
 	}
 
   }
 
-}
+  override fun subList(fromIndex: Int, toIndex: Int): List<R> {
+	TODO("Not yet implemented")
+  }
 
+  override fun lastIndexOf(element: R): Int {
+	TODO("Not yet implemented")
+  }
+
+  override fun indexOf(element: R): Int {
+	TODO("Not yet implemented")
+  }
+
+  override fun containsAll(elements: Collection<R>): Boolean {
+	TODO("Not yet implemented")
+  }
+
+  override fun contains(element: R): Boolean {
+	TODO("Not yet implemented")
+  }
+
+}
 
 inline fun <reified E, reified T: BasicObservableListImpl<E>> T.withChangeListener(
   listenerName: String? = null,
