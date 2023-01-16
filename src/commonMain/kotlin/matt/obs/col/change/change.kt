@@ -100,9 +100,9 @@ class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>): MultiAdd
   override val addedElements get() = added.toList()
 }
 
-sealed class MultiAdditionIntoList<E>(override val collection: List<E>, added: Collection<E>): ListAdditionBase<E>
+sealed class MultiAdditionIntoList<E>(override val collection: List<E>): ListAdditionBase<E>
 
-class MultiAddAtEnd<E>(collection: List<E>, val added: Collection<E>): MultiAdditionIntoList<E>(collection, added) {
+class MultiAddAtEnd<E>(collection: List<E>, val added: Collection<E>): MultiAdditionIntoList<E>(collection) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	MultiAddAtEnd(collection as List<T>, added.map(convert))
 
@@ -116,8 +116,7 @@ class MultiAddAtEnd<E>(collection: List<E>, val added: Collection<E>): MultiAddi
 }
 
 class MultiAddAt<E>(collection: List<E>, val added: Collection<E>, val index: Int): MultiAdditionIntoList<E>(
-  collection,
-  added
+  collection
 ) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	MultiAddAt(collection as List<T>, added.map(convert), index)
