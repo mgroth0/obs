@@ -252,12 +252,12 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 	override fun remove() {
 	  super.remove()
-	  changedFromOuter(RemoveAt(list, lastReturned!!, currentIndex))
+	  changedFromOuter(RemoveAt(list, lastReturned!!, previousIndex()))
 	}
 
 	override fun add(element: E) {
 	  super.add(element)
-	  changedFromOuter(AddAt(list, element, currentIndex))
+	  changedFromOuter(AddAt(list, element, previousIndex()))
 	}
 
 	@NeedsTest
@@ -267,11 +267,13 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 		ReplaceAt(
 		  list, lastReturned!!, element, index = when (lastItrDir) {
 			NEXT -> {
-			  currentIndex - 1
+			  previousIndex()
+//			  currentIndex - 1
 			}
 
 			PREVIOUS -> {
-			  currentIndex
+			  previousIndex() + 1
+//			  currentIndex
 			}
 
 			else -> NEVER
