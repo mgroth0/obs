@@ -10,6 +10,7 @@ import matt.obs.bind.LazyBindableProp
 import matt.obs.bind.binding
 import matt.obs.col.IBObsCol
 import matt.obs.col.change.mirror
+import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.ObsList
 import matt.obs.col.oset.MutableObsSet
@@ -44,8 +45,8 @@ sealed class BindableImpl: Bindable {
 }
 
 interface BindableList<E>: Bindable {
-  fun bind(source: ObsList<E>) = bind(source) { it }
-  fun <S> bind(source: ObsList<S>, converter: (S)->E)
+  fun bind(source: ImmutableObsList<E>) = bind(source) { it }
+  fun <S> bind(source: ImmutableObsList<S>, converter: (S)->E)
   fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>)
 }
 
@@ -58,7 +59,7 @@ interface BindableSet<E>: Bindable {
 /*matt.log.todo.todo: lazily evaluated bound lists!*/
 class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl(), BindableList<E> {
 
-  @Synchronized override fun <S> bind(source: ObsList<S>, converter: (S)->E) {
+  @Synchronized override fun <S> bind(source: ImmutableObsList<S>, converter: (S)->E) {
 	unbind()
 	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(source.map(converter))
