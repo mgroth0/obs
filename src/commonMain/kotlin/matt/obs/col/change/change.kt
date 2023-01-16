@@ -58,7 +58,7 @@ sealed class ListAddition<E>(override val collection: List<E>, val added: E): Li
 
 
 class AddIntoSet<E>(override val collection: Set<E>, added: E): SetAddition<E>(collection, added) {
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T): SetChange<T> =
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T): AddIntoSet<T> =
 	AddIntoSet(collection as Set<T>, convert(added))
 
   override fun toString() = toStringBuilder("added" to added)
