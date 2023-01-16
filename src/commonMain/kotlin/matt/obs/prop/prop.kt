@@ -64,7 +64,7 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 }
 
 
-sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, *>>: MListenable<L>,
+sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, out ValueUpdate<T>>>: MListenable<L>,
 																					  ValueWrapper<T>,
 																					  ReadOnlyProperty<Any?, T> {
   override val value: T
@@ -121,8 +121,8 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U,
 
   infix fun <T> notEqNow(value: ObsVal<T>) = this.value != value.value
 
-  fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit): Listener
-  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit): Listener
+  fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit): MyListenerInter<*>
+  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit): MyListenerInter<*>
 
 }
 
