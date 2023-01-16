@@ -212,6 +212,10 @@ class RemoveAt<E>(collection: List<E>, removed: E, val index: Int): ListRemoval<
 
   override val lowestChangedIndex = index
 
+  override fun toString(): String {
+	return toStringBuilder(mapOf("index" to index))
+  }
+
 }
 //class RemoveFirst<E>(collection: Collection<E>, removed: E): matt.obs.map.change.Removal<E>(collection, removed)
 
@@ -288,10 +292,10 @@ class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): M
   override val lowestChangedIndex: Int = removed.minOfOrNull { it.index }!!
 
   val isRange by lazy {
-		removedWithIndices
-		  .zipWithNext { a, b -> a.index == b.index - 1 }
-		  .all { it }
-	  }
+	removedWithIndices
+	  .zipWithNext { a, b -> a.index == b.index - 1 }
+	  .all { it }
+  }
 }
 
 
