@@ -65,8 +65,8 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 
 
 sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, out ValueUpdate<T>>>: MListenable<L>,
-																					  ValueWrapper<T>,
-																					  ReadOnlyProperty<Any?, T> {
+																									   ValueWrapper<T>,
+																									   ReadOnlyProperty<Any?, T> {
   override val value: T
 
   @Suppress("UNCHECKED_CAST")
@@ -262,8 +262,8 @@ fun <T, O: Var<T>> O.withUpdatesFromWhen(o: ObsVal<out T>, predicate: ()->Boolea
   takeChangesFromWhen(o, predicate)
 }
 
-abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U>>: MObservableImpl<U, L>(),
-																					   MObservableVal<T, U, L> {
+abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, *>>: MObservableImpl<U, L>(),
+																						  MObservableVal<T, U, L> {
 
 
   infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
