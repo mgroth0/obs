@@ -17,6 +17,7 @@ import matt.obs.listen.update.SetUpdate
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
 
+
 interface BasicOCollection<E, C: CollectionChange<E, out Collection<E>>, U: CollectionUpdate<E, C>, L: CollectionListenerBase<E, C, U>>:
 	Collection<E>,
 	MListenable<L> {

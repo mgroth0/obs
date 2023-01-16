@@ -11,6 +11,7 @@ import matt.lang.NEVER
 import matt.lang.NOT_IMPLEMENTED
 import matt.lang.anno.NeedsTest
 import matt.lang.comparableComparator
+import matt.lang.firstIndex
 import matt.lang.function.Consume
 import matt.lang.sync.inSync
 import matt.lang.weak.WeakRef
@@ -21,9 +22,11 @@ import matt.obs.bindhelp.BindableListImpl
 import matt.obs.bindings.bool.ObsB
 import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOCollection
+import matt.obs.col.InternallyBackedOList
 import matt.obs.col.change.AddAt
 import matt.obs.col.change.AddAtEnd
 import matt.obs.col.change.AdditionBase
+import matt.obs.col.change.ClearList
 import matt.obs.col.change.CollectionChange
 import matt.obs.col.change.ListAdditionBase
 import matt.obs.col.change.ListChange
@@ -36,6 +39,7 @@ import matt.obs.col.change.RemoveAtIndices
 import matt.obs.col.change.RemoveElementFromList
 import matt.obs.col.change.RemoveElements
 import matt.obs.col.change.ReplaceAt
+import matt.obs.col.change.RetainAllList
 import matt.obs.col.olist.dynamic.BasicFilteredList
 import matt.obs.col.olist.dynamic.BasicSortedList
 import matt.obs.col.olist.dynamic.DynamicList
@@ -45,11 +49,12 @@ import matt.obs.listen.CollectionListenerBase
 import matt.obs.listen.ListListener
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.WeakCollectionListener
+import matt.obs.listen.update.ListUpdate
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
 
-interface ImmutableObsList<E>: BasicOCollection<E,ListChange<E>>, List<E> {
+interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>, ListListener<E>>, List<E> {
   fun <W: Any> onChangeWithWeak(
 	o: W, op: (W, ListChange<E>)->Unit
   ) = run {
@@ -60,11 +65,12 @@ interface ImmutableObsList<E>: BasicOCollection<E,ListChange<E>>, List<E> {
   }
 
   fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, ListChange<E>)->Unit) = run {
-	val listener = WeakCollectionListener<W, E>(weakRef) { o: W, c: ListChange<E> ->
+	val listener = WeakCollectionListener<W, E, ListChange<E>>(weakRef) { o: W, c: ListChange<E> ->
 	  op(o, c)
 	}
 	addListener(listener)
   }
+
   fun filtered(filter: (E)->Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
   fun dynamicallyFiltered(filter: (E)->ObsB): BasicFilteredList<E> = DynamicList(this, dynamicFilter = filter)
   fun sorted(comparator: Comparator<in E>? = null): BasicSortedList<E> = DynamicList(this, comparator = comparator)
@@ -136,7 +142,7 @@ class FakeMutableObsList<E>(private val o: ObsList<E>): ObsList<E> by o, Mutable
 interface MutableObsList<E>: MutableList<E>, ObsList<E>
 
 
-abstract class BaseBasicWritableOList<E>: InternallyBackedOCollection<E>(),
+abstract class BaseBasicWritableOList<E>: InternallyBackedOList<E>(),
 										  ObsList<E>,
 										  MutableObsList<E>,
 										  BindableList<E> {
@@ -239,7 +245,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   override fun clear() {
 	val removed = list.toList()
 	list.clear()
-	changedFromOuter(Clear(list, removed = removed))
+	changedFromOuter(ClearList(list, removed = removed))
   }
 
 
@@ -288,8 +294,11 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   }
 
   override fun removeAll(elements: Collection<E>): Boolean {
+	val lowestChangedIndex = withIndex().firstOrNull { it.value in elements }?.index
 	val b = list.removeAll(elements)
-	if (b) changedFromOuter(RemoveElements(list, elements))
+	if (b) {
+	  changedFromOuter(RemoveElements(list, elements,lowestChangedIndex=lowestChangedIndex!!))
+	}
 	return b
   }
 
@@ -301,9 +310,10 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   }
 
   override fun retainAll(elements: Collection<E>): Boolean {
+	val lowestChangedIndex = withIndex().firstOrNull { it.value !in elements }?.index
 	val toRemove = list.filter { it !in elements }
 	val b = list.retainAll(elements)
-	if (b) changedFromOuter(RetainAll(list, toRemove, retained = elements))
+	if (b) changedFromOuter(RetainAllList(list, toRemove, retained = elements,lowestChangedIndex=lowestChangedIndex!!))
 	return b
   }
 
@@ -313,7 +323,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	return oldElement
   }
 
-  fun changedFromOuter(c: CollectionChange<E>) {
+  fun changedFromOuter(c: ListChange<E>) {
 	invalidateSubLists()
 	emitChange(c)
   }
@@ -483,7 +493,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 
   fun <R> view(converter: (E)->R) = object: ImmutableObsList<R> {
-	override fun onChange(listenerName: String?, op: (ListChange<R>)->Unit): CollectionListenerBase<R> {
+	override fun onChange(listenerName: String?, op: (ListChange<R>)->Unit): ListListener<R> {
 	  TODO("Not yet implemented")
 	}
 
@@ -496,7 +506,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 	override fun iterator(): Iterator<R> = listIterator()
 
-	override fun addListener(listener: CollectionListenerBase<R>): CollectionListenerBase<R> {
+	override fun addListener(listener: ListListener<R>): ListListener<R> {
 	  TODO("Not yet implemented")
 	}
 
