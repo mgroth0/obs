@@ -48,6 +48,8 @@ sealed interface RemovalBase<E, COL: Collection<E>>: CollectionChange<E, COL> {
   val removedElements: List<E>
 }
 
+sealed interface SetRemovalBase<E>: SetChange<E>, RemovalBase<E,Set<E>>
+
 sealed interface ListRemovalBase<E>: RemovalBase<E, List<E>>, ListChange<E> {
   val removedElementsIndexed: OrderedSet<out MyIndexedValue<E, out RemovalIndex>>
   override val removedElements: List<E> get() = removedElementsIndexed.map { it.element }
@@ -132,8 +134,7 @@ sealed class Removal<E, COL: Collection<E>>(override val collection: COL, val re
 }
 
 sealed class SetRemoval<E>(override val collection: Set<E>, removed: E): Removal<E, Set<E>>(collection, removed),
-																		 RemovalBase<E, Set<E>>,
-																		 SetChange<E>
+																		 SetRemovalBase<E>
 
 sealed class ListRemoval<E>(override val collection: List<E>, removed: E): Removal<E, List<E>>(collection, removed),
 																		   ListRemovalBase<E>
@@ -190,7 +191,7 @@ sealed class MultiRemoval<E, COL: Collection<E>>(
 sealed class MultiRemovalFromSet<E>(
   override val collection: Set<E>,
   removed: Collection<E>
-): MultiRemoval<E, Set<E>>(collection, removed), RemovalBase<E, Set<E>>, SetChange<E>
+): MultiRemoval<E, Set<E>>(collection, removed), SetRemovalBase<E>
 
 sealed class MultiRemovalFromList<E>(
   override val collection: List<E>,
