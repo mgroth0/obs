@@ -34,9 +34,7 @@ sealed interface ListChange<E>: CollectionChange<E, List<E>> {
 }
 
 class AtomicListChange<E>(
-  override val collection: List<E>,
-  val changes: List<ListChange<E>>,
-  var isCompiled: Boolean = false
+  override val collection: List<E>, val changes: List<ListChange<E>>, var isCompiled: Boolean = false
 ): ListChange<E>, ListAdditionBase<E>, ListRemovalBase<E> {
 
 
@@ -53,9 +51,7 @@ class AtomicListChange<E>(
 
   override fun <T> convert(collection: Collection<T>, convert: (E)->T): AtomicListChange<T> {
 	return AtomicListChange(
-	  collection as List<T>,
-	  changes.map { it.convert(collection, convert) },
-	  isCompiled = isCompiled
+	  collection as List<T>, changes.map { it.convert(collection, convert) }, isCompiled = isCompiled
 	)
   }
 
@@ -126,8 +122,7 @@ sealed class MultiAddition<E, COL: Collection<E>>(
 
 class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>): MultiAddition<E, Set<E>>(
   collection
-),
-																		SetChange<E> {
+), SetChange<E> {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	MultiAddIntoSet(collection as Set<T>, added.map(convert))
 
@@ -161,10 +156,21 @@ class MultiAddAt<E>(collection: List<E>, val added: Collection<E>, val index: In
 
 
   override val lowestChangedIndex = index
+
+  override fun toString(): String {
+	return toStringBuilder(mapOf("index" to index))
+  }
+
+  val isRange by lazy {
+	addedElementsIndexed.zipWithNext { a, b -> a.index.i == b.index.i - 1 }.all { it }
+  }
+
 }
 
-sealed class Removal<E, COL: Collection<E>>(override val collection: COL, val removed: E): RemovalBase<E, COL> {
-  //  override val removedElements get() = listOf(removed)
+sealed class Removal<E, COL: Collection<E>>(
+  override val collection: COL,
+  val removed: E
+): RemovalBase<E, COL> { //  override val removedElements get() = listOf(removed)
 }
 
 sealed class SetRemoval<E>(override val collection: Set<E>, removed: E): Removal<E, Set<E>>(collection, removed),
@@ -213,33 +219,27 @@ class RemoveAt<E>(collection: List<E>, removed: E, val index: Int): ListRemoval<
   override val lowestChangedIndex = index
 
   override fun toString(): String {
-	return toStringBuilder(mapOf("index" to index))
+	return toStringBuilder(mapOf("index" to index, "removed" to removed))
   }
 
-}
-//class RemoveFirst<E>(collection: Collection<E>, removed: E): matt.obs.map.change.Removal<E>(collection, removed)
+} //class RemoveFirst<E>(collection: Collection<E>, removed: E): matt.obs.map.change.Removal<E>(collection, removed)
 
 sealed class MultiRemoval<E, COL: Collection<E>>(
-  override val collection: COL,
-  val removed: Collection<E>
-): RemovalBase<E, COL> {
-  //  override val removedElements get() = removed.toList()
+  override val collection: COL, val removed: Collection<E>
+): RemovalBase<E, COL> { //  override val removedElements get() = removed.toList()
 }
 
 sealed class MultiRemovalFromSet<E>(
-  override val collection: Set<E>,
-  removed: Collection<E>
+  override val collection: Set<E>, removed: Collection<E>
 ): MultiRemoval<E, Set<E>>(collection, removed), SetRemovalBase<E>
 
 sealed class MultiRemovalFromList<E>(
-  override val collection: List<E>,
-  removed: Collection<E>
+  override val collection: List<E>, removed: Collection<E>
 ): MultiRemoval<E, List<E>>(collection, removed), ListRemovalBase<E>
 
 
 class RemoveElementsFromSet<E>(collection: Set<E>, removed: Collection<E>): MultiRemovalFromSet<E>(
-  collection,
-  removed
+  collection, removed
 ) {
 
   override val removedElements get() = removed.toList()
@@ -273,15 +273,13 @@ class RemoveElements<E>(collection: List<E>, removed: Collection<E>, override va
 }
 
 
-class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): MultiRemovalFromList<E>(
-  collection,
-  removed.map { it.value }) {
+class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): MultiRemovalFromList<E>(collection,
+																									   removed.map { it.value }) {
   private val removedWithIndices = removed
   override val removedElementsIndexed
 	get() = removedWithIndices.map {
 	  MyIndexedValue(
-		element = it.value,
-		index = Index(it.index)
+		element = it.value, index = Index(it.index)
 	  )
 	}.toOrderedSet()
 
@@ -292,15 +290,15 @@ class RemoveAtIndices<E>(collection: List<E>, removed: List<IndexedValue<E>>): M
   override val lowestChangedIndex: Int = removed.minOfOrNull { it.index }!!
 
   val isRange by lazy {
-	removedWithIndices
-	  .zipWithNext { a, b -> a.index == b.index - 1 }
-	  .all { it }
+	removedWithIndices.zipWithNext { a, b -> a.index == b.index - 1 }.all { it }
   }
 }
 
 
-class RetainAllSet<E>(collection: Set<E>, removed: Collection<E>, val retained: Collection<E>):
-	MultiRemovalFromSet<E>(collection, removed), SetChange<E> {
+class RetainAllSet<E>(collection: Set<E>, removed: Collection<E>, val retained: Collection<E>): MultiRemovalFromSet<E>(
+  collection,
+  removed
+), SetChange<E> {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	RetainAllSet(collection as Set<T>, removed.map(convert), retained = retained.map(convert))
 
@@ -309,19 +307,14 @@ class RetainAllSet<E>(collection: Set<E>, removed: Collection<E>, val retained: 
 
 
 class RetainAllList<E>(
-  collection: List<E>,
-  removed: Collection<E>,
-  val retained: Collection<E>,
-  override val lowestChangedIndex: Int
-):
-	MultiRemovalFromList<E>(collection, removed), ListRemovalBase<E> {
-  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-	RetainAllList(
-	  collection as List<T>,
-	  removed.map(convert),
-	  retained = retained.map(convert),
-	  lowestChangedIndex = lowestChangedIndex
-	)
+  collection: List<E>, removed: Collection<E>, val retained: Collection<E>, override val lowestChangedIndex: Int
+): MultiRemovalFromList<E>(collection, removed), ListRemovalBase<E> {
+  override fun <T> convert(collection: Collection<T>, convert: (E)->T) = RetainAllList(
+	collection as List<T>,
+	removed.map(convert),
+	retained = retained.map(convert),
+	lowestChangedIndex = lowestChangedIndex
+  )
 
   override val removedElementsIndexed: OrderedSet<MyIndexedValue<E, out RemovalIndex>>
 	get() = removed.map { it withIndex All }.toOrderedSet()
@@ -331,17 +324,14 @@ class RetainAllList<E>(
 
 
 sealed class Replacement<E>(override val collection: List<E>, val removed: E, val added: E): ListAdditionBase<E>,
-																							 ListRemovalBase<E> {
-  //  override val addedElements get() = listOf(added)
+																							 ListRemovalBase<E> { //  override val addedElements get() = listOf(added)
   //  override val removedElements get() = listOf(removed)
 
 
 }
 
 class ReplaceAt<E>(collection: List<E>, removed: E, added: E, val index: Int): Replacement<E>(
-  collection,
-  removed,
-  added
+  collection, removed, added
 ) {
 
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
@@ -354,9 +344,7 @@ class ReplaceAt<E>(collection: List<E>, removed: E, added: E, val index: Int): R
 
   override fun toString() = toStringBuilder(
 	mapOf(
-	  "removed" to removed,
-	  "added" to added,
-	  "index" to index
+	  "removed" to removed, "added" to added, "index" to index
 	)
   )
 
@@ -392,8 +380,7 @@ fun <E> MutableSet<E>.mirror(c: SetChange<E>): SetChange<E> {
 	  is MultiAddIntoSet       -> addAll(c.added)
 	  is RemoveElementsFromSet -> removeAll(c.removed)
 	}
-  } catch (e: IllegalArgumentException) {
-	/*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
+  } catch (e: IllegalArgumentException) {    /*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
 	println("c=$c")
 	taball("mirroring set", this)
 	throw e
@@ -407,7 +394,11 @@ fun <S, T> MutableSet<T>.mirror(c: SetChange<S>, convert: (S)->T) {
 }
 
 
-fun <E> MutableList<E>.mirror(c: ListChange<E>): ListChange<E> {
+fun <E> MutableList<E>.mirror(c: ListChange<E>, debug: Boolean = false): ListChange<E> {
+  if (debug) {
+	println("mirror: $c")
+	taball("before mirror", this)
+  }
   try {
 	when (c) {
 	  is AddAt                 -> add(index = c.index, element = c.added)
@@ -420,8 +411,14 @@ fun <E> MutableList<E>.mirror(c: ListChange<E>): ListChange<E> {
 	  is RetainAllList         -> retainAll(c.retained)
 	  is RemoveAt              -> removeAt(c.index)
 	  is RemoveElementFromList -> remove(c.removed)
-	  is RemoveAtIndices       -> c.removedElementsIndexed.sortedBy { it.index }.forEach {
-		removeAt(it.index.i)
+	  is RemoveAtIndices       -> {
+		require(c.isRange)
+		subList(
+		  c.lowestChangedIndex,
+		  c.removedElementsIndexed.last().index.i + 1
+		).clear()        //		c.removedElementsIndexed.sortedBy { it.index }.forEach {
+		//		  removeAt(it.index.i)
+		//		}
 	  }
 
 	  is AtomicListChange      -> {
@@ -431,8 +428,7 @@ fun <E> MutableList<E>.mirror(c: ListChange<E>): ListChange<E> {
 		}
 	  }
 	}
-  } catch (e: IllegalArgumentException) {
-	/*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
+  } catch (e: IllegalArgumentException) {    /*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
 	println("c=$c")
 	taball("mirroring list", this)
 	throw e

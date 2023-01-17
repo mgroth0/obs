@@ -252,7 +252,8 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 	override fun remove() {
 	  super.remove()
-	  changedFromOuter(RemoveAt(list, lastReturned!!, previousIndex()))
+	  //	  println("RemoveAt from lItr: previousIndex=${previousIndex()},lastReturned=$lastReturned")
+	  changedFromOuter(RemoveAt(list, lastReturned!!, previousIndex() + 1))
 	}
 
 	override fun add(element: E) {
@@ -268,12 +269,12 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 		  list, lastReturned!!, element, index = when (lastItrDir) {
 			NEXT -> {
 			  previousIndex()
-//			  currentIndex - 1
+			  //			  currentIndex - 1
 			}
 
 			PREVIOUS -> {
 			  previousIndex() + 1
-//			  currentIndex
+			  //			  currentIndex
 			}
 
 			else -> NEVER
@@ -336,7 +337,9 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 	op()
 	isAtomicallyChanging = false
 	atomicChanges = null
-	emitChange(AtomicListChange(this, changes))
+	if (changes.isNotEmpty()) {
+	  emitChange(AtomicListChange(this, changes))
+	}
   }
 
   fun changedFromOuter(c: ListChange<E>) {
@@ -596,7 +599,10 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E)->R) = object: ImmutableObsLis
   }
 
   override fun indexOf(element: R): Int {
-	TODO("Not yet implemented")
+	this@view.forEachIndexed { idx, it ->
+	  if (converter(it) == element) return idx
+	}
+	return -1
   }
 
   override fun containsAll(elements: Collection<R>): Boolean {

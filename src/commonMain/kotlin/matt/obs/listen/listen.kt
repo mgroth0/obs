@@ -29,6 +29,7 @@ import kotlin.jvm.Synchronized
 
 typealias Listener = MyListener<*>
 
+
 interface MyListenerInter<U: Update> {
   fun notify(update: U, debugger: Prints? = null)
   fun removeListener()

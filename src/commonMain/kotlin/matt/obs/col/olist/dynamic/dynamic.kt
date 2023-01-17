@@ -1,7 +1,7 @@
 package matt.obs.col.olist.dynamic
 
+import matt.collect.list.setAllOneByOneNeverAllowingDuplicates
 import matt.collect.map.lazyMap
-import matt.lang.setall.setAllOneByOneNeverAllowingDuplicates
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
@@ -35,7 +35,7 @@ class DynamicList<E>(
 ): ImmutableObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies {
 
 
-  override fun toString() = toStringBuilder()
+  override fun toString() = toStringBuilder("name" to nam)
 
   override val predicate = BindableProperty(filter)
   override val comparator = BindableProperty(comparator)
@@ -53,10 +53,8 @@ class DynamicList<E>(
 
   override fun refresh() {
 	require(predicate.value == null || dynamicFilter == null)
-
-
 	target.atomicChange {
-	  println("starting atomic change of ${this@DynamicList}")
+//	  println("starting atomic change of ${this@DynamicList}")
 
 
 	  /*THERE MUST NEVER BE DUPLICATES GOING TO NODE LISTS
@@ -77,10 +75,8 @@ class DynamicList<E>(
 			else it
 		  }
 	  )
-	  println("finishing atomic change of ${this@DynamicList}")
+//	  println("finishing atomic change of ${this@DynamicList}")
 	}
-
-
   }
 
 

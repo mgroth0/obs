@@ -23,7 +23,6 @@ import matt.obs.prop.MObservableROValBase
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.MObservableValNewOnly
 import matt.obs.prop.ObsVal
-import matt.obs.prop.ReadOnlyBindableProperty
 import matt.obs.prop.ValProp
 import matt.obs.prop.Var
 import matt.obs.prop.VarProp
@@ -37,12 +36,13 @@ infix fun <T: Any> ObsVal<T?>.coalesceNull(backup: ObsVal<T?>) = MyBinding(this,
 
 
 fun <T> BindableValue<T>.smartBind(property: ValProp<T>, readonly: Boolean) {
-  if (readonly || (property !is VarProp<*>)) bind(property) else bindBidirectional(property as VarProp)
+  if (readonly || (property !is Var<*>)) bind(property) else bindBidirectional(property as VarProp)
 }
 
 fun <T> BindableValue<T>.smartBind(property: MObservableVal<T, *, *>, readonly: Boolean) {
-  require(property is ReadOnlyBindableProperty)
-  if (readonly || (property !is VarProp<T>)) bind(property) else
+  /*why did I have that requirement???*/
+  /*require(property is ReadOnlyBindableProperty)*/
+  if (readonly || (property !is Var<T>)) bind(property) else
 	bindBidirectional(property)
 }
 
