@@ -85,7 +85,7 @@ sealed interface ListRemovalBase<E>: RemovalBase<E, List<E>>, ListChange<E> {
   override val removedElements: List<E> get() = removedElementsIndexed.map { it.element }
 }
 
-sealed class SetAddition<E>(override val collection: Set<E>, val added: E): AdditionBase<E, Set<E>>, SetChange<E>
+sealed class SetAddition<E>(override val collection: Set<E>, val added: E): SetAdditionBase<E>
 sealed class ListAddition<E>(override val collection: List<E>, val added: E): ListAdditionBase<E>
 
 
@@ -122,7 +122,7 @@ sealed class MultiAddition<E, COL: Collection<E>>(
 
 class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>): MultiAddition<E, Set<E>>(
   collection
-), SetChange<E> {
+), SetChange<E>, SetAdditionBase<E> {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	MultiAddIntoSet(collection as Set<T>, added.map(convert))
 
