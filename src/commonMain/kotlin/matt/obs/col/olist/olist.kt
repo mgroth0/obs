@@ -50,7 +50,7 @@ import matt.obs.prop.ObsVal
 import kotlin.jvm.Synchronized
 
 interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>, ListListenerBase<E>>, List<E> {
-  fun <W: Any> onChangeWithWeak(
+  override fun <W: Any> onChangeWithWeak(
 	o: W, op: (W, ListChange<E>)->Unit
   ) = run {
 	val weakRef = WeakRef(o)
@@ -59,7 +59,7 @@ interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>,
 	}
   }
 
-  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, ListChange<E>)->Unit) = run {
+  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, ListChange<E>)->Unit) = run {
 	val listener = WeakListListener(weakRef) { o: W, c: ListChange<E> ->
 	  op(o, c)
 	}

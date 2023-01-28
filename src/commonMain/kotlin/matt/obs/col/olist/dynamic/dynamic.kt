@@ -2,6 +2,7 @@ package matt.obs.col.olist.dynamic
 
 import matt.collect.list.setAllOneByOneNeverAllowingDuplicates
 import matt.collect.map.lazyMap
+import matt.lang.weak.WeakRef
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
@@ -54,7 +55,7 @@ class DynamicList<E>(
   override fun refresh() {
 	require(predicate.value == null || dynamicFilter == null)
 	target.atomicChange {
-//	  println("starting atomic change of ${this@DynamicList}")
+	  //	  println("starting atomic change of ${this@DynamicList}")
 
 
 	  /*THERE MUST NEVER BE DUPLICATES GOING TO NODE LISTS
@@ -75,7 +76,7 @@ class DynamicList<E>(
 			else it
 		  }
 	  )
-//	  println("finishing atomic change of ${this@DynamicList}")
+	  //	  println("finishing atomic change of ${this@DynamicList}")
 	}
   }
 
@@ -114,6 +115,20 @@ class DynamicList<E>(
   }
 
   override fun removeDependency(o: MObservable) = dependencyHelper.removeDependency(o)
+
+  override fun <O: MObservable> addWeakDependency(
+	weakRef: WeakRef<*>,
+	mainDep: O,
+	moreDeps: List<MObservable>,
+	debugLogger: DebugLogger?,
+	vararg deepDependencies: (O)->MObservable?
+  ) = dependencyHelper.addWeakDependency(
+	weakRef = weakRef,
+	mainDep = mainDep,
+	moreDeps = moreDeps,
+	debugLogger = debugLogger,
+	*deepDependencies
+  )
 
 
 }
