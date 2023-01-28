@@ -71,7 +71,7 @@ fun <W: Any, T, R> ObsVal<T>.weakBinding(
   w: W,
   vararg dependencies: MObservable,
   op: (W, T)->R,
-) = MyWeakBinding(w, this, *dependencies) { w -> op(w, value) }
+) = MyWeakBinding(w, this, *dependencies) { ww -> op(ww, value) }
 
 fun <T, R> ObsVal<T>.binding(
   vararg dependencies: MObservable,
@@ -175,7 +175,7 @@ abstract class MyBindingBaseImpl<T>: MObservableROValBase<T, ValueUpdate<T>, New
 
   fun removeAllDependencies() = depHelper.removeAllDependencies()
 
-  override fun <O: MObservable> addWeakDependency(
+  final override fun <O: MObservable> addWeakDependency(
 	weakRef: WeakRef<*>,
 	mainDep: O,
 	moreDeps: List<MObservable>,
