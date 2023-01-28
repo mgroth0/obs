@@ -223,8 +223,9 @@ interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U
 	return value
   }
 
-  override operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: T) {
-	value = newValue
+
+  override operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+	this.value = value
   }
 
 
