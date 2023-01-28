@@ -1,5 +1,6 @@
 package matt.obs.bindhelp
 
+import matt.lang.go
 import matt.lang.setall.setAll
 import matt.lang.weak.WeakRef
 import matt.lang.weak.getValue
@@ -227,27 +228,38 @@ interface ABind {
 }
 
 class TheBind(
-  source: MListenable<*>, private val listener: MyListenerInter<*>
+  source: MListenable<*>,
+  listener: MyListenerInter<*>
 ): ABind {
-  val source by WeakRef(source)
+  private val source by WeakRef(source)
+  private val listener by WeakRef(listener)
   override fun cut() {
-	source?.removeListener(listener)
+	listener?.go { l ->
+	  source?.removeListener(l)
+	}
   }
 }
 
 class BiTheBind(
-  val source: Var<*>,
-  val target: Var<*>,
-  private val sourceListener: MyListenerInter<*>,
-  private val targetListener: MyListenerInter<*>,
+  source: Var<*>,
+  target: Var<*>,
+  sourceListener: MyListenerInter<*>,
+  targetListener: MyListenerInter<*>,
   private val debug: Boolean = false
 ): ABind {
-
+  private val source by WeakRef(source)
+  private val target by WeakRef(target)
+  private val sourceListener by WeakRef(sourceListener)
+  private val targetListener by WeakRef(targetListener)
   override fun cut() {
 	if (debug) println("cutting $this")
-	source.removeListener(sourceListener)
-	target.removeListener(targetListener)
-	source.theBind = null
-	target.theBind = null
+	sourceListener?.go {
+	  source?.removeListener(it)
+	}
+	targetListener?.go {
+	  target?.removeListener(it)
+	}
+	source?.theBind = null
+	target?.theBind = null
   }
 }
