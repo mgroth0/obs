@@ -16,7 +16,6 @@ import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.lazy.DependentValue
 import matt.obs.listen.InvalidListener
-import matt.obs.listen.MyListenerInter
 import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.WeakInvalidListener
 import matt.obs.listen.update.LazyMaybeNewValueUpdate
@@ -130,7 +129,8 @@ abstract class MyBindingBaseImpl<T>: MObservableROValBase<T, ValueUpdate<T>, New
 	op()
   })
 
-  final override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> {
+
+  final override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): WeakInvalidListener<T> {
 	@Suppress("UNCHECKED_CAST")
 	w as WeakRef<Any>
 	val l = WeakInvalidListener<T>(w) {
@@ -174,6 +174,22 @@ abstract class MyBindingBaseImpl<T>: MObservableROValBase<T, ValueUpdate<T>, New
 
 
   fun removeAllDependencies() = depHelper.removeAllDependencies()
+
+  override fun <O: MObservable> addWeakDependency(
+	weakRef: WeakRef<*>,
+	mainDep: O,
+	moreDeps: List<MObservable>,
+	debugLogger: DebugLogger?,
+	vararg deepDependencies: (O)->MObservable?
+  ) = depHelper.addWeakDependency(
+	weakRef = weakRef,
+	mainDep = mainDep,
+	moreDeps = moreDeps,
+	debugLogger = debugLogger,
+	*deepDependencies
+  )
+
+
 
 }
 
