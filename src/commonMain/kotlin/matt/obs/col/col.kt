@@ -14,6 +14,7 @@ import matt.obs.listen.ListListener
 import matt.obs.listen.ListListenerBase
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.SetListener
+import matt.obs.listen.SetListenerBase
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ListUpdate
 import matt.obs.listen.update.SetUpdate
@@ -75,13 +76,13 @@ abstract class InternallyBackedOCollection<E, C: CollectionChange<E, out Collect
   }
 }
 
-abstract class InternallyBackedOSet<E> internal constructor(): InternallyBackedOCollection<E, SetChange<E>, SetUpdate<E>, SetListener<E>>() {
+abstract class InternallyBackedOSet<E> internal constructor(): InternallyBackedOCollection<E, SetChange<E>, SetUpdate<E>, SetListenerBase<E>>() {
 
   override fun updateFrom(c: SetChange<E>): SetUpdate<E> {
 	return SetUpdate(c)
   }
 
-  override fun createListener(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>)->Unit): SetListener<E> {
+  override fun createListener(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>)->Unit): SetListenerBase<E> {
 	val l = SetListener<E>(invoke)
 	return l
   }

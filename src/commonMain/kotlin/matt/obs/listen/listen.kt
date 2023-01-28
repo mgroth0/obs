@@ -229,7 +229,7 @@ class WeakListListener<W: Any, E>(
 class WeakSetListener<W: Any, E>(
   wref: WeakRef<W>,
   invoke: MyListenerInter<*>.(ref: W, change: SetChange<E>)->Unit
-): WeakCollectionListener<W, E, SetChange<E>, SetUpdate<E>>(wref, invoke)
+): WeakCollectionListener<W, E, SetChange<E>, SetUpdate<E>>(wref, invoke), SetListenerBase<E>
 
 
 class WeakChangeListenerWithNewValue<W: Any, T>(
@@ -296,6 +296,9 @@ class SetListener<E>(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(
 
 
 interface ListListenerBase<E>: CollectionListenerBase<E, ListChange<E>, ListUpdate<E>>
+interface SetListenerBase<E>: CollectionListenerBase<E, SetChange<E>, SetUpdate<E>>
+
+
 class ListListener<E>(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>)->Unit):
 	CollectionListener<E, ListChange<E>, ListUpdate<E>>(
 	  invoke
