@@ -1,7 +1,9 @@
 package matt.obs.subscribe
 
 import matt.lang.function.Consume
+import matt.lang.weak.WeakRef
 import matt.obs.MObservableImpl
+import matt.obs.listen.MyListenerInter
 import matt.obs.listen.event.BasicEventListener
 import matt.obs.listen.event.MyEventListener
 import matt.obs.listen.event.Subscription
@@ -18,6 +20,9 @@ open class Channel<E: Event>: MObservableImpl<E, MyEventListener<in E>>() {
   @Suppress("UNCHECKED_CAST") fun subscribe(): Subscription<E> = addListener(Subscription()) as Subscription<E>
 
   override fun observe(op: ()->Unit) = addListener(BasicEventListener { op() })
+  override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> {
+    TODO("Not yet implemented")
+  }
 
 }
 
