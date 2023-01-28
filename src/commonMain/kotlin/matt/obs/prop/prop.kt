@@ -17,12 +17,10 @@ import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.bindings.bool.not
 import matt.obs.listen.ChangeListener
-import matt.obs.listen.Listener
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.NewOrLessListener
 import matt.obs.listen.OldAndNewListener
 import matt.obs.listen.OldAndNewListenerImpl
-import matt.obs.listen.ValueListener
 import matt.obs.listen.ValueListenerBase
 import matt.obs.listen.WeakChangeListenerWithNewValue
 import matt.obs.listen.WeakListenerWithOld
@@ -153,6 +151,15 @@ interface MObservableValNewAndOld<T>:
   override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit) = run {
 	val listener = WeakListenerWithOld(weakRef) { o: W, _: T, new: T ->
 	  op(o, new)
+	}.apply {
+	  removeCondition = { weakRef.deref() == null }
+	}
+	addListener(listener)
+  }
+
+  fun <W: Any> onChangeWithAlreadyWeakAndOld(weakRef: WeakRef<W>, op: (W, o: T, n: T)->Unit) = run {
+	val listener = WeakListenerWithOld(weakRef) { o: W, old: T, new: T ->
+	  op(o, old, new)
 	}.apply {
 	  removeCondition = { weakRef.deref() == null }
 	}

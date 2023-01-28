@@ -116,6 +116,7 @@ class BindableSetImpl<E>(private val target: MutableObsSet<E>): BindableImpl(), 
 
 interface BindableValue<T>: Bindable {
   fun bind(source: ObsVal<out T>)
+  fun bindWeakly(source: ObsVal<out T>)
   fun bindBidirectional(source: Var<T>, checkEquality: Boolean = false, clean: Boolean = true, debug: Boolean = false)
   fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>)
 }
@@ -148,6 +149,16 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	wProp setCorrectlyTo { source.value }
 	val listener = source.observe {
 	  wProp setCorrectlyTo { source.value }
+	}
+	theBind = TheBind(source = source, listener = listener)
+  }
+
+  @Synchronized override fun bindWeakly(source: ObsVal<out T>) {
+	require(this !is FXBackedPropBase || !isFXBound)
+	unbind()
+	wProp setCorrectlyTo { source.value }
+	val listener = source.onChangeWithWeak(wProp) { w, it ->
+	  w setCorrectlyTo { it }
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
