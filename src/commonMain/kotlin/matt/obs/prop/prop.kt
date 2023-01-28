@@ -381,6 +381,7 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 
 
   override infix fun bind(source: ObsVal<out T>) = bindManager.bind(source)
+  override infix fun bindWeakly(source: ObsVal<out T>) = bindManager.bindWeakly(source)
 
   /*allows property to still be set by other means*/
   fun pseudoBind(source: ObsVal<out T>) {
