@@ -1,5 +1,6 @@
 package matt.obs.invalid
 
+import matt.lang.function.Produce
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.listen.Listener
@@ -53,7 +54,8 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 	  obs = this,
 	  mainDep = mainDep,
 	  moreDeps = moreDeps,
-	  getDeepDeps = { deepDependencies.mapNotNull { it.invoke(mainDep) } },
+	  getDeepDeps = deepDependencies.takeIf { it.isNotEmpty() }
+		?.let { { deepDependencies.mapNotNull { it.invoke(mainDep) } } },
 	  subListeners = deepDependencies.mapNotNull {
 		it(mainDep)?.observe {
 		  markInvalid()
@@ -94,7 +96,9 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 	  obs = this,
 	  mainDep = o,
 	  moreDeps = EMPTY_MORE_DEPS_LIST,
-	  getDeepDeps = { deepDependencies.mapNotNull { it.invoke(o) } },
+	  getDeepDeps = if (deepDependencies.isEmpty()) null else {
+		{ deepDependencies.mapNotNull { it.invoke(o) } }
+	  },
 	  subListeners = deepDependencies.mapNotNull {
 		it(o)?.observe {
 		  markInvalid()
@@ -119,12 +123,7 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
   }
 
   private fun removeDep(dep: DepListenerSet) {
-	dep.mainListeners.forEach {
-	  it.tryRemovingListener()
-	}
-	dep.subListeners.forEach {
-	  it.tryRemovingListener()
-	}
+	dep.removeAllListeners()
 	deps.remove(dep)
   }
 
@@ -134,15 +133,21 @@ private open class DepListenerSet(
   val obs: CustomInvalidations,
   mainDep: MObservable,
   moreDeps: List<MObservable>,
-  getDeepDeps: (dep: MObservable)->List<MObservable>,
+  getDeepDeps: ((dep: MObservable)->List<MObservable>)?,
   var subListeners: List<MyListenerInter<*>>,
   @Suppress("UNUSED_PARAMETER") debugLogger: DebugLogger? = null
 ) {
+
+  private val getTheDeepDeps: Produce<List<MObservable>> = getDeepDeps?.let {
+	{ it.invoke(mainDep) }
+	//	it(mainDep)
+  } ?: { listOf() /*dont save mainDep in memory*/ }
+
   open val mainListeners = (listOf(mainDep) + moreDeps).mapIndexed { index, it ->
 	it.observe {
 	  obs.markInvalid()
 	  subListeners.forEach { it.tryRemovingListener() }
-	  subListeners = getDeepDeps(mainDep).map {
+	  subListeners = getTheDeepDeps().map {
 		it.observe {
 		  obs.markInvalid()
 		}
@@ -151,19 +156,37 @@ private open class DepListenerSet(
 	  name = "${DepListenerSet::class.simpleName} mainListener $index"
 	}
   }
+
+  fun removeAllListeners() {
+	mainListeners.forEach {
+	  it.tryRemovingListener()
+	}
+	subListeners.forEach {
+	  it.tryRemovingListener()
+	}
+  }
+
 }
 
 private class DepListenerSetIgnoringNullOuterValues(
   obs: CustomInvalidations,
   mainDep: ObsVal<*>,
-  getDeepDeps: (dep: MObservable)->List<MObservable>,
+  getDeepDeps: ((dep: MObservable)->List<MObservable>)?,
   subListeners: List<Listener>
 ): DepListenerSet(obs, mainDep = mainDep, moreDeps = EMPTY_MORE_DEPS_LIST, getDeepDeps, subListeners) {
-  override val mainListeners = listOf(mainDep.onChange {
-	if (it != null) {
+
+
+  private val getTheDeepDeps: Produce<List<MObservable>> = getDeepDeps?.let {
+	{ it.invoke(mainDep) }
+	//	it(mainDep)
+  } ?: { listOf() /*dont save mainDep in memory*/ }
+
+
+  override val mainListeners = listOf(mainDep.onChange { new ->
+	if (new != null) {
 	  obs.markInvalid()
 	  this.subListeners.forEach { it.tryRemovingListener() }
-	  this.subListeners = getDeepDeps(mainDep).map {
+	  this.subListeners = getTheDeepDeps().map {
 		it.observe {
 		  obs.markInvalid()
 		}
