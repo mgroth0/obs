@@ -6,19 +6,17 @@ import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOSet
 import matt.obs.col.change.AddIntoSet
 import matt.obs.col.change.ClearSet
-import matt.obs.col.change.ListChange
 import matt.obs.col.change.MultiAddIntoSet
 import matt.obs.col.change.RemoveElementFromSet
 import matt.obs.col.change.RemoveElementsFromSet
 import matt.obs.col.change.RetainAllSet
 import matt.obs.col.change.SetChange
 import matt.obs.fx.requireNotObservable
-import matt.obs.listen.SetListener
-import matt.obs.listen.WeakListListener
+import matt.obs.listen.SetListenerBase
 import matt.obs.listen.WeakSetListener
 import matt.obs.listen.update.SetUpdate
 
-interface ObsSet<E>: Set<E>, BasicOCollection<E, SetChange<E>, SetUpdate<E>, SetListener<E>> {
+interface ObsSet<E>: Set<E>, BasicOCollection<E, SetChange<E>, SetUpdate<E>, SetListenerBase<E>> {
 
   override fun <W: Any> onChangeWithWeak(
 	o: W, op: (W, SetChange<E>)->Unit
