@@ -31,6 +31,7 @@ import matt.obs.prop.proxy.ProxyProp
 import matt.service.scheduler.Scheduler
 import kotlin.jvm.JvmInline
 import kotlin.properties.ReadOnlyProperty
+import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
@@ -66,6 +67,10 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U,
 																									   ValueWrapper<T>,
 																									   ReadOnlyProperty<Any?, T> {
   override val value: T
+
+  override operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+	return value
+  }
 
   @Suppress("UNCHECKED_CAST")
   fun <R> cast(): MObservableVal<R, *, *> = binding {
@@ -106,9 +111,7 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U,
   }
 
 
-  override operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
-	return value
-  }
+
 
 
   infix fun <T> eqNow(value: T) = this.value == value
@@ -210,13 +213,14 @@ interface FXBackedPropBase {
 typealias Var<T> = WritableMObservableVal<T, *, *>
 
 interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, *>>: MObservableVal<T, U, L>,
-																					   BindableValue<T> {
+																					   BindableValue<T>,
+																					   ReadWriteProperty<Any?, T> {
 
 
   override var value: T
 
 
-  operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: T) {
+  override operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: T) {
 	value = newValue
   }
 
