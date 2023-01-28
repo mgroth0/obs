@@ -4,6 +4,7 @@ import matt.collect.itr.filterNotNull
 import matt.lang.delegation.provider
 import matt.lang.go
 import matt.lang.setall.setAll
+import matt.lang.weak.WeakRef
 import matt.model.code.delegate.SimpleGetter
 import matt.model.op.debug.DebugLogger
 import matt.model.op.prints.Prints
@@ -22,6 +23,10 @@ interface MObsHolder<O: MObservable>: MObservable {
 
   override fun observe(op: ()->Unit) = ObsHolderListener().apply {
 	subListeners.setAll(observables.map { it.observe(op) })
+  }
+
+  override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> = ObsHolderListener().apply {
+	subListeners.setAll(observables.map { it.observeWeakly(w, op) })
   }
 
   override fun removeListener(listener: MyListenerInter<*>) {
@@ -99,7 +104,6 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
 }
 
 
-
 open class TypedObservableHolder: ObservableHolderImplBase<TypedBindableProperty<*>>() {
   inline fun <reified T> registeredProp(defaultValue: T, noinline onChange: (()->Unit)? = null) = provider {
 	val fx = TypedBindableProperty(T::class, nullable = null is T, value = defaultValue)
@@ -110,6 +114,7 @@ open class TypedObservableHolder: ObservableHolderImplBase<TypedBindableProperty
 	postRegister(fx)
 	SimpleGetter(fx)
   }
+
   open fun postRegister(prop: ObsVal<*>) = Unit
 }
 
