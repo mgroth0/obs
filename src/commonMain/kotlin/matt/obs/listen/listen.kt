@@ -292,7 +292,7 @@ abstract class CollectionListener<E, C: CollectionChange<E, out Collection<E>>, 
 class SetListener<E>(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>)->Unit):
 	CollectionListener<E, SetChange<E>, SetUpdate<E>>(
 	  invoke
-	)
+	), SetListenerBase<E>
 
 
 interface ListListenerBase<E>: CollectionListenerBase<E, ListChange<E>, ListUpdate<E>>
