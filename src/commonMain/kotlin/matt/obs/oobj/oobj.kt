@@ -17,7 +17,7 @@ interface MObservableObject<T>: MListenable<ContextListener<T>>, CustomInvalidat
   override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> {
 	TODO("Not yet implemented")
   }
-  
+
   fun onChange(op: T.()->Unit) = addListener(ContextListener(uncheckedThis) {
 	op()
   })
