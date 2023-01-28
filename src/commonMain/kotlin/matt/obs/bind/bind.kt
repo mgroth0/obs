@@ -1,6 +1,8 @@
 package matt.obs.bind
 
+import matt.lang.err
 import matt.lang.setall.setAll
+import matt.lang.weak.WeakRef
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
 import matt.model.op.debug.DebugLogger
@@ -14,7 +16,9 @@ import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.lazy.DependentValue
 import matt.obs.listen.InvalidListener
+import matt.obs.listen.MyListenerInter
 import matt.obs.listen.NewOrLessListener
+import matt.obs.listen.WeakInvalidListener
 import matt.obs.listen.update.LazyMaybeNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.oobj.MObservableObject
@@ -63,6 +67,13 @@ fun <T, R> ObsVal<T>.binding(
   op: (T)->R,
 ) = MyBinding(this, *dependencies) { op(value) }
 
+
+fun <W: Any, T, R> ObsVal<T>.weakBinding(
+  w: W,
+  vararg dependencies: MObservable,
+  op: (W, T)->R,
+) = MyWeakBinding(w, this, *dependencies) { w -> op(w, value) }
+
 fun <T, R> ObsVal<T>.binding(
   vararg dependencies: MObservable,
   converter: Converter<T, R>,
@@ -108,17 +119,28 @@ fun <T> MyBinding<T>.eager() = BindableProperty(value).also { prop ->
 interface MyBindingBase<T>: MObservableValNewOnly<T>, CustomDependencies
 
 
-abstract class MyBindingBaseImpl<T>(calc: ()->T):
-	MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>(),
-	MyBindingBase<T>,
-	CustomDependencies {
+abstract class MyBindingBaseImpl<T>: MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>(),
+									 MyBindingBase<T>,
+									 CustomDependencies {
 
+
+  protected abstract fun calc(): T
 
   final override fun observe(op: ()->Unit) = addListener(InvalidListener {
 	op()
   })
 
-  protected val cVal = DependentValue(calc)
+  final override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> {
+	@Suppress("UNCHECKED_CAST")
+	w as WeakRef<Any>
+	val l = WeakInvalidListener<T>(w) {
+	  op()
+	}
+	addListener(l)
+	return l
+  }
+
+  protected val cVal = DependentValue { calc() }
   var stopwatch by cVal::stopwatch
 
   final override fun markInvalid() {
@@ -155,7 +177,11 @@ abstract class MyBindingBaseImpl<T>(calc: ()->T):
 
 }
 
-open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindingBaseImpl<T>(calc) {
+open class MyBinding<T>(vararg dependencies: MObservable, private val calcArg: ()->T): MyBindingBaseImpl<T>() {
+
+  override fun calc(): T {
+	return calcArg()
+  }
 
   init {
 	addDependencies(*dependencies)
@@ -166,13 +192,41 @@ open class MyBinding<T>(vararg dependencies: MObservable, calc: ()->T): MyBindin
 
 }
 
+open class MyWeakBinding<W: Any, T>(w: W, vararg dependencies: MObservable, private val calcArg: (W)->T):
+	MyBindingBaseImpl<T>() {
+
+  private val weakRef = WeakRef(w)
+
+  override fun calc(): T {
+	val w = weakRef.deref()
+	if (w == null) {
+	  err("I guess this does not work yet")
+	} else {
+	  return calcArg(w)
+	}
+  }
+
+  init {
+
+	addWeakDependencies(weakRef, *dependencies)
+  }
+
+  override val value: T get() = cVal.get()
+
+
+}
+
 
 open class LazyBindableProp<T>(
-  calc: ()->T
-): MyBindingBaseImpl<T>(calc),
+  private val calcArg: ()->T
+): MyBindingBaseImpl<T>(),
    WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
 
   constructor(t: T): this({ t })
+
+  override fun calc(): T {
+	return calcArg()
+  }
 
   private val bindWritePass = KeyPass()
   override var value: T

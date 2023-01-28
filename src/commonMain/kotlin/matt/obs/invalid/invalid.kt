@@ -1,6 +1,7 @@
 package matt.obs.invalid
 
 import matt.lang.function.Produce
+import matt.lang.weak.WeakRef
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.listen.Listener
@@ -21,7 +22,22 @@ interface CustomDependencies: CustomInvalidations {
   }
 
 
+  fun addWeakDependencies(w: WeakRef<*>, vararg obs: MObservable) {
+	obs.forEach {
+	  addWeakDependency(w, it)
+	}
+  }
+
+
   fun <O: MObservable> addDependency(
+	mainDep: O,
+	moreDeps: List<MObservable> = EMPTY_MORE_DEPS_LIST,
+	debugLogger: DebugLogger? = null,
+	vararg deepDependencies: (O)->MObservable?
+  )
+
+  fun <O: MObservable> addWeakDependency(
+	weakRef: WeakRef<*>,
 	mainDep: O,
 	moreDeps: List<MObservable> = EMPTY_MORE_DEPS_LIST,
 	debugLogger: DebugLogger? = null,
@@ -43,6 +59,30 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 
   private val deps = mutableListOf<DepListenerSet>()
 
+  @Synchronized override fun <O: MObservable> addWeakDependency(
+	weakRef: WeakRef<*>,
+	mainDep: O,
+	moreDeps: List<MObservable>,
+	debugLogger: DebugLogger?,
+	vararg deepDependencies: (O)->MObservable?
+  ) {
+	deps += WeakDepListenerSet(
+	  obs = this,
+	  weakRef = weakRef,
+	  mainDep = mainDep,
+	  moreDeps = moreDeps,
+	  getDeepDeps = deepDependencies.takeIf { it.isNotEmpty() }
+		?.let { { deepDependencies.mapNotNull { it.invoke(mainDep) } } },
+	  subListeners = deepDependencies.mapNotNull {
+		it(mainDep)?.observeWeakly(weakRef) {
+		  markInvalid()
+		}.apply {
+		  this?.name = "subListener1"
+		}
+	  },
+	  debugLogger = debugLogger
+	)
+  }
 
   @Synchronized override fun <O: MObservable> addDependency(
 	mainDep: O,
@@ -50,7 +90,7 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 	debugLogger: DebugLogger?,
 	vararg deepDependencies: (O)->MObservable?
   ) {
-	deps += DepListenerSet(
+	deps += DefaultDepListenerSet(
 	  obs = this,
 	  mainDep = mainDep,
 	  moreDeps = moreDeps,
@@ -72,7 +112,7 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 	deepDependencies: (O)->List<MObservable>
   ) {
 
-	deps += DepListenerSet(
+	deps += DefaultDepListenerSet(
 	  obs = this,
 	  mainDep = o,
 	  moreDeps = EMPTY_MORE_DEPS_LIST,
@@ -92,7 +132,7 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 	o: O,
 	vararg deepDependencies: (O)->MObservable?
   ) {
-	deps += DepListenerSet(
+	deps += DefaultDepListenerSet(
 	  obs = this,
 	  mainDep = o,
 	  moreDeps = EMPTY_MORE_DEPS_LIST,
@@ -129,14 +169,19 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 
 }
 
-private open class DepListenerSet(
-  val obs: CustomInvalidations,
+private sealed interface DepListenerSet {
+  val obs: MObservable
+  fun removeAllListeners()
+}
+
+private open class DefaultDepListenerSet(
+  override val obs: CustomInvalidations,
   mainDep: MObservable,
   moreDeps: List<MObservable>,
   getDeepDeps: ((dep: MObservable)->List<MObservable>)?,
   var subListeners: List<MyListenerInter<*>>,
   @Suppress("UNUSED_PARAMETER") debugLogger: DebugLogger? = null
-) {
+): DepListenerSet {
 
   private val getTheDeepDeps: Produce<List<MObservable>> = getDeepDeps?.let {
 	{ it.invoke(mainDep) }
@@ -153,11 +198,11 @@ private open class DepListenerSet(
 		}
 	  }
 	}.apply {
-	  name = "${DepListenerSet::class.simpleName} mainListener $index"
+	  name = "${DefaultDepListenerSet::class.simpleName} mainListener $index for ${obs.nam}"
 	}
   }
 
-  fun removeAllListeners() {
+  override fun removeAllListeners() {
 	mainListeners.forEach {
 	  it.tryRemovingListener()
 	}
@@ -168,12 +213,54 @@ private open class DepListenerSet(
 
 }
 
+
+private open class WeakDepListenerSet(
+  override val obs: CustomInvalidations,
+  weakRef: WeakRef<*>,
+  mainDep: MObservable,
+  moreDeps: List<MObservable>,
+  getDeepDeps: ((dep: MObservable)->List<MObservable>)?,
+  var subListeners: List<MyListenerInter<*>>,
+  @Suppress("UNUSED_PARAMETER") debugLogger: DebugLogger? = null
+): DepListenerSet {
+
+  private val getTheDeepDeps: Produce<List<MObservable>> = getDeepDeps?.let {
+	{ it.invoke(mainDep) }
+	//	it(mainDep)
+  } ?: { listOf() /*dont save mainDep in memory*/ }
+
+  open val mainListeners = (listOf(mainDep) + moreDeps).mapIndexed { index, it ->
+	it.observeWeakly(weakRef) {
+	  obs.markInvalid()
+	  subListeners.forEach { it.tryRemovingListener() }
+	  subListeners = getTheDeepDeps().map {
+		it.observeWeakly(weakRef) {
+		  obs.markInvalid()
+		}
+	  }
+	}.apply {
+	  name = "${WeakDepListenerSet::class.simpleName} mainListener $index for ${obs.nam}"
+	}
+  }
+
+  override fun removeAllListeners() {
+	mainListeners.forEach {
+	  it.tryRemovingListener()
+	}
+	subListeners.forEach {
+	  it.tryRemovingListener()
+	}
+  }
+
+}
+
+
 private class DepListenerSetIgnoringNullOuterValues(
   obs: CustomInvalidations,
   mainDep: ObsVal<*>,
   getDeepDeps: ((dep: MObservable)->List<MObservable>)?,
   subListeners: List<Listener>
-): DepListenerSet(obs, mainDep = mainDep, moreDeps = EMPTY_MORE_DEPS_LIST, getDeepDeps, subListeners) {
+): DefaultDepListenerSet(obs, mainDep = mainDep, moreDeps = EMPTY_MORE_DEPS_LIST, getDeepDeps, subListeners) {
 
 
   private val getTheDeepDeps: Produce<List<MObservable>> = getDeepDeps?.let {

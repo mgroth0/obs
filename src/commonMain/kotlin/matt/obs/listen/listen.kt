@@ -76,8 +76,8 @@ internal fun <U, L: MyListenerInter<U>> L.moveTo(o: MListenable<L>) {
   o.addListener(this)
 }
 
-class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit):
-	NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>, ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>() {
+class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit): ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>(),
+																		   NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>> {
   var listenerDebugger: Prints? = null
   override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) {
 	listenerDebugger = debugger
@@ -87,6 +87,26 @@ class InvalidListener<T>(private val invoke: InvalidListener<T>.()->Unit):
 
   override fun transformUpdate(u: ValueUpdate<T>) = u
 }
+
+class WeakInvalidListener<T>(
+  override val wref: WeakRef<Any>,
+  private val invoke: WeakInvalidListener<T>.()->Unit
+): WeakValueListenerBase<Any, T>(), NewOrLessListener<T,ValueUpdate<T>, ValueUpdateWithWeakObj<Any,T>> {
+
+  var listenerDebugger: Prints? = null
+
+  override fun subNotify(update: ValueUpdateWithWeakObj<Any, T>, debugger: Prints?) {
+	listenerDebugger = debugger
+	invoke()
+	listenerDebugger = null
+  }
+
+  override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<Any, T>? {
+	return ValueUpdateWithWeakObj(u.new, wref.deref()!!)
+  }
+
+}
+
 
 sealed interface ValueListenerBase<T, U: ValueUpdate<T>, U_OUT: ValueUpdate<T>>: MyListenerInter<U> {
   var untilInclusive: ((U_OUT)->Boolean)?

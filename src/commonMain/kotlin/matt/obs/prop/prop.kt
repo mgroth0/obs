@@ -78,6 +78,8 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U,
   }
 
   override fun observe(op: ()->Unit): MyListenerInter<*> = onChange { op() }
+  override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> =
+	onChangeWithAlreadyWeak(w) { _, _ -> op() }
 
   fun onChange(op: (T)->Unit): L
 
@@ -109,9 +111,6 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U,
   }.apply {
 	this.untilExclusive = { until(it.new) }
   }
-
-
-
 
 
   infix fun <T> eqNow(value: T) = this.value == value
