@@ -13,7 +13,7 @@ import matt.lang.anno.NeedsTest
 import matt.lang.comparableComparator
 import matt.lang.function.Consume
 import matt.lang.sync.inSync
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.model.op.prints.Prints
 import matt.obs.bind.MyBinding
 import matt.obs.bindhelp.BindableList
@@ -53,13 +53,13 @@ interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>,
   override fun <W: Any> onChangeWithWeak(
 	o: W, op: (W, ListChange<E>)->Unit
   ) = run {
-	val weakRef = WeakRef(o)
+	val weakRef = MyWeakRef(o)
 	onChangeWithAlreadyWeak(weakRef) { w, c ->
 	  op(w, c)
 	}
   }
 
-  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, ListChange<E>)->Unit) = run {
+  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, ListChange<E>)->Unit) = run {
 	val listener = WeakListListener(weakRef) { o: W, c: ListChange<E> ->
 	  op(o, c)
 	}

@@ -1,7 +1,7 @@
 package matt.obs.col.oset
 
 import matt.collect.itr.MutableIteratorWithSomeMemory
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOSet
 import matt.obs.col.change.AddIntoSet
@@ -21,13 +21,13 @@ interface ObsSet<E>: Set<E>, BasicOCollection<E, SetChange<E>, SetUpdate<E>, Set
   override fun <W: Any> onChangeWithWeak(
 	o: W, op: (W, SetChange<E>)->Unit
   ) = run {
-	val weakRef = WeakRef(o)
+	val weakRef = MyWeakRef(o)
 	onChangeWithAlreadyWeak(weakRef) { w, c ->
 	  op(w, c)
 	}
   }
 
-  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, SetChange<E>)->Unit) = run {
+  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, SetChange<E>)->Unit) = run {
 	val listener = WeakSetListener(weakRef) { o: W, c: SetChange<E> ->
 	  op(o, c)
 	}

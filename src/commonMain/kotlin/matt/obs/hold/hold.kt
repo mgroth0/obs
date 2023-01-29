@@ -4,7 +4,7 @@ import matt.collect.itr.filterNotNull
 import matt.lang.delegation.provider
 import matt.lang.go
 import matt.lang.setall.setAll
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.model.code.delegate.SimpleGetter
 import matt.model.op.debug.DebugLogger
 import matt.model.op.prints.Prints
@@ -25,7 +25,7 @@ interface MObsHolder<O: MObservable>: MObservable {
 	subListeners.setAll(observables.map { it.observe(op) })
   }
 
-  override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> = ObsHolderListener().apply {
+  override fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit): MyListenerInter<*> = ObsHolderListener().apply {
 	subListeners.setAll(observables.map { it.observeWeakly(w, op) })
   }
 

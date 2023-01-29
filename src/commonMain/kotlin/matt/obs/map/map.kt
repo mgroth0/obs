@@ -1,7 +1,7 @@
 package matt.obs.map
 
 import matt.lang.ILLEGAL
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.log.warn.warnOnce
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
@@ -23,7 +23,7 @@ import kotlin.collections.MutableMap.MutableEntry
 interface BasicOMap<K, V>: Map<K, V>, MListenable<MapListener<K, V>> {
   override fun observe(op: ()->Unit) = onChange { op() }
 
-  override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> {
+  override fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit): MyListenerInter<*> {
 	TODO("Not yet implemented")
   }
 

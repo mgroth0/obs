@@ -2,7 +2,7 @@ package matt.obs.bindhelp
 
 import matt.lang.go
 import matt.lang.setall.setAll
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.lang.weak.getValue
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.model.op.convert.Converter
@@ -132,17 +132,51 @@ fun <S, T> BindableValue<T>.bindInv(source: ObsVal<out S>, converter: Converter<
 fun <S, T> BindableValue<T>.bindBidirectionalInv(source: Var<S>, converter: Converter<S, T>) =
   bindBidirectional(source, converter.invert())
 
-class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), BindableValue<T> {
 
-  infix fun <TT> Var<TT>.setCorrectlyTo(new: ()->TT) {
-	when (this) {
-	  is BindableProperty<TT> -> setFromBinding(new())
-	  is LazyBindableProp<TT> -> setFromBinding(new)
-	  else                    -> {
-		value = new()
+/*reduce number of listeners, which contributes a huge amount to my object count*/
+fun <T> bindMultipleTargetsTogether(
+  targets: Collection<BindableValue<T>>,
+  source: ObsVal<out T>
+) {
+
+
+  targets.forEach {
+	require(it !is FXBackedPropBase || !it.isFXBound)
+	it.unbind()
+	@Suppress("UNCHECKED_CAST")
+	(it.bindManager as BindableValueHelper<T>).apply {
+	  wProp setCorrectlyTo { source.value }
+	}
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  val listener = source.observe {
+	targets.forEach {
+	  (it.bindManager as BindableValueHelper<T>).apply {
+		wProp setCorrectlyTo { source.value }
 	  }
 	}
   }
+
+  val b = TheBind(source = source, listener = listener)
+  targets.forEach {
+	it.bindManager.theBind = b
+  }
+}
+
+infix fun <TT> Var<TT>.setCorrectlyTo(new: ()->TT) {
+  when (this) {
+	is BindableProperty<TT> -> setFromBinding(new())
+	is LazyBindableProp<TT> -> setFromBinding(new)
+	else                    -> {
+	  value = new()
+	}
+  }
+}
+
+class BindableValueHelper<T>(internal val wProp: Var<T>): BindableImpl(), BindableValue<T> {
+
+
 
   @Synchronized override fun bind(source: ObsVal<out T>) {
 	require(this !is FXBackedPropBase || !isFXBound)
@@ -153,6 +187,7 @@ class BindableValueHelper<T>(private val wProp: Var<T>): BindableImpl(), Bindabl
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
+
 
   @Synchronized override fun bindWeakly(source: ObsVal<out T>) {
 	require(this !is FXBackedPropBase || !isFXBound)
@@ -231,8 +266,8 @@ class TheBind(
   source: MListenable<*>,
   listener: MyListenerInter<*>
 ): ABind {
-  private val source by WeakRef(source)
-  private val listener by WeakRef(listener)
+  private val source by MyWeakRef(source)
+  private val listener by MyWeakRef(listener)
   override fun cut() {
 	listener?.go { l ->
 	  source?.removeListener(l)
@@ -247,10 +282,10 @@ class BiTheBind(
   targetListener: MyListenerInter<*>,
   private val debug: Boolean = false
 ): ABind {
-  private val source by WeakRef(source)
-  private val target by WeakRef(target)
-  private val sourceListener by WeakRef(sourceListener)
-  private val targetListener by WeakRef(targetListener)
+  private val source by MyWeakRef(source)
+  private val target by MyWeakRef(target)
+  private val sourceListener by MyWeakRef(sourceListener)
+  private val targetListener by MyWeakRef(targetListener)
   override fun cut() {
 	if (debug) println("cutting $this")
 	sourceListener?.go {

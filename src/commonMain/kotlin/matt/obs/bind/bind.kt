@@ -2,7 +2,7 @@ package matt.obs.bind
 
 import matt.lang.err
 import matt.lang.setall.setAll
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
 import matt.model.op.debug.DebugLogger
@@ -130,9 +130,9 @@ abstract class MyBindingBaseImpl<T>: MObservableROValBase<T, ValueUpdate<T>, New
   })
 
 
-  final override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): WeakInvalidListener<T> {
+  final override fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit): WeakInvalidListener<T> {
 	@Suppress("UNCHECKED_CAST")
-	w as WeakRef<Any>
+	w as MyWeakRef<Any>
 	val l = WeakInvalidListener<T>(w) {
 	  op()
 	}
@@ -152,7 +152,7 @@ abstract class MyBindingBaseImpl<T>: MObservableROValBase<T, ValueUpdate<T>, New
 
   final override fun <O: MObservable> addDependency(
 	mainDep: O,
-	moreDeps: List<MObservable>,
+	moreDeps: List<MObservable>?,
 	debugLogger: DebugLogger?,
 	/*vararg dependencies: MObservable,*/
 	vararg deepDependencies: (O)->MObservable?
@@ -176,9 +176,9 @@ abstract class MyBindingBaseImpl<T>: MObservableROValBase<T, ValueUpdate<T>, New
   fun removeAllDependencies() = depHelper.removeAllDependencies()
 
   final override fun <O: MObservable> addWeakDependency(
-	weakRef: WeakRef<*>,
+	weakRef: MyWeakRef<*>,
 	mainDep: O,
-	moreDeps: List<MObservable>,
+	moreDeps: List<MObservable>?,
 	debugLogger: DebugLogger?,
 	vararg deepDependencies: (O)->MObservable?
   ) = depHelper.addWeakDependency(
@@ -211,7 +211,7 @@ open class MyBinding<T>(vararg dependencies: MObservable, private val calcArg: (
 open class MyWeakBinding<W: Any, T>(w: W, vararg dependencies: MObservable, private val calcArg: (W)->T):
 	MyBindingBaseImpl<T>() {
 
-  private val weakRef = WeakRef(w)
+  private val weakRef = MyWeakRef(w)
 
   override fun calc(): T {
 	val w = weakRef.deref()

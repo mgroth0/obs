@@ -1,6 +1,6 @@
 package matt.obs.col.col
 
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.obs.col.InternallyBackedOCollection
 import matt.obs.col.change.QueueChange
 import matt.obs.listen.CollectionListener
@@ -19,7 +19,7 @@ abstract class InternallyBackedOQueue<E> internal constructor(): InternallyBacke
   }
 
   override fun <W: Any> onChangeWithAlreadyWeak(
-	weakRef: WeakRef<W>,
+	weakRef: MyWeakRef<W>,
 	op: (W, QueueChange<E>)->Unit
   ): MyListenerInter<*> {
 	TODO("Not yet implemented")

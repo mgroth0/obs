@@ -4,7 +4,8 @@ import matt.lang.function.Produce
 import matt.lang.model.value.ValueWrapper
 import matt.lang.sync.inSync
 import matt.lang.sync.inSyncOrJustRun
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
+import matt.lang.weak.WeakRefInter
 import matt.lang.weak.lazySoft
 import matt.log.warn.warnOnce
 import matt.model.flowlogic.keypass.KeyPass
@@ -78,7 +79,7 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U,
   }
 
   override fun observe(op: ()->Unit): MyListenerInter<*> = onChange { op() }
-  override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> =
+  override fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit): MyListenerInter<*> =
 	onChangeWithAlreadyWeak(w) { _, _ -> op() }
 
   fun onChange(op: (T)->Unit): L
@@ -122,7 +123,7 @@ sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U,
   infix fun <T> notEqNow(value: ObsVal<T>) = this.value != value.value
 
   fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit): MyListenerInter<*>
-  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit): MyListenerInter<*>
+  fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, T)->Unit): MyListenerInter<*>
 
 }
 
@@ -146,11 +147,11 @@ interface MObservableValNewAndOld<T>:
   }
 
   override fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit) = run {
-	val weakRef = WeakRef(o)
+	val weakRef = MyWeakRef(o)
 	onChangeWithAlreadyWeak(weakRef, op)
   }
 
-  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit) = run {
+  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, T)->Unit) = run {
 	val listener = WeakListenerWithOld(weakRef) { o: W, _: T, new: T ->
 	  op(o, new)
 	}.apply {
@@ -159,7 +160,7 @@ interface MObservableValNewAndOld<T>:
 	addListener(listener)
   }
 
-  fun <W: Any> onChangeWithAlreadyWeakAndOld(weakRef: WeakRef<W>, op: (W, o: T, n: T)->Unit) = run {
+  fun <W: Any> onChangeWithAlreadyWeakAndOld(weakRef: WeakRefInter<W>, op: (W, o: T, n: T)->Unit) = run {
 	val listener = WeakListenerWithOld(weakRef) { o: W, old: T, new: T ->
 	  op(o, old, new)
 	}.apply {
@@ -169,7 +170,7 @@ interface MObservableValNewAndOld<T>:
   }
 
   fun <W: Any> onChangeWithWeakAndOld(o: W, op: (W, T, T)->Unit) = run {
-	val weakRef = WeakRef(o)
+	val weakRef = MyWeakRef(o)
 	val listener = WeakListenerWithOld(weakRef) { o: W, old: T, new: T ->
 	  op(o, old, new)
 	}.apply {
@@ -189,11 +190,11 @@ interface MObservableValNewOnly<T>:
   })
 
   override fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit) = run {
-	val weakRef = WeakRef(o)
+	val weakRef = MyWeakRef(o)
 	onChangeWithAlreadyWeak(weakRef, op)
   }
 
-  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, T)->Unit) = run {
+  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, T)->Unit) = run {
 	val listener = WeakChangeListenerWithNewValue(weakRef) { o: W, new: T ->
 	  op(o, new)
 	}.apply {
@@ -299,7 +300,9 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListenerBase<T
   val isNull by lazySoft {
 	eq(null)
   }
+
   val isNotNull by lazySoft {
+//	println("here again?")
 	isNull.not()
   }
 
@@ -409,6 +412,8 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
   override var theBind by bindManager::theBind
   override fun unbind() = bindManager.unbind()
 }
+
+
 
 
 fun Var<Boolean>.toggle() {

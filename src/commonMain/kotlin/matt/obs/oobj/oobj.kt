@@ -1,6 +1,6 @@
 package matt.obs.oobj
 
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.invalid.CustomInvalidations
@@ -14,7 +14,7 @@ interface MObservableObject<T>: MListenable<ContextListener<T>>, CustomInvalidat
   @Suppress("UNCHECKED_CAST") val uncheckedThis get() = this as T
 
   override fun observe(op: ()->Unit) = onChange { op() }
-  override fun observeWeakly(w: WeakRef<*>, op: ()->Unit): MyListenerInter<*> {
+  override fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit): MyListenerInter<*> {
 	TODO("Not yet implemented")
   }
 

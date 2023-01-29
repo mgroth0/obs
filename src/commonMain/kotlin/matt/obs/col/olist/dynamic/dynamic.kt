@@ -2,7 +2,7 @@ package matt.obs.col.olist.dynamic
 
 import matt.collect.list.setAllOneByOneNeverAllowingDuplicates
 import matt.collect.map.lazyMap
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
@@ -98,7 +98,7 @@ class DynamicList<E>(
 
   override fun <O: MObservable> addDependency(
 	mainDep: O,
-	moreDeps: List<MObservable>,
+	moreDeps: List<MObservable>?,
 	debugLogger: DebugLogger?,
 	vararg deepDependencies: (O)->MObservable?
   ) =
@@ -117,9 +117,9 @@ class DynamicList<E>(
   override fun removeDependency(o: MObservable) = dependencyHelper.removeDependency(o)
 
   override fun <O: MObservable> addWeakDependency(
-	weakRef: WeakRef<*>,
+	weakRef: MyWeakRef<*>,
 	mainDep: O,
-	moreDeps: List<MObservable>,
+	moreDeps: List<MObservable>?,
 	debugLogger: DebugLogger?,
 	vararg deepDependencies: (O)->MObservable?
   ) = dependencyHelper.addWeakDependency(

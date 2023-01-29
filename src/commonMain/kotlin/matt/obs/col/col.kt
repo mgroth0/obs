@@ -1,6 +1,6 @@
 package matt.obs.col
 
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
@@ -27,13 +27,13 @@ interface BasicOCollection<E, C: CollectionChange<E, out Collection<E>>, U: Coll
 	MListenable<L> {
   override fun observe(op: ()->Unit) = onChange { op() }
 
-  override fun observeWeakly(w: WeakRef<*>, op: ()->Unit) = onChangeWithAlreadyWeak(w) { _, _ ->
+  override fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit) = onChangeWithAlreadyWeak(w) { _, _ ->
 	op()
   }
 
   fun onChange(listenerName: String? = null, op: (C)->Unit): MyListenerInter<*>
   fun <W: Any> onChangeWithWeak(o: W, op: (W, C)->Unit): MyListenerInter<*>
-  fun <W: Any> onChangeWithAlreadyWeak(weakRef: WeakRef<W>, op: (W, C)->Unit): MyListenerInter<*>
+  fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, C)->Unit): MyListenerInter<*>
 
 
 }

@@ -1,7 +1,7 @@
 package matt.obs
 
 import matt.lang.function.MetaFunction
-import matt.lang.weak.WeakRef
+import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
 import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.prints.Prints
@@ -15,7 +15,7 @@ import matt.obs.listen.update.Update
 @ObservableDSL interface MObservable {
   var nam: String?
   fun observe(op: ()->Unit): MyListenerInter<*>
-  fun observeWeakly(w: WeakRef<*>, op: ()-> Unit): MyListenerInter<*>
+  fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit): MyListenerInter<*>
   fun removeListener(listener: MyListenerInter<*>)
 
   /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
@@ -41,6 +41,8 @@ import matt.obs.listen.update.Update
   fun addListener(listener: L): L
 }
 
+expect fun maybeRemoveByRefQueue(wl: MyWeakListener<*>): Boolean
+
 abstract class MObservableImpl<U: Update, L: MyListenerInter<in U>> internal constructor(): MListenable<L> {
 
   override var nam: String? = null
@@ -50,6 +52,12 @@ abstract class MObservableImpl<U: Update, L: MyListenerInter<in U>> internal con
   )
 
   private val listeners = mutableListOf<L>()
+
+  private val weakListeners = run {
+
+
+  }
+
   private val synchronizer by lazy { AntiDeadlockSynchronizer() }
 
 
@@ -58,7 +66,13 @@ abstract class MObservableImpl<U: Update, L: MyListenerInter<in U>> internal con
 	  listeners += listener
 	  listener as MyListener<*>
 	  require(listener.currentObservable == null)
-	  listener.currentObservable = WeakRef(this)
+	  listener.currentObservable = MyWeakRef(this)
+	  if (listener is MyWeakListener<*>) {
+		if (!maybeRemoveByRefQueue(listener)) {
+		  listeners.remove(listener)
+		  (listener as? MyListener<*>)?.currentObservable = null
+		}
+	  }
 	}
 	return listener
   }
