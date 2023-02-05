@@ -46,6 +46,7 @@ sealed class BindableImpl: Bindable {
 interface BindableList<E>: Bindable {
   fun bind(source: ImmutableObsList<E>) = bind(source) { it }
   fun <S> bind(source: ImmutableObsList<S>, converter: (S)->E)
+  fun <S> bindWeakly(source: ImmutableObsList<S>, converter: (S)->E)
   fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>)
 }
 
@@ -67,6 +68,19 @@ class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl()
 	  (target as? IBObsCol)?.bindWritePass?.hold()
 	  target.mirror(it, converter)
 	  (target as? IBObsCol)?.bindWritePass?.release()
+	}
+	theBind = TheBind(source = source, listener = listener)
+  }
+
+  @Synchronized override fun <S> bindWeakly(source: ImmutableObsList<S>, converter: (S)->E) {
+	unbind()
+	(target as? IBObsCol)?.bindWritePass?.hold()
+	target.setAll(source.map(converter))
+	(target as? IBObsCol)?.bindWritePass?.release()
+	val listener = source.onChangeWithWeak(target) { targ, new ->
+	  (targ as? IBObsCol)?.bindWritePass?.hold()
+	  targ.mirror(new, converter)
+	  (targ as? IBObsCol)?.bindWritePass?.release()
 	}
 	theBind = TheBind(source = source, listener = listener)
   }
