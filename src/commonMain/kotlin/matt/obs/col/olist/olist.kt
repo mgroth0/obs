@@ -145,6 +145,7 @@ abstract class BaseBasicWritableOList<E>: InternallyBackedOList<E>(),
 
   val bindableListHelper by lazy { BindableListImpl(this) }
   override fun <S> bind(source: ImmutableObsList<S>, converter: (S)->E) = bindableListHelper.bind(source, converter)
+  override fun <S> bindWeakly(source: ImmutableObsList<S>, converter: (S)->E) = bindableListHelper.bindWeakly(source, converter)
   override fun <T> bind(source: ObsVal<T>, converter: (T)->List<E>) = bindableListHelper.bind(source, converter)
   final override val bindManager get() = bindableListHelper.bindManager
   override var theBind
