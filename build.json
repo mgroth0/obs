@@ -14,9 +14,9 @@
 	  "path" : ":k:collect"
 	},
 	{
-	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
+	  "type" : "matt.mstruct.bj.BuildJsonLibDependency",
 	  "cfg" :  "commonMainImplementation",
-	  "path" : ":k:json"
+	  "key" :  "kotlinx-serialization-json"
 	},
 	{
 	  "type" : "matt.mstruct.bj.BuildJsonProjectDependency",
