@@ -5,8 +5,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
-import matt.json.custom.intOrNull
-import matt.json.custom.string
+import kotlinx.serialization.json.intOrNull
 import matt.lang.NOT_IMPLEMENTED
 import matt.obs.prop.BindableProperty
 
@@ -40,7 +39,7 @@ fun <T> BindableProperty<T>.setFromJson(j: JsonElement) {
   } else if (j is JsonPrimitive) {
 	if (j.isString) {
 	  @Suppress("UNCHECKED_CAST")
-	  (this as BindableProperty<String?>).value = j.string
+	  (this as BindableProperty<String?>).value = j.content
 	} else {
 	  val int = j.intOrNull
 	  if (int!= null) {
