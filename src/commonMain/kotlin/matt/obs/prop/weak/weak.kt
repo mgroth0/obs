@@ -26,7 +26,7 @@ class WeakPropWrapper<T>(p: BindableProperty<T>): MWritableValNewAndOld<T>,
 	prop.bindWeakly(source)
   }
 
-  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean) {
+  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean, weak: Boolean) {
 	TODO("Not yet implemented")
   }
 

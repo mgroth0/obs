@@ -42,11 +42,14 @@ fun <T> BindableValue<T>.smartBind(property: ValProp<T>, readonly: Boolean) {
   if (readonly || (property !is Var<*>)) bind(property) else bindBidirectional(property as VarProp)
 }
 
-fun <T> BindableValue<T>.smartBind(property: MObservableVal<T, *, *>, readonly: Boolean) {
+fun <T> BindableValue<T>.smartBind(property: MObservableVal<T, *, *>, readonly: Boolean, weak: Boolean = false) {
   /*why did I have that requirement???*/
   /*require(property is ReadOnlyBindableProperty)*/
-  if (readonly || (property !is Var<T>)) bind(property) else
-	bindBidirectional(property)
+  if (readonly || (property !is Var<T>)) {
+	if (weak) {
+	  bindWeakly(property)
+	} else bind(property)
+  } else bindBidirectional(property, weak = weak)
 }
 
 fun <T, E> ObsVal<T>.boundList(propGetter: (T)->Iterable<E>): MutableObsList<E> =
@@ -190,7 +193,6 @@ abstract class MyBindingBaseImpl<T>: MObservableROValBase<T, ValueUpdate<T>, New
   )
 
 
-
 }
 
 open class MyBinding<T>(vararg dependencies: MObservable, private val calcArg: ()->T): MyBindingBaseImpl<T>() {
@@ -275,8 +277,8 @@ open class LazyBindableProp<T>(
   final override val bindManager by lazy { BindableValueHelper(this) }
   override fun bind(source: ObsVal<out T>) = bindManager.bind(source)
   override fun bindWeakly(source: ObsVal<out T>) = bindManager.bindWeakly(source)
-  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean) =
-	bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug)
+  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean, weak: Boolean) =
+	bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug,weak=weak)
 
   override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
 	bindManager.bindBidirectional(source, converter)

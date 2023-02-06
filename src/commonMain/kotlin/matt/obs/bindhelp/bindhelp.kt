@@ -132,7 +132,14 @@ class BindableSetImpl<E>(private val target: MutableObsSet<E>): BindableImpl(), 
 interface BindableValue<T>: Bindable {
   fun bind(source: ObsVal<out T>)
   fun bindWeakly(source: ObsVal<out T>)
-  fun bindBidirectional(source: Var<T>, checkEquality: Boolean = false, clean: Boolean = true, debug: Boolean = false)
+  fun bindBidirectional(
+	source: Var<T>,
+	checkEquality: Boolean = false,
+	clean: Boolean = true,
+	debug: Boolean = false,
+	weak: Boolean = false
+  )
+
   fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>)
 }
 
@@ -191,7 +198,6 @@ infix fun <TT> Var<TT>.setCorrectlyTo(new: ()->TT) {
 class BindableValueHelper<T>(internal val wProp: Var<T>): BindableImpl(), BindableValue<T> {
 
 
-
   @Synchronized override fun bind(source: ObsVal<out T>) {
 	require(this !is FXBackedPropBase || !isFXBound)
 	unbind()
@@ -213,7 +219,13 @@ class BindableValueHelper<T>(internal val wProp: Var<T>): BindableImpl(), Bindab
 	theBind = TheBind(source = source, listener = listener)
   }
 
-  @Synchronized override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean) {
+  @Synchronized override fun bindBidirectional(
+	source: Var<T>,
+	checkEquality: Boolean,
+	clean: Boolean,
+	debug: Boolean,
+	weak: Boolean
+  ) {
 	if (clean) {
 	  unbind()
 	  source.unbind()
@@ -223,23 +235,32 @@ class BindableValueHelper<T>(internal val wProp: Var<T>): BindableImpl(), Bindab
 	}
 
 	val rBlocker = RecursionBlocker()
-	val sourceListener = source.observe {
-	  if (!checkEquality || source.value != wProp.value) {
-		rBlocker.with {
-		  wProp setCorrectlyTo { source.value }
+
+	fun createListener(theSource: Var<T>, theTarget: Var<T>): MyListenerInter<*> {
+	  return if (weak) {
+		theSource.onChangeWithWeak(theTarget) { deRefedTarget, newValue ->
+		  if (!checkEquality || newValue != deRefedTarget.value) {
+			rBlocker.with {
+			  deRefedTarget setCorrectlyTo { newValue }
+			}
+		  }
+		}
+	  } else {
+		theSource.onChange { newValue ->
+		  if (!checkEquality || newValue != theTarget.value) {
+			rBlocker.with {
+			  theTarget setCorrectlyTo { newValue }
+			}
+		  }
 		}
 	  }
-
 	}
 
 
-	val targetListener = wProp.observe {
-	  if (!checkEquality || source.value != wProp.value) {
-		rBlocker.with {
-		  source setCorrectlyTo { wProp.value }
-		}
-	  }
-	}
+	val sourceListener = createListener(source, wProp)
+	val targetListener = createListener(wProp, source)
+
+
 
 	theBind =
 	  BiTheBind(

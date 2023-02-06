@@ -302,7 +302,7 @@ abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListenerBase<T
   }
 
   val isNotNull by lazySoft {
-//	println("here again?")
+	//	println("here again?")
 	isNull.not()
   }
 
@@ -403,8 +403,14 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
 	}
   }
 
-  override fun bindBidirectional(source: Var<T>, checkEquality: Boolean, clean: Boolean, debug: Boolean) =
-	bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug)
+  override fun bindBidirectional(
+	source: Var<T>,
+	checkEquality: Boolean,
+	clean: Boolean,
+	debug: Boolean,
+	weak: Boolean
+  ) =
+	bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug, weak = weak)
 
   override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
 	bindManager.bindBidirectional(source, converter)
@@ -412,8 +418,6 @@ open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
   override var theBind by bindManager::theBind
   override fun unbind() = bindManager.unbind()
 }
-
-
 
 
 fun Var<Boolean>.toggle() {
