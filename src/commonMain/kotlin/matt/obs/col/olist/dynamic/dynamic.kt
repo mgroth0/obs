@@ -2,6 +2,7 @@ package matt.obs.col.olist.dynamic
 
 import matt.collect.list.setAllOneByOneNeverAllowingDuplicates
 import matt.collect.map.lazyMap
+import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
@@ -13,7 +14,6 @@ import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ObsVal
-import matt.reflect.tostring.toStringBuilder
 
 interface CalculatedList<E>: ImmutableObsList<E> {
   fun refresh()
@@ -36,7 +36,7 @@ class DynamicList<E>(
 ): ImmutableObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies {
 
 
-  override fun toString() = toStringBuilder("name" to nam)
+  override fun toString() = mehToStringBuilder("name" to nam)
 
   override val predicate = BindableProperty(filter)
   override val comparator = BindableProperty(comparator)

@@ -1,8 +1,7 @@
 package matt.obs.fx
 
 import matt.lang.go
-import matt.reflect.classForName
-import matt.reflect.isSubTypeOf
+import matt.lang.nametoclass.classForName
 
 internal val JAVAFX_OBSERVABLE_CLASS by lazy {
   classForName("javafx.beans.Observable") ?: run {
@@ -15,7 +14,10 @@ internal val JAVAFX_OBSERVABLE_CLASS by lazy {
 
 internal fun <E> Iterable<E>.requireNotObservable() = apply {
   JAVAFX_OBSERVABLE_CLASS?.go {
-	require(!this::class.isSubTypeOf(it)) {
+	require(
+	  !it.isInstance(it)
+	  /*!this::class.isSubTypeOf(it)*/
+	) {
 	  "this is the wrong way to make a BasicObservableList from an ObservableList if you want them to be synced"
 	}
   }

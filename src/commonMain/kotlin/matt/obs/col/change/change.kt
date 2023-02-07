@@ -3,6 +3,7 @@ package matt.obs.col.change
 import matt.collect.set.ordered.OrderedSet
 import matt.collect.set.ordered.orderedSetOf
 import matt.collect.set.ordered.toOrderedSet
+import matt.lang.tostring.mehToStringBuilder
 import matt.log.taball
 import matt.model.data.index.AdditionIndex
 import matt.model.data.index.All
@@ -14,7 +15,6 @@ import matt.model.data.index.RemovalIndex
 import matt.model.data.index.withIndex
 import matt.obs.col.change.atomic.compile
 import matt.prim.str.elementsToString
-import matt.reflect.tostring.toStringBuilder
 
 
 interface CollectionChange<E, COL: Collection<E>> {
@@ -57,7 +57,7 @@ class AtomicListChange<E>(
 
 
   override fun toString(): String {
-	return toStringBuilder(mapOf("changes" to changes.elementsToString()))
+	return mehToStringBuilder(mapOf("changes" to changes.elementsToString()))
   }
 }
 
@@ -93,13 +93,13 @@ class AddIntoSet<E>(override val collection: Set<E>, added: E): SetAddition<E>(c
   override fun <T> convert(collection: Collection<T>, convert: (E)->T): AddIntoSet<T> =
 	AddIntoSet(collection as Set<T>, convert(added))
 
-  override fun toString() = toStringBuilder("added" to added)
+  override fun toString() = mehToStringBuilder("added" to added)
   override val addedElements = listOf(added)
 }
 
 class AddAtEnd<E>(override val collection: List<E>, added: E): ListAddition<E>(collection, added) {
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) = AddAtEnd(collection as List<T>, convert(added))
-  override fun toString() = toStringBuilder("added" to added)
+  override fun toString() = mehToStringBuilder("added" to added)
   override val addedElementsIndexed get() = orderedSetOf(added withIndex End)
   override val lowestChangedIndex: Int = collection.size - 1
 }
@@ -109,7 +109,7 @@ class AddAt<E>(override val collection: List<E>, added: E, val index: Int): List
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	AddAt(collection as List<T>, convert(added), index = index)
 
-  override fun toString() = toStringBuilder("added" to added, "index" to index)
+  override fun toString() = mehToStringBuilder("added" to added, "index" to index)
 
   override val addedElementsIndexed get() = orderedSetOf(added withIndex index)
   override val lowestChangedIndex: Int = index
@@ -126,7 +126,7 @@ class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>): MultiAdd
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	MultiAddIntoSet(collection as Set<T>, added.map(convert))
 
-  override fun toString() = toStringBuilder("added" to added)
+  override fun toString() = mehToStringBuilder("added" to added)
 
   override val addedElements get() = added.toList()
 }
@@ -138,7 +138,7 @@ class MultiAddAtEnd<E>(collection: List<E>, val added: Collection<E>): MultiAddi
 	MultiAddAtEnd(collection as List<T>, added.map(convert))
 
 
-  override fun toString() = toStringBuilder("added" to added)
+  override fun toString() = mehToStringBuilder("added" to added)
 
   override val addedElementsIndexed get() = added.map { it withIndex End }.toOrderedSet()
 
@@ -158,7 +158,7 @@ class MultiAddAt<E>(collection: List<E>, val added: Collection<E>, val index: In
   override val lowestChangedIndex = index
 
   override fun toString(): String {
-	return toStringBuilder(mapOf("index" to index))
+	return mehToStringBuilder(mapOf("index" to index))
   }
 
   val isRange by lazy {
@@ -219,7 +219,7 @@ class RemoveAt<E>(collection: List<E>, removed: E, val index: Int): ListRemoval<
   override val lowestChangedIndex = index
 
   override fun toString(): String {
-	return toStringBuilder(mapOf("index" to index, "removed" to removed))
+	return mehToStringBuilder(mapOf("index" to index, "removed" to removed))
   }
 
 } //class RemoveFirst<E>(collection: Collection<E>, removed: E): matt.obs.map.change.Removal<E>(collection, removed)
@@ -247,7 +247,7 @@ class RemoveElementsFromSet<E>(collection: Set<E>, removed: Collection<E>): Mult
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	RemoveElementsFromSet(collection as Set<T>, removed.map(convert))
 
-  override fun toString() = toStringBuilder(
+  override fun toString() = mehToStringBuilder(
 	mapOf(
 	  "removed" to removed.elementsToString()
 	)
@@ -264,7 +264,7 @@ class RemoveElements<E>(collection: List<E>, removed: Collection<E>, override va
   override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
 	RemoveElements(collection as List<T>, removed.map(convert), lowestChangedIndex = lowestChangedIndex)
 
-  override fun toString() = toStringBuilder(
+  override fun toString() = mehToStringBuilder(
 	mapOf(
 	  "removed" to removed.elementsToString()
 	)
@@ -342,7 +342,7 @@ class ReplaceAt<E>(collection: List<E>, removed: E, added: E, val index: Int): R
   override val lowestChangedIndex: Int
 	get() = index
 
-  override fun toString() = toStringBuilder(
+  override fun toString() = mehToStringBuilder(
 	mapOf(
 	  "removed" to removed, "added" to added, "index" to index
 	)

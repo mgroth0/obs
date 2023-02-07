@@ -30,11 +30,6 @@
 	},
 	{
 	  "type" : "Project",
-	  "cfg" :  "commonMainImplementation",
-	  "path" : ":k:reflect"
-	},
-	{
-	  "type" : "Project",
 	  "cfg" :  "jvmTestImplementation",
 	  "path" : ":k:test"
 	}

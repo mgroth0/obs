@@ -1,6 +1,7 @@
 package matt.obs
 
 import matt.lang.function.MetaFunction
+import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
 import matt.model.op.prints.Prints
@@ -8,7 +9,6 @@ import matt.obs.listen.MyListener
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.MyWeakListener
 import matt.obs.listen.update.Update
-import matt.reflect.tostring.toStringBuilder
 
 @DslMarker annotation class ObservableDSL
 
@@ -47,7 +47,7 @@ abstract class MObservableImpl<U: Update, L: MyListenerInter<in U>> internal con
 
   override var nam: String? = null
 
-  override fun toString() = toStringBuilder(
+  override fun toString() = mehToStringBuilder(
 	"name" to nam, "#listeners" to listeners.size
   )
 

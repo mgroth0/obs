@@ -16,7 +16,6 @@ import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.serializer
 import matt.lang.err
 import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 open class TypedObsHolderSerializer<T: TypedObservableHolder>(
@@ -38,8 +37,12 @@ open class TypedObsHolderSerializer<T: TypedObservableHolder>(
   }
 */
 
+  @Suppress("UNCHECKED_CAST")
+  private fun newInstance(): T = cls.java.constructors[0].newInstance() as T
+
   private val exampleInstance by lazy {
-	cls.createInstance()
+	newInstance()
+	/*cls.createInstance()*/
   }
 
   override val descriptor: SerialDescriptor by lazy {
@@ -55,7 +58,7 @@ open class TypedObsHolderSerializer<T: TypedObservableHolder>(
   }
 
   override fun deserialize(decoder: Decoder): T {
-	return cls.createInstance().apply {
+	return newInstance().apply {
 
 	  decoder.decodeStructure(descriptor) {
 		val observables = namedObservables()

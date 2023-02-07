@@ -3,6 +3,7 @@ package matt.obs.listen
 import matt.lang.NEVER
 import matt.lang.ifTrue
 import matt.lang.model.value.Value
+import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.lang.weak.WeakRefInter
 import matt.model.op.prints.Prints
@@ -23,7 +24,6 @@ import matt.obs.listen.update.ValueUpdateWithWeakObj
 import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
 import matt.obs.prop.ObsVal
-import matt.reflect.tostring.toStringBuilder
 import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ListenerDSL
@@ -43,7 +43,7 @@ interface MyListenerInter<U: Update> {
 
   override var name: String? = null
 
-  override fun toString() = toStringBuilder("name" to name)
+  override fun toString() = mehToStringBuilder("name" to name)
 
   var removeCondition: (()->Boolean)? = null
   override var removeAfterInvocation: Boolean = false
