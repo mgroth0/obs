@@ -32,6 +32,11 @@
 	  "type" : "Project",
 	  "cfg" :  "jvmTestImplementation",
 	  "path" : ":k:test"
+	},
+	{
+	  "type" : "Project",
+	  "cfg" :  "jvmTestImplementation",
+	  "path" : ":k:reflect"
 	}
   ]
 }
