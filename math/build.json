@@ -2,17 +2,17 @@
     "type":  "matt.mstruct.bj.MultiPlatformModule", "jvm": {},
     "dependencies": [
         {
-            "type": "matt.mstruct.bj.BuildJsonLibDependency",
+            "type": "Lib",
             "cfg": "commonMainApi",
             "key": "kt-stdlib"
         },
         {
-            "type": "matt.mstruct.bj.BuildJsonProjectDependency",
+            "type": "Project",
             "cfg": "commonMainApi",
             "path": ":k:obs"
         },
         {
-            "type": "matt.mstruct.bj.BuildJsonProjectDependency",
+            "type": "Project",
             "cfg": "commonMainApi",
             "path": ":k:math"
         }
