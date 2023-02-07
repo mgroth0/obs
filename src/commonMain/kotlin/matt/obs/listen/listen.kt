@@ -5,7 +5,6 @@ import matt.lang.ifTrue
 import matt.lang.model.value.Value
 import matt.lang.weak.MyWeakRef
 import matt.lang.weak.WeakRefInter
-import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.prints.Prints
 import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
@@ -24,6 +23,7 @@ import matt.obs.listen.update.ValueUpdateWithWeakObj
 import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
 import matt.obs.prop.ObsVal
+import matt.reflect.tostring.toStringBuilder
 import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ListenerDSL

@@ -12,9 +12,9 @@ import matt.model.data.index.Index
 import matt.model.data.index.MyIndexedValue
 import matt.model.data.index.RemovalIndex
 import matt.model.data.index.withIndex
-import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.obs.col.change.atomic.compile
 import matt.prim.str.elementsToString
+import matt.reflect.tostring.toStringBuilder
 
 
 interface CollectionChange<E, COL: Collection<E>> {

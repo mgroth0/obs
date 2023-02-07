@@ -3,12 +3,12 @@ package matt.obs
 import matt.lang.function.MetaFunction
 import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
-import matt.model.obj.tostringbuilder.toStringBuilder
 import matt.model.op.prints.Prints
 import matt.obs.listen.MyListener
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.MyWeakListener
 import matt.obs.listen.update.Update
+import matt.reflect.tostring.toStringBuilder
 
 @DslMarker annotation class ObservableDSL
 
