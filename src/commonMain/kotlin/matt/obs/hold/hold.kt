@@ -105,6 +105,12 @@ open class ObservableHolderImpl: ObservableHolderImplBase<MObservable>() {
 
 
 open class TypedObservableHolder: ObservableHolderImplBase<TypedBindableProperty<*>>() {
+
+  var wasResetBecauseSerializedDataWasWrongClassVersion = false
+
+  private val sectionsM = mutableListOf<TypedObservableHolder>()
+  val sections: List<TypedObservableHolder> = sectionsM
+
   inline fun <reified T> registeredProp(defaultValue: T, noinline onChange: (()->Unit)? = null) = provider {
 	val fx = TypedBindableProperty(T::class, nullable = null is T, value = defaultValue)
 	onChange?.go { listener ->
@@ -114,6 +120,14 @@ open class TypedObservableHolder: ObservableHolderImplBase<TypedBindableProperty
 	postRegister(fx)
 	SimpleGetter(fx)
   }
+
+
+  fun <T: TypedObservableHolder> registeredSection(obsHolder: T) = provider { sectionName ->
+	sectionsM += obsHolder
+	_observables.putAll(obsHolder.namedObservables().mapKeys { sectionName + "." + it.key })
+	SimpleGetter(obsHolder)
+  }
+
 
   open fun postRegister(prop: ObsVal<*>) = Unit
 }

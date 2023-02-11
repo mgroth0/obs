@@ -61,23 +61,25 @@ inline fun <reified T> typedBindableProperty(value: T) = TypedBindableProperty(T
 @OptIn(InternalSerializationApi::class)
 @Serializable(with = TypedBindablePropertySerializer::class)
 class TypedBindableProperty<T>(val cls: KClass<*>, val nullable: Boolean, value: T): BindableProperty<T>(value) {
-  fun encode(encoder: CompositeEncoder, index: Int) {
-	val ser = cls.serializer()
+  fun encode(
+	encoder: CompositeEncoder,
+	descriptor: SerialDescriptor,
+	index: Int
+  ) {
 	@Suppress("UNCHECKED_CAST")
-	encoder.encodeSerializableElement<T>(
-	  descriptor = ser.descriptor,
+	encoder.encodeSerializableElement(
+	  descriptor = descriptor,
 	  index = index,
-	  serializer = ser as SerializationStrategy<T>,
+	  serializer = cls.serializer() as SerializationStrategy<T>,
 	  value = value
 	)
   }
 
-  fun decode(decoder: CompositeDecoder, index: Int) {
-	val ser = cls.serializer()
-	@Suppress("UNCHECKED_CAST") val loadedValue = decoder.decodeSerializableElement<T>(
-	  descriptor = ser.descriptor,
+  fun decode(decoder: CompositeDecoder, descriptor: SerialDescriptor, index: Int) {
+	@Suppress("UNCHECKED_CAST") val loadedValue = decoder.decodeSerializableElement(
+	  descriptor = descriptor,
 	  index = index,
-	  deserializer = ser as DeserializationStrategy<T>
+	  deserializer = cls.serializer() as DeserializationStrategy<T>
 	)
 	value = loadedValue
   }
