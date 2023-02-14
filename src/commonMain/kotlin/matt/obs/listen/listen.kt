@@ -1,6 +1,7 @@
 package matt.obs.listen
 
 import matt.lang.NEVER
+import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.ifTrue
 import matt.lang.model.value.Value
 import matt.lang.tostring.mehToStringBuilder
@@ -24,7 +25,6 @@ import matt.obs.listen.update.ValueUpdateWithWeakObj
 import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
 import matt.obs.prop.ObsVal
-import kotlin.jvm.Synchronized
 
 @DslMarker annotation class ListenerDSL
 
@@ -167,7 +167,7 @@ class ChangeListener<T>(private val invoke: ChangeListener<T>.(new: T)->Unit):
 	return false
   }
 
-  @Synchronized
+  @OnlySynchronizedOnJvm
   override fun subNotify(update: ValueUpdate<T>, debugger: Prints?) = invoke(update.new)
 }
 

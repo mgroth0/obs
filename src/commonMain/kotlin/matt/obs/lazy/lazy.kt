@@ -1,9 +1,9 @@
 package matt.obs.lazy
 
 import kotlinx.datetime.Clock
+import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.go
 import matt.lang.sync.inSync
-import kotlin.jvm.Synchronized
 
 private object EMPTY
 
@@ -12,7 +12,7 @@ class DependentValue<V>(private var op: ()->V) {
   var stopwatch: String? = null
 
 
-  @Synchronized fun setOp(op: ()->V) {
+  @OnlySynchronizedOnJvm fun setOp(op: ()->V) {
 	this.op = op
 	markInvalid()
   }
@@ -27,7 +27,7 @@ class DependentValue<V>(private var op: ()->V) {
 
   private val invalidationDuringGetMonitor = object {}
   private var justMarkedInvalid = false
-  @Synchronized @Suppress("UNCHECKED_CAST") fun get(): V {
+  @OnlySynchronizedOnJvm @Suppress("UNCHECKED_CAST") fun get(): V {
 	val momentValid = inSync(invalidationDuringGetMonitor) {
 	  justMarkedInvalid = false
 	  valid

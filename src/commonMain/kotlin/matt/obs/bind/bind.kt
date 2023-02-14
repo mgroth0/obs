@@ -1,5 +1,6 @@
 package matt.obs.bind
 
+import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.err
 import matt.lang.setall.setAll
 import matt.lang.weak.MyWeakRef
@@ -30,7 +31,6 @@ import matt.obs.prop.ValProp
 import matt.obs.prop.Var
 import matt.obs.prop.VarProp
 import matt.obs.prop.WritableMObservableVal
-import kotlin.jvm.Synchronized
 
 
 infix fun <T: Any> ObsVal<T?>.coalesceNull(backup: ObsVal<T?>) = MyBinding(this, backup) {
@@ -248,7 +248,7 @@ open class LazyBindableProp<T>(
 
   private val bindWritePass = KeyPass()
   override var value: T
-	@Synchronized get() = cVal.get()
+	@OnlySynchronizedOnJvm get() = cVal.get()
 	set(value) {
 	  require(!this.isBound || bindWritePass.isHeld)
 	  cVal.setOp { value }

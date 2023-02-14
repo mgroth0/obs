@@ -1,5 +1,6 @@
 package matt.obs.bindhelp
 
+import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.go
 import matt.lang.setall.setAll
 import matt.lang.weak.MyWeakRef
@@ -20,7 +21,6 @@ import matt.obs.prop.BindableProperty
 import matt.obs.prop.FXBackedPropBase
 import matt.obs.prop.ObsVal
 import matt.obs.prop.Var
-import kotlin.jvm.Synchronized
 
 sealed interface Bindable {
   val bindManager: Bindable
@@ -34,7 +34,7 @@ sealed interface Bindable {
 sealed class BindableImpl: Bindable {
   override val bindManager get() = this
   override var theBind: ABind? = null
-  @Synchronized override fun unbind() {
+  @OnlySynchronizedOnJvm override fun unbind() {
 	require(this !is FXBackedPropBase || !isFXBound)
 	theBind?.cut()
 	theBind = null
@@ -59,7 +59,7 @@ interface BindableSet<E>: Bindable {
 /*matt.log.todo.todo: lazily evaluated bound lists!*/
 class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl(), BindableList<E> {
 
-  @Synchronized override fun <S> bind(source: ImmutableObsList<S>, converter: (S)->E) {
+  @OnlySynchronizedOnJvm override fun <S> bind(source: ImmutableObsList<S>, converter: (S)->E) {
 	unbind()
 	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(source.map(converter))
@@ -72,7 +72,7 @@ class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl()
 	theBind = TheBind(source = source, listener = listener)
   }
 
-  @Synchronized override fun <S> bindWeakly(source: ImmutableObsList<S>, converter: (S)->E) {
+  @OnlySynchronizedOnJvm override fun <S> bindWeakly(source: ImmutableObsList<S>, converter: (S)->E) {
 	unbind()
 	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(source.map(converter))
@@ -85,7 +85,7 @@ class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl()
 	theBind = TheBind(source = source, listener = listener)
   }
 
-  @Synchronized override fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>) {
+  @OnlySynchronizedOnJvm override fun <S> bind(source: ObsVal<S>, converter: (S)->List<E>) {
 	unbind()
 	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(converter(source.value))
@@ -102,7 +102,7 @@ class BindableListImpl<E>(private val target: MutableObsList<E>): BindableImpl()
 /*matt.log.todo.todo: lazily evaluated bound lists!*/
 class BindableSetImpl<E>(private val target: MutableObsSet<E>): BindableImpl(), BindableSet<E> {
 
-  @Synchronized override fun <S> bind(source: ObsSet<S>, converter: (S)->E) {
+  @OnlySynchronizedOnJvm override fun <S> bind(source: ObsSet<S>, converter: (S)->E) {
 	unbind()
 	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(source.map(converter))
@@ -115,7 +115,7 @@ class BindableSetImpl<E>(private val target: MutableObsSet<E>): BindableImpl(), 
 	theBind = TheBind(source = source, listener = listener)
   }
 
-  @Synchronized override fun <S> bind(source: ObsVal<S>, converter: (S)->Set<E>) {
+  @OnlySynchronizedOnJvm override fun <S> bind(source: ObsVal<S>, converter: (S)->Set<E>) {
 	unbind()
 	(target as? IBObsCol)?.bindWritePass?.hold()
 	target.setAll(converter(source.value))
@@ -198,7 +198,7 @@ infix fun <TT> Var<TT>.setCorrectlyTo(new: ()->TT) {
 class BindableValueHelper<T>(internal val wProp: Var<T>): BindableImpl(), BindableValue<T> {
 
 
-  @Synchronized override fun bind(source: ObsVal<out T>) {
+  @OnlySynchronizedOnJvm override fun bind(source: ObsVal<out T>) {
 	require(this !is FXBackedPropBase || !isFXBound)
 	unbind()
 	wProp setCorrectlyTo { source.value }
@@ -209,7 +209,7 @@ class BindableValueHelper<T>(internal val wProp: Var<T>): BindableImpl(), Bindab
   }
 
 
-  @Synchronized override fun bindWeakly(source: ObsVal<out T>) {
+  @OnlySynchronizedOnJvm override fun bindWeakly(source: ObsVal<out T>) {
 	require(this !is FXBackedPropBase || !isFXBound)
 	unbind()
 	wProp setCorrectlyTo { source.value }
@@ -219,7 +219,7 @@ class BindableValueHelper<T>(internal val wProp: Var<T>): BindableImpl(), Bindab
 	theBind = TheBind(source = source, listener = listener)
   }
 
-  @Synchronized override fun bindBidirectional(
+  @OnlySynchronizedOnJvm override fun bindBidirectional(
 	source: Var<T>,
 	checkEquality: Boolean,
 	clean: Boolean,
@@ -269,7 +269,7 @@ class BindableValueHelper<T>(internal val wProp: Var<T>): BindableImpl(), Bindab
 	source.theBind = theBind
   }
 
-  @Synchronized override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) {
+  @OnlySynchronizedOnJvm override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) {
 	unbind()
 	source.unbind()
 	wProp setCorrectlyTo { converter.convertToA(source.value) }

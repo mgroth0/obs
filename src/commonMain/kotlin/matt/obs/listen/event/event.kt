@@ -1,5 +1,6 @@
 package matt.obs.listen.event
 
+import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.function.Op
 import matt.lang.go
 import matt.model.op.prints.Prints
@@ -7,7 +8,6 @@ import matt.obs.MObservable
 import matt.obs.listen.MyListener
 import matt.obs.listen.update.Event
 import matt.obs.subscribe.Channel
-import kotlin.jvm.Synchronized
 
 abstract class MyEventListener<E: Event>: MyListener<E>()
 
@@ -38,7 +38,7 @@ class Subscription<E: Event>(
   private val notifications = mutableListOf<E>()
   fun unsubscribe() = removeListener()
 
-  @Synchronized fun whenItHasAtLeastOneNotification(op: Op) {
+  @OnlySynchronizedOnJvm fun whenItHasAtLeastOneNotification(op: Op) {
 	if (notifications.size >= 1) op()
 	else channel.addListener(BasicEventListener {
 	  op()

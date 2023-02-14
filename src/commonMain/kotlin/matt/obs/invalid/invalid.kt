@@ -1,6 +1,7 @@
 package matt.obs.invalid
 
 import matt.collect.list.single.SingleElementList
+import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.function.Produce
 import matt.lang.weak.MyWeakRef
 import matt.model.op.debug.DebugLogger
@@ -8,7 +9,6 @@ import matt.obs.MObservable
 import matt.obs.listen.Listener
 import matt.obs.listen.MyListenerInter
 import matt.obs.prop.ObsVal
-import kotlin.jvm.Synchronized
 
 interface CustomInvalidations: MObservable {
   fun markInvalid()
@@ -58,7 +58,7 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 
   private val deps = mutableListOf<DepListenerSet>()
 
-  @Synchronized override fun <O: MObservable> addWeakDependency(
+  @OnlySynchronizedOnJvm override fun <O: MObservable> addWeakDependency(
 	weakRef: MyWeakRef<*>,
 	mainDep: O,
 	moreDeps: List<MObservable>?,
@@ -83,7 +83,7 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 	)
   }
 
-  @Synchronized override fun <O: MObservable> addDependency(
+  @OnlySynchronizedOnJvm override fun <O: MObservable> addDependency(
 	mainDep: O,
 	moreDeps: List<MObservable>?,
 	debugLogger: DebugLogger?,
@@ -106,7 +106,7 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 	)
   }
 
-  @Synchronized override fun <O: MObservable> addDependencyWithDeepList(
+  @OnlySynchronizedOnJvm override fun <O: MObservable> addDependencyWithDeepList(
 	o: O,
 	deepDependencies: (O)->List<MObservable>
   ) {
@@ -127,7 +127,7 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
   }
 
 
-  @Synchronized override fun <O: ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(
+  @OnlySynchronizedOnJvm override fun <O: ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(
 	o: O,
 	vararg deepDependencies: (O)->MObservable?
   ) {
@@ -146,14 +146,14 @@ class DependencyHelper(main: CustomInvalidations): CustomDependencies,
 	)
   }
 
-  @Synchronized override fun removeDependency(o: MObservable) {
+  @OnlySynchronizedOnJvm override fun removeDependency(o: MObservable) {
 	deps.filter { it.obs == o }.toList().forEach {
 	  removeDep(it)
 	}
   }
 
 
-  @Synchronized
+  @OnlySynchronizedOnJvm
   fun removeAllDependencies() {
 	val depsCopy = deps.toList()
 	depsCopy.forEach {

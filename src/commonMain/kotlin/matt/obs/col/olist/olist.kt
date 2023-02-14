@@ -10,6 +10,7 @@ import matt.lang.ILLEGAL
 import matt.lang.NEVER
 import matt.lang.NOT_IMPLEMENTED
 import matt.lang.anno.NeedsTest
+import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.comparableComparator
 import matt.lang.function.Consume
 import matt.lang.sync.inSync
@@ -47,7 +48,6 @@ import matt.obs.listen.WeakListListener
 import matt.obs.listen.update.ListUpdate
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
-import kotlin.jvm.Synchronized
 
 interface ImmutableObsList<E>: BasicOCollection<E, ListChange<E>, ListUpdate<E>, ListListenerBase<E>>, List<E> {
   override fun <W: Any> onChangeWithWeak(
@@ -359,10 +359,10 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
   }
 
 
-  @Synchronized
+  @OnlySynchronizedOnJvm
   override fun subList(fromIndex: Int, toIndex: Int) = SubList(fromIndex, toIndex)
 
-  @Synchronized
+  @OnlySynchronizedOnJvm
   private fun invalidateSubLists() {
 	validSubLists.forEach { it.isValid = false }
 	validSubLists.clear()
