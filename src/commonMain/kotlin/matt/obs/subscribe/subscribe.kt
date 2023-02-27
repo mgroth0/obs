@@ -28,7 +28,6 @@ open class Channel<E: Event>: MObservableImpl<E, MyEventListener<in E>>() {
 
 
 class Beeper: Channel<Beep>() {
-
   fun beep() = broadcast(Beep)
 }
 
