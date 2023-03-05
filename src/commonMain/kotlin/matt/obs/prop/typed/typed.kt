@@ -14,13 +14,21 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.serializer
-import matt.lang.nametoclass.classForName
+import matt.lang.nametoclass.bootStrapClassForNameCache
 import matt.obs.prop.BindableProperty
 import kotlin.reflect.KClass
 
-@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+@OptIn(ExperimentalSerializationApi::class)
 class TypedBindablePropertySerializer<T>(private val dataSerializer: KSerializer<T>):
-  KSerializer<TypedBindableProperty<T>> {
+	KSerializer<TypedBindableProperty<T>> {
+
+  companion object {
+	private var classCache = bootStrapClassForNameCache()
+	fun clearClassCache() {
+	  classCache = bootStrapClassForNameCache()
+	}
+  }
+
   override val descriptor: SerialDescriptor = dataSerializer.descriptor
 
   override fun serialize(encoder: Encoder, value: TypedBindableProperty<T>) {
@@ -41,15 +49,14 @@ class TypedBindablePropertySerializer<T>(private val dataSerializer: KSerializer
 
 	val valueDescriptor = dataSerializer.descriptor
 
-	val cls = classForName(valueDescriptor.serialName)
+	val cls = classCache[valueDescriptor.serialName]
 
-//	println("value=${value}")
-//	println("valueDescriptor.serialName=${valueDescriptor.serialName}")
-//	println("cls=${cls}")
-	val goodClass = cls as KClass<*>
+	//	println("value=${value}")
+	//	println("valueDescriptor.serialName=${valueDescriptor.serialName}")
+	//	println("cls=${cls}")
 
 	return TypedBindableProperty(
-	  cls = goodClass,
+	  cls = cls,
 	  nullable = valueDescriptor.isNullable,
 	  value = value
 	)
