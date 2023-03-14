@@ -5,7 +5,7 @@ import matt.test.yesIUseTestLibs
 import kotlin.reflect.full.functions
 import kotlin.test.Test
 
-class SomeTests {
+class ObsColChangeTests {
 
   @Test fun testWrappers() {
 

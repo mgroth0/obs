@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
 
 
-class SomeTests {
+class ObsBindTests {
 
   @Test fun deadlock() {
 

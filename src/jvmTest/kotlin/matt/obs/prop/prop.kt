@@ -4,7 +4,7 @@ import matt.obs.listen.OldAndNewListenerImpl
 import matt.test.yesIUseTestLibs
 import org.junit.jupiter.api.Test
 
-class SomeTests {
+class ObsPropTests {
 
   @Test fun testOldNewUpdates() {
 
