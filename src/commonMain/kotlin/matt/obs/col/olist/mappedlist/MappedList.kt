@@ -59,9 +59,11 @@ class WeakMappedList<W: Any, S, T>(
   private val weakRef = MyWeakRef(weakObj)
 
   override fun refresh() {
-	target.setAll(source.map {
-	  converter(weakRef.deref()!!, it)
-	})
+	target.atomicChange {
+	  setAll(this@WeakMappedList.source.map {
+		this@WeakMappedList.converter(this@WeakMappedList.weakRef.deref()!!, it)
+	  })
+	}
   }
 
   init {
