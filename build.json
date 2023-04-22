@@ -1,42 +1,47 @@
 {
-  "type" :         "matt.mstruct.bj.MultiPlatformModule",
-  "jvm" :          {},
-  "js" :           "LIB",
-  "dependencies" : [
-	{
-	  "type" : "Project",
-	  "cfg" :  "commonMainApi",
-	  "path" : ":k:log"
-	},
-	{
-	  "type" : "Project",
-	  "cfg" :  "commonMainImplementation",
-	  "path" : ":k:collect"
-	},
-	{
-	  "type" : "Project",
-	  "cfg" :  "commonMainApi",
-	  "path" : ":k:service"
-	},
-	{
-	  "type" : "Project",
-	  "cfg" :  "commonMainImplementation",
-	  "path" : ":k:time"
-	},
-	{
-	  "type" : "Project",
-	  "cfg" :  "commonMainImplementation",
-	  "path" : ":k:json"
-	},
-	{
-	  "type" : "Project",
-	  "cfg" :  "jvmTestImplementation",
-	  "path" : ":k:test"
-	},
-	{
-	  "type" : "Project",
-	  "cfg" :  "jvmTestImplementation",
-	  "path" : ":k:reflect"
-	}
+  "type": "matt.mstruct.bj.MultiPlatformModule",
+  "jvm": {},
+  "js": "LIB",
+  "dependencies": [
+    {
+      "type": "Project",
+      "cfg": "commonMainApi",
+      "path": ":k:log"
+    },
+    {
+      "type": "Project",
+      "cfg": "commonMainImplementation",
+      "path": ":k:collect"
+    },
+    {
+      "type": "Project",
+      "cfg": "commonMainApi",
+      "path": ":k:service"
+    },
+    {
+      "type": "Project",
+      "cfg": "commonMainImplementation",
+      "path": ":k:time"
+    },
+    {
+      "type": "Project",
+      "cfg": "commonMainImplementation",
+      "path": ":k:json"
+    },
+    {
+      "type": "Project",
+      "cfg": "jvmTestImplementation",
+      "path": ":k:test"
+    },
+    {
+      "type": "Lib",
+      "cfg": "jvmMainImplementation",
+      "key": "kt-reflect"
+    },
+    {
+      "type": "Project",
+      "cfg": "jvmTestImplementation",
+      "path": ":k:reflect"
+    }
   ]
 }

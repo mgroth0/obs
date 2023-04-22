@@ -15,8 +15,10 @@ import matt.obs.col.olist.basicROObservableListOf
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.ObsHolderListener
 import matt.obs.prop.BindableProperty
-import matt.obs.prop.ObsVal
 import matt.obs.prop.typed.TypedBindableProperty
+import matt.obs.prop.typed.TypedImmutableObsList
+import matt.obs.prop.typed.TypedMutableObsList
+import matt.obs.prop.typed.TypedSerializableElement
 
 interface MObsHolder<O : MObservable> : MObservable {
     val observables: List<O>
@@ -104,7 +106,7 @@ open class ObservableHolderImpl : ObservableHolderImplBase<MObservable>() {
 }
 
 
-open class TypedObservableHolder : ObservableHolderImplBase<TypedBindableProperty<*>>() {
+open class TypedObservableHolder : ObservableHolderImplBase<TypedSerializableElement>() {
 
     var wasResetBecauseSerializedDataWasWrongClassVersion = false
 
@@ -124,19 +126,34 @@ open class TypedObservableHolder : ObservableHolderImplBase<TypedBindablePropert
 
     fun <T : TypedObservableHolder> registeredSection(obsHolder: T) = provider { sectionName ->
         sectionsM += obsHolder
-        _observables.putAll(obsHolder.namedObservables().mapKeys { sectionName + "." + it.key })
+        val sectionProps = obsHolder.namedObservables().mapKeys { sectionName + "." + it.key }
+        sectionProps.forEach {
+            _observables[it.key] = it.value
+            postRegister(it.value)
+        }
         SimpleGetter(obsHolder)
     }
 
 
+    inline fun <reified E> registeredMutableList(vararg default: E) =
+        provider {
+            val list = basicMutableObservableListOf(*default)
+            val fx = TypedMutableObsList(elementCls = E::class, nullableElements = null is E, list = list)
+            _observables[it] = fx
+            postRegister(fx)
+            SimpleGetter(fx)
+        }
+
+    inline fun <reified E> registeredList(vararg default: E) = provider {
+        val list = basicROObservableListOf(*default)
+        val fx = TypedImmutableObsList(elementCls = E::class, nullableElements = null is E, list = list)
+        _observables[it] = fx
+        postRegister(fx)
+        SimpleGetter(fx)
+    }
 
 
-
-
-
-
-
-    open fun postRegister(prop: ObsVal<*>) = Unit
+    open fun postRegister(prop: MObservable) = Unit
 }
 
 
