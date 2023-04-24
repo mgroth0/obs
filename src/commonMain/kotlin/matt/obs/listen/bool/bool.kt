@@ -3,7 +3,6 @@
 package matt.obs.listen.bool
 
 import matt.obs.bindings.bool.ObsB
-import matt.obs.listen.Listener
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.whenEqualsOnce
 import kotlin.jvm.JvmName
