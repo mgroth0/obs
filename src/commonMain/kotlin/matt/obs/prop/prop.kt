@@ -1,5 +1,6 @@
 package matt.obs.prop
 
+import matt.lang.function.Op
 import matt.lang.function.Produce
 import matt.lang.model.value.ValueWrapper
 import matt.lang.sync.inSync
@@ -61,6 +62,9 @@ value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 	  TODO("Not yet implemented")
 	}
 
+	override fun releaseUpdatesAfter(op: Op) {
+		TODO("Not yet implemented")
+	}
 }
 
 
