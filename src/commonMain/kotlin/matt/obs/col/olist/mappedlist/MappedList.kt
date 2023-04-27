@@ -4,7 +4,6 @@ package matt.obs.col.olist.mappedlist
 import matt.lang.model.value.LazyValue
 import matt.lang.setall.setAll
 import matt.lang.weak.MyWeakRef
-import matt.log.taball
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.col.olist.ImmutableObsList
@@ -72,10 +71,10 @@ class WeakMappedList<W : Any, S, T>(
     init {
         refresh()
         source.onChangeWithAlreadyWeak(weakRef) { w, it ->
-            println("source changed")
-            taball("source", source)
-            taball("target", target)
-            println("change=${it}")
+//            println("source changed")
+//            taball("source", source)
+//            taball("target", target)
+//            println("change=${it}")
             target.mirror(it) {
                 converter(w, it)
             }
