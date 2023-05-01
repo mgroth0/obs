@@ -205,6 +205,11 @@ fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
 
 fun <E> ImmutableObsList<E>.toMutableObsList() = toBasicObservableList()
 
+
+fun <E> MutableObsList<E>.readOnly() = ReadOnlyObsList(this)
+class ReadOnlyObsList<E>(private val obsList: ImmutableObsList<E>) : ImmutableObsList<E> by obsList
+
+
 open class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>) :
     BaseBasicWritableOList<E>(),
     List<E> by list {
