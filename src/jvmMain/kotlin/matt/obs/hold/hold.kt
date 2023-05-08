@@ -64,7 +64,7 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
                         )
                     }
 
-                    is AbstractTypedObsList<*> -> {
+                    is AbstractTypedObsList<*>  -> {
                         val cls = theValue.elementCls
                         val elementDescriptor = cls.serializer().descriptor
                         element(
@@ -91,12 +91,14 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
 
         val compositeDecoder = decoder.beginStructure(descriptor)
 
+
+
         val observables = obj.namedObservables()
         while (true) {
             val index = compositeDecoder.decodeElementIndex(descriptor)
             when {
 
-                index == 0 -> {
+                index == 0            -> {
                     checkedClassVersion = true
                     val loadedClassVersion = compositeDecoder.decodeIntElement(descriptor, index)
                     if (loadedClassVersion != classVersion) {
@@ -109,7 +111,7 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
                     }
                 }
 
-                index >= 1 -> {
+                index >= 1            -> {
 
                     if (stopLoading) {
                         (compositeDecoder as JsonDecoder).decodeJsonElement()
@@ -123,9 +125,9 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
                 }
 
 
-                index == DECODE_DONE -> break
+                index == DECODE_DONE  -> break
                 index == UNKNOWN_NAME -> err("unknown name?")
-                else -> error("Unexpected index: $index")
+                else                  -> error("Unexpected index: $index")
             }
         }
 
