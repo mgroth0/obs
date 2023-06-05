@@ -11,7 +11,7 @@ import matt.lang.NEVER
 import matt.lang.NOT_IMPLEMENTED
 import matt.lang.anno.NeedsTest
 import matt.lang.anno.OnlySynchronizedOnJvm
-import matt.lang.comparableComparator
+import matt.lang.compare.comparableComparator
 import matt.lang.function.Consume
 import matt.lang.function.Op
 import matt.lang.sync.inSync
