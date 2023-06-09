@@ -18,6 +18,7 @@ import matt.lang.sync.inSync
 import matt.lang.weak.MyWeakRef
 import matt.model.op.prints.Prints
 import matt.obs.bind.MyBinding
+import matt.obs.bind.binding
 import matt.obs.bindhelp.BindableList
 import matt.obs.bindhelp.BindableListImpl
 import matt.obs.bindings.bool.ObsB
@@ -651,3 +652,13 @@ inline fun <reified E, reified T : BasicObservableListImpl<E>> T.withChangeListe
 
 
 
+
+
+val <E> ImmutableObsList<E>.sizeProperty get() = binding { size }
+
+val <E> ImmutableObsList<E>.isEmptyProperty get() = binding { isEmpty() }
+val <E> ImmutableObsList<E>.isNotEmptyProperty get() = binding { isNotEmpty() }
+
+
+/*-1 if list is empty*/
+val <E> ImmutableObsList<E>.lastIndexProperty get() = sizeProperty.binding { it - 1 }

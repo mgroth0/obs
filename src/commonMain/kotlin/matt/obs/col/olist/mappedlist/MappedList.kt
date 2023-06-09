@@ -71,10 +71,6 @@ class WeakMappedList<W : Any, S, T>(
     init {
         refresh()
         source.onChangeWithAlreadyWeak(weakRef) { w, it ->
-//            println("source changed")
-//            taball("source", source)
-//            taball("target", target)
-//            println("change=${it}")
             target.mirror(it) {
                 converter(w, it)
             }

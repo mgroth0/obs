@@ -16,6 +16,8 @@ import matt.obs.listen.MyListenerInter
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ObsVal
 
+interface InterestingList
+
 interface CalculatedList<E> : ImmutableObsList<E> {
     fun refresh()
 }
@@ -34,7 +36,7 @@ class DynamicList<E>(
     private val dynamicFilter: ((E) -> ObsB)? = null,
     comparator: Comparator<in E>? = null,
     private val target: MutableObsList<E> = basicMutableObservableListOf()
-) : ImmutableObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies {
+) : ImmutableObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies, InterestingList {
 
 
     override fun toString() = mehToStringBuilder("name" to nam)

@@ -8,7 +8,6 @@ import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.MyWeakRef
 import matt.lang.weak.WeakRefInter
 import matt.lang.weak.lazySoft
-import matt.log.warn.warnOnce
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.convert.Converter
 import matt.model.op.prints.Prints
@@ -42,7 +41,7 @@ typealias ObsVal<T> = MObservableVal<T, *, *>
 value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
 
   override fun addListener(listener: OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>): OldAndNewListener<T, ValueChange<T>, out ValueChange<T>> {
-	warnOnce("listening to FakeObsVal")
+//	warnOnce("listening to FakeObsVal")
 	return listener
   }
 

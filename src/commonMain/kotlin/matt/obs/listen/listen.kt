@@ -298,6 +298,8 @@ class SetListener<E>(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(
 
 
 interface ListListenerBase<E>: CollectionListenerBase<E, ListChange<E>, ListUpdate<E>>
+
+
 interface SetListenerBase<E>: CollectionListenerBase<E, SetChange<E>, SetUpdate<E>>
 
 
@@ -305,6 +307,8 @@ class ListListener<E>(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>
 	CollectionListener<E, ListChange<E>, ListUpdate<E>>(
 	  invoke
 	), ListListenerBase<E>
+
+
 
 
 class MapListener<K, V>(internal val invoke: MapListener<K, V>.(change: MapChange<K, V>)->Unit):
