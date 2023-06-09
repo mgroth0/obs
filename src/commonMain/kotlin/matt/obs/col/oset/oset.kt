@@ -12,7 +12,6 @@ import matt.obs.col.change.RemoveElementFromSet
 import matt.obs.col.change.RemoveElementsFromSet
 import matt.obs.col.change.RetainAllSet
 import matt.obs.col.change.SetChange
-import matt.obs.col.olist.ImmutableObsList
 import matt.obs.fx.requireNotObservable
 import matt.obs.listen.SetListenerBase
 import matt.obs.listen.WeakSetListener
