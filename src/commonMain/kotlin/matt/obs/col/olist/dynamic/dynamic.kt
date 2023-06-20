@@ -1,7 +1,6 @@
 package matt.obs.col.olist.dynamic
 
 import matt.collect.list.setAllOneByOneNeverAllowingDuplicates
-import matt.lang.model.value.Value
 import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.model.op.debug.DebugLogger
@@ -58,8 +57,10 @@ class DynamicList<E>(
         val bProp = dynamicFilter!!(element)
         return bProp.apply {
             var listener: MyListenerInter<*>? = null
-            listener = onChangeWithWeak(Value(element)) { weakElement, _ ->
-                val e = weakElement.value
+            listener = onChangeWithWeak(
+                element ?: error("this needs to be non-null since its a weak listener")
+            ) { weakElement, _ ->
+                val e = weakElement
                 if (e in this@DynamicList.source) {
                     this@DynamicList.refresh()
                 } else {

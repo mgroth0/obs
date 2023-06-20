@@ -3,9 +3,10 @@ package matt.obs.col.olist
 import matt.collect.fake.FakeMutableList
 import matt.collect.itr.FakeMutableIterator
 import matt.collect.itr.FakeMutableListIterator
+import matt.collect.itr.ItrDir
 import matt.collect.itr.ItrDir.NEXT
 import matt.collect.itr.ItrDir.PREVIOUS
-import matt.collect.itr.MutableListIteratorWithSomeMemory
+import matt.collect.itr.MutableListIteratorExtender
 import matt.lang.ILLEGAL
 import matt.lang.NEVER
 import matt.lang.NOT_IMPLEMENTED
@@ -258,12 +259,23 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
     override fun listIterator(): MutableListIterator<E> = lItr()
     override fun listIterator(index: Int): MutableListIterator<E> = lItr(index)
 
-    private fun lItr(index: Int? = null) = object : MutableListIteratorWithSomeMemory<E>(list, index) {
+    private fun lItr(index: Int? = null) = object : MutableListIteratorExtender<E>(list, index ?: 0) {
+
+        var lastElement: E? = null
+        var lastItrDir: ItrDir? = null
+
+        override fun postNext(e: E) {
+            lastElement = e
+            lastItrDir = NEXT
+        }
+        override fun postPrevious(e: E) {
+            lastElement = e
+            lastItrDir = PREVIOUS
+        }
 
         override fun remove() {
             super.remove()
-            //	  println("RemoveAt from lItr: previousIndex=${previousIndex()},lastReturned=$lastReturned")
-            changedFromOuter(RemoveAt(list, lastReturned!!, previousIndex() + 1))
+            changedFromOuter(RemoveAt(list, lastElement ?: TODO("null"), previousIndex() + 1))
         }
 
         override fun add(element: E) {
@@ -276,15 +288,13 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
             super.set(element)
             changedFromOuter(
                 ReplaceAt(
-                    list, lastReturned!!, element, index = when (lastItrDir) {
+                    list, lastElement ?: TODO("null"), element, index = when (lastItrDir) {
                         NEXT -> {
                             previousIndex()
-                            //			  currentIndex - 1
                         }
 
                         PREVIOUS -> {
                             previousIndex() + 1
-                            //			  currentIndex
                         }
 
                         else -> NEVER
@@ -414,7 +424,8 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
                     processChange(
                         RemoveAtIndices(
                             collection = this@BasicObservableListImpl,
-                            removed = copyWithIndices2
+                            removed = copyWithIndices2,
+                            quickIsRange = true
                         )
                     )
                 }
@@ -428,7 +439,13 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
                 val addIndex = toIndexExclusive
                 toIndexExclusive += elements.size
                 val r = subList.addAll(elements)
-                processChange(MultiAddAt(collection = this@BasicObservableListImpl, added = elements, index = addIndex))
+                processChange(
+                    MultiAddAt(
+                        collection = this@BasicObservableListImpl,
+                        added = elements,
+                        index = addIndex
+                    )
+                )
                 r
             }
         }
@@ -648,10 +665,6 @@ inline fun <reified E, reified T : BasicObservableListImpl<E>> T.withChangeListe
     onChange(listenerName = listenerName, listener)
     return this
 }
-
-
-
-
 
 
 val <E> ImmutableObsList<E>.sizeProperty get() = binding { size }

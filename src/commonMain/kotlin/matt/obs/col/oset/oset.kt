@@ -1,6 +1,6 @@
 package matt.obs.col.oset
 
-import matt.collect.itr.MutableIteratorWithSomeMemory
+import matt.collect.itr.MutableIteratorExtender
 import matt.lang.weak.MyWeakRef
 import matt.obs.bind.binding
 import matt.obs.col.BasicOCollection
@@ -77,11 +77,16 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>) : InternallyBacke
         return theSet.isEmpty()
     }
 
-    override fun iterator() = object : MutableIteratorWithSomeMemory<E>(theSet) {
-        override fun remove(): Unit {
+    override fun iterator() = object : MutableIteratorExtender<E>(theSet) {
+        var lastNext: E? = null
+        override fun postNext(e: E) {
+            lastNext = e
+        }
+
+        override fun remove() {
             super.remove()
             emitChange(
-                RemoveElementFromSet(theSet, lastReturned!!)
+                RemoveElementFromSet(theSet, lastNext ?: error("todo: this does not work with null elements yet"))
             )
         }
     }
