@@ -2,6 +2,8 @@ package matt.obs
 
 import matt.lang.function.MetaFunction
 import matt.lang.function.Op
+import matt.lang.require.requireNonNegative
+import matt.lang.require.requireNull
 import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
@@ -18,11 +20,18 @@ annotation class ObservableDSL
 interface MObservable {
     var nam: String?
     fun observe(op: () -> Unit): MyListenerInter<*>
-    fun observeWeakly(w: MyWeakRef<*>, op: () -> Unit): MyListenerInter<*>
+    fun observeWeakly(
+        w: MyWeakRef<*>,
+        op: () -> Unit
+    ): MyListenerInter<*>
+
     fun removeListener(listener: MyListenerInter<*>)
 
     /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
-    fun patientlyObserve(scheduleOp: MetaFunction, op: () -> Unit): MyListenerInter<*> {
+    fun patientlyObserve(
+        scheduleOp: MetaFunction,
+        op: () -> Unit
+    ): MyListenerInter<*> {
         var shouldScheduleAnother = true
         return observe {
             if (shouldScheduleAnother) {
@@ -65,7 +74,7 @@ abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> internal c
         synchronizer.operateOnInternalDataNowOrLater {
             listeners += listener
             listener as MyListener<*>
-            require(listener.currentObservable == null)
+            requireNull(listener.currentObservable)
             listener.currentObservable = MyWeakRef(this)
             if (listener is MyWeakListener<*>) {
                 if (!maybeRemoveByRefQueue(listener)) {
@@ -124,7 +133,7 @@ abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> internal c
         notifyAfterDepth += 1
         op()
         notifyAfterDepth -= 1
-        require(notifyAfterDepth >= 0)
+        requireNonNegative(notifyAfterDepth)
         if (notifyAfterDepth == 0) {
             notifyAfterUpdates?.forEach {
                 notifyListeners(it)

@@ -15,6 +15,8 @@ import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.compare.comparableComparator
 import matt.lang.function.Consume
 import matt.lang.function.Op
+import matt.lang.require.requireNonNegative
+import matt.lang.require.requireNot
 import matt.lang.sync.inSync
 import matt.lang.weak.MyWeakRef
 import matt.model.op.prints.Prints
@@ -54,7 +56,8 @@ import matt.obs.prop.ObsVal
 
 interface ImmutableObsList<E> : BasicOCollection<E, ListChange<E>, ListUpdate<E>, ListListenerBase<E>>, List<E> {
     override fun <W : Any> onChangeWithWeak(
-        o: W, op: (W, ListChange<E>) -> Unit
+        o: W,
+        op: (W, ListChange<E>) -> Unit
     ) = run {
         val weakRef = MyWeakRef(o)
         onChangeWithAlreadyWeak(weakRef) { w, c ->
@@ -62,7 +65,10 @@ interface ImmutableObsList<E> : BasicOCollection<E, ListChange<E>, ListUpdate<E>
         }
     }
 
-    override fun <W : Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, ListChange<E>) -> Unit) = run {
+    override fun <W : Any> onChangeWithAlreadyWeak(
+        weakRef: MyWeakRef<W>,
+        op: (W, ListChange<E>) -> Unit
+    ) = run {
         val listener = WeakListListener(weakRef) { o: W, c: ListChange<E> ->
             op(o, c)
         }
@@ -106,9 +112,15 @@ fun <E> MutableObsList<E>.toFakeMutableObsList() = FakeMutableObsList(this)
 class FakeMutableObsList<E>(private val o: MutableObsList<E>) : MutableObsList<E> by o {
     override fun add(element: E) = ILLEGAL
 
-    override fun add(index: Int, element: E) = ILLEGAL
+    override fun add(
+        index: Int,
+        element: E
+    ) = ILLEGAL
 
-    override fun addAll(index: Int, elements: Collection<E>) = ILLEGAL
+    override fun addAll(
+        index: Int,
+        elements: Collection<E>
+    ) = ILLEGAL
 
     override fun addAll(elements: Collection<E>) = ILLEGAL
 
@@ -122,7 +134,10 @@ class FakeMutableObsList<E>(private val o: MutableObsList<E>) : MutableObsList<E
 
     override fun retainAll(elements: Collection<E>) = ILLEGAL
 
-    override fun set(index: Int, element: E) = ILLEGAL
+    override fun set(
+        index: Int,
+        element: E
+    ) = ILLEGAL
 
     override fun iterator(): MutableIterator<E> {
         return FakeMutableIterator(o.iterator())
@@ -136,7 +151,10 @@ class FakeMutableObsList<E>(private val o: MutableObsList<E>) : MutableObsList<E
         return FakeMutableListIterator(o.listIterator(index))
     }
 
-    override fun subList(fromIndex: Int, toIndex: Int): MutableList<E> {
+    override fun subList(
+        fromIndex: Int,
+        toIndex: Int
+    ): MutableList<E> {
         return FakeMutableList(o.subList(fromIndex, toIndex))
     }
 }
@@ -147,11 +165,22 @@ abstract class BaseBasicWritableOList<E> : InternallyBackedOList<E>(),
     BindableList<E> {
 
     val bindableListHelper by lazy { BindableListImpl(this) }
-    override fun <S> bind(source: ImmutableObsList<S>, converter: (S) -> E) = bindableListHelper.bind(source, converter)
-    override fun <S> bindWeakly(source: ImmutableObsList<S>, converter: (S) -> E) =
+    override fun <S> bind(
+        source: ImmutableObsList<S>,
+        converter: (S) -> E
+    ) = bindableListHelper.bind(source, converter)
+
+    override fun <S> bindWeakly(
+        source: ImmutableObsList<S>,
+        converter: (S) -> E
+    ) =
         bindableListHelper.bindWeakly(source, converter)
 
-    override fun <T> bind(source: ObsVal<T>, converter: (T) -> List<E>) = bindableListHelper.bind(source, converter)
+    override fun <T> bind(
+        source: ObsVal<T>,
+        converter: (T) -> List<E>
+    ) = bindableListHelper.bind(source, converter)
+
     final override val bindManager get() = bindableListHelper.bindManager
     override var theBind
         get() = bindManager.theBind
@@ -232,12 +261,18 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
         return b
     }
 
-    override fun add(index: Int, element: E) {
+    override fun add(
+        index: Int,
+        element: E
+    ) {
         list.add(index, element)
         changedFromOuter(AddAt(list, element, index))
     }
 
-    override fun addAll(index: Int, elements: Collection<E>): Boolean {
+    override fun addAll(
+        index: Int,
+        elements: Collection<E>
+    ): Boolean {
         val b = list.addAll(index, elements)
         if (b) changedFromOuter(MultiAddAt(list, elements, index))
         return b
@@ -268,6 +303,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
             lastElement = e
             lastItrDir = NEXT
         }
+
         override fun postPrevious(e: E) {
             lastElement = e
             lastItrDir = PREVIOUS
@@ -322,7 +358,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
     }
 
     override fun removeAt(index: Int): E {
-        require(index >= 0)
+        requireNonNegative(index)
         val e = list.removeAt(index)
         changedFromOuter(RemoveAt(list, e, index))
         return e
@@ -343,14 +379,17 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
         return b
     }
 
-    override fun set(index: Int, element: E): E {
+    override fun set(
+        index: Int,
+        element: E
+    ): E {
         val oldElement = list.set(index, element)
         changedFromOuter(ReplaceAt(list, removed = oldElement, added = element, index = index))
         return oldElement
     }
 
     override fun atomicChange(op: MutableObsList<E>.() -> Unit) {
-        require(!isAtomicallyChanging)
+        requireNot(isAtomicallyChanging)
         val changes = mutableListOf<ListChange<E>>()
         atomicChanges = changes
         isAtomicallyChanging = true
@@ -379,7 +418,10 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
 
     @OnlySynchronizedOnJvm
-    override fun subList(fromIndex: Int, toIndex: Int) = SubList(fromIndex, toIndex)
+    override fun subList(
+        fromIndex: Int,
+        toIndex: Int
+    ) = SubList(fromIndex, toIndex)
 
     @OnlySynchronizedOnJvm
     private fun invalidateSubLists() {
@@ -450,11 +492,17 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
             }
         }
 
-        override fun addAll(index: Int, elements: Collection<E>): Boolean {
+        override fun addAll(
+            index: Int,
+            elements: Collection<E>
+        ): Boolean {
             TODO("Not yet implemented")
         }
 
-        override fun add(index: Int, element: E) {
+        override fun add(
+            index: Int,
+            element: E
+        ) {
             TODO("Not yet implemented")
         }
 
@@ -495,8 +543,15 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
         override fun listIterator() = NOT_IMPLEMENTED
         override fun listIterator(index: Int) = NOT_IMPLEMENTED
         override fun removeAt(index: Int) = NOT_IMPLEMENTED
-        override fun subList(fromIndex: Int, toIndex: Int) = NOT_IMPLEMENTED
-        override fun set(index: Int, element: E): E {
+        override fun subList(
+            fromIndex: Int,
+            toIndex: Int
+        ) = NOT_IMPLEMENTED
+
+        override fun set(
+            index: Int,
+            element: E
+        ): E {
             require(isValid)
             val prev = subList.set(index, element)
             processChange(
@@ -564,7 +619,10 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObsList<R> {
 
 
-    override fun onChange(listenerName: String?, op: (ListChange<R>) -> Unit): MyListenerInter<*> {
+    override fun onChange(
+        listenerName: String?,
+        op: (ListChange<R>) -> Unit
+    ): MyListenerInter<*> {
         return this@view.onChange {
             op(it.convert(this, converter))
         }
@@ -629,7 +687,10 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObs
 
     }
 
-    override fun subList(fromIndex: Int, toIndex: Int): List<R> {
+    override fun subList(
+        fromIndex: Int,
+        toIndex: Int
+    ): List<R> {
         TODO("Not yet implemented")
     }
 

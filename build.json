@@ -1,12 +1,17 @@
 {
   "type": "MultiPlatformModule",
   "jvm": {},
-  "js": "LIB",
+  "js": {"type":"lib"},
   "dependencies": [
     {
       "type": "Project",
       "cfg": "commonMainApi",
       "path": ":k:log"
+    },
+    {
+      "type": "Project",
+      "cfg": "commonMainApi",
+      "path": ":k:lang"
     },
     {
       "type": "Project",

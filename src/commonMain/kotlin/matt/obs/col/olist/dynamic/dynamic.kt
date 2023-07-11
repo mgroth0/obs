@@ -1,6 +1,7 @@
 package matt.obs.col.olist.dynamic
 
 import matt.collect.list.setAllOneByOneNeverAllowingDuplicates
+import matt.lang.require.requireNull
 import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.model.op.debug.DebugLogger
@@ -48,12 +49,12 @@ class DynamicList<E>(
     /*small issue: full refresh is excessive*/
     /*big issue: are more weak references needed?*/
     private val dynamicPredicates = dynamicFilter?.let { _ ->
-        require(filter == null)
+        requireNull(filter)
         mutableMapOf<E, ObsB>()
     }
 
     private fun newDynamicPredicate(element: E): ObsB {
-        require(predicate.value == null)
+        requireNull(predicate.value)
         val bProp = dynamicFilter!!(element)
         return bProp.apply {
             var listener: MyListenerInter<*>? = null
@@ -136,7 +137,10 @@ class DynamicList<E>(
             *deepDependencies
         )
 
-    override fun <O : MObservable> addDependencyWithDeepList(o: O, deepDependencies: (O) -> List<MObservable>) =
+    override fun <O : MObservable> addDependencyWithDeepList(
+        o: O,
+        deepDependencies: (O) -> List<MObservable>
+    ) =
         dependencyHelper.addDependencyWithDeepList(o, deepDependencies)
 
     override fun <O : ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(

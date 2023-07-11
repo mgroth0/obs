@@ -1,5 +1,6 @@
 package matt.obs.bind
 
+import matt.lang.require.requireOne
 import matt.test.yesIUseTestLibs
 import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
@@ -7,25 +8,26 @@ import kotlin.concurrent.thread
 
 class ObsBindTests {
 
-  @Test fun deadlock() {
+    @Test
+    fun deadlock() {
 
-	yesIUseTestLibs()
+        yesIUseTestLibs()
 
-	val d = thread(isDaemon = true) {
-	  var binding: MyBinding<Int>? = null
-	  binding = MyBinding {
-		thread {
-		  binding!!.markInvalid()
-		}.join()
-		1
-	  }
-	  require(binding.value == 1)
-	}
-	d.join(1000)
-	if (d.isAlive) {
-	  error("found deadlock!")
-	}
+        val d = thread(isDaemon = true) {
+            var binding: MyBinding<Int>? = null
+            binding = MyBinding {
+                thread {
+                    binding!!.markInvalid()
+                }.join()
+                1
+            }
+            requireOne(binding.value)
+        }
+        d.join(1000)
+        if (d.isAlive) {
+            error("found deadlock!")
+        }
 
 
-  }
+    }
 }

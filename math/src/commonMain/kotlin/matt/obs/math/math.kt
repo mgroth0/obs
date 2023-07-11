@@ -1,6 +1,7 @@
 package matt.obs.math
 
 import matt.lang.Num
+import matt.lang.require.requireNotEmpty
 import matt.math.neg.unaryMinus
 import matt.obs.bind.binding
 import matt.obs.prop.ObsVal
@@ -12,7 +13,7 @@ operator fun <N: Number> ObsVal<N>.unaryMinus(): ObsVal<N> = binding { -it }.cas
 
 
 fun <N: Num> reduction(vararg values: ObsVal<N>, op: (Array<out ObsVal<N>>)->N): ObsVal<N> {
-  require(values.isNotEmpty())
+  requireNotEmpty(values)
   return if (values.size == 1) values[0]
   else values[0].binding(*values.drop(1).toTypedArray()) {
 	op(values)
