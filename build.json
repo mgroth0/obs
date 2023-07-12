@@ -10,11 +10,6 @@
     },
     {
       "type": "Project",
-      "cfg": "commonMainApi",
-      "path": ":k:lang"
-    },
-    {
-      "type": "Project",
       "cfg": "commonMainImplementation",
       "path": ":k:collect"
     },
