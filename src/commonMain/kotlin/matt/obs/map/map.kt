@@ -2,7 +2,6 @@ package matt.obs.map
 
 import matt.lang.ILLEGAL
 import matt.lang.weak.MyWeakRef
-import matt.log.warn.warnOnce
 import matt.log.warn.warn
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
