@@ -3,6 +3,7 @@ package matt.obs.map
 import matt.lang.ILLEGAL
 import matt.lang.weak.MyWeakRef
 import matt.log.warn.warnOnce
+import matt.log.warn.warn
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
@@ -43,7 +44,7 @@ abstract class InternallyBackedOMap<K, V> internal constructor(map: Map<K, V>):
 
   internal val bindWritePass = KeyPass()
   protected fun emitChange(change: MapChange<K, V>) {
-	warnOnce(
+	warn(
 	  """
 		I guess InternallyBackedOMap needs similar infrastructural support as ObsList? like:
 	require(this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)  
