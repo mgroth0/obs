@@ -1,7 +1,6 @@
 {
-    "type":  "MultiPlatformModule", "jvm": {},
+    "type": "MultiPlatformModule",
     "dependencies": [
-
         {
             "type": "Project",
             "cfg": "commonMainApi",
@@ -11,6 +10,13 @@
             "type": "Project",
             "cfg": "commonMainApi",
             "path": ":k:math"
+        },
+        {
+            "type": "Project",
+            "cfg": "jvmTestImplementation",
+            "path": ":k:test"
         }
-    ]
+    ],
+    "jvm": {
+    }
 }
