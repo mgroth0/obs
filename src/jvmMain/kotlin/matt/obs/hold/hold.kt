@@ -5,6 +5,7 @@ package matt.obs.hold
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.listSerialDescriptor
@@ -19,12 +20,13 @@ import matt.lang.err
 import matt.log.warn.warn
 import matt.obs.prop.typed.AbstractTypedObsList
 import matt.obs.prop.typed.TypedBindableProperty
+import matt.prim.str.elementsToString
 import kotlin.reflect.KClass
 
 @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 open class TypedObsHolderSerializer<T : TypedObservableHolder>(
     private val cls: KClass<out T>,
-    private val classVersion: Int
+    private val classVersion: Int?
 ) : KSerializer<T> {
 
     companion object {
@@ -33,7 +35,17 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
 
 
     @Suppress("UNCHECKED_CAST")
-    private fun newInstance(): T = cls.java.constructors[0].newInstance() as T
+    private fun newInstance(): T {
+        val constructors = cls.java.constructors
+        val goodConstructor = constructors.firstOrNull {
+            it.parameterCount == 0
+        } ?: error(
+            "Cannot find no-arg constructor for $cls, constructors have ${
+                constructors.map { it.parameterCount }.elementsToString()
+            } parameters"
+        )
+        return goodConstructor.newInstance() as T
+    }
 
     private val exampleInstance by lazy {
         newInstance()
@@ -41,12 +53,16 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
 
     override val descriptor: SerialDescriptor by lazy {
         buildClassSerialDescriptor(cls.qualifiedName!!) {
-            element(
-                elementName = CLASS_VERSION_KEY,
-                descriptor = Int::class.serializer().descriptor,
-                isOptional = true
-            )
+            if (classVersion != null) {
+                element(
+                    elementName = CLASS_VERSION_KEY,
+                    descriptor = Int::class.serializer().descriptor,
+                    isOptional = true
+                )
+            }
+
             exampleInstance.namedObservables().forEach {
+
                 if (it.key == CLASS_VERSION_KEY) {
                     err("property can not have the name $CLASS_VERSION_KEY")
                 }
@@ -56,7 +72,9 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
                 when (theValue) {
                     is TypedBindableProperty<*> -> {
                         val cls = theValue.cls
-                        val desc = cls.serializer().descriptor
+                        val desc = cls.serializer().let {
+                            if (theValue.nullable) it.nullable else it
+                        }.descriptor
                         element(
                             elementName = it.key,
                             descriptor = desc,
@@ -92,13 +110,12 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
         val compositeDecoder = decoder.beginStructure(descriptor)
 
 
-
         val observables = obj.namedObservables()
         while (true) {
             val index = compositeDecoder.decodeElementIndex(descriptor)
             when {
 
-                index == 0            -> {
+                index == 0 && classVersion != null -> {
                     checkedClassVersion = true
                     val loadedClassVersion = compositeDecoder.decodeIntElement(descriptor, index)
                     if (loadedClassVersion != classVersion) {
@@ -111,7 +128,7 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
                     }
                 }
 
-                index >= 1            -> {
+                index >= 0                         -> {
 
                     if (stopLoading) {
                         (compositeDecoder as JsonDecoder).decodeJsonElement()
@@ -125,9 +142,9 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
                 }
 
 
-                index == DECODE_DONE  -> break
-                index == UNKNOWN_NAME -> err("unknown name?")
-                else                  -> error("Unexpected index: $index")
+                index == DECODE_DONE               -> break
+                index == UNKNOWN_NAME              -> err("unknown name?")
+                else                               -> error("Unexpected index: $index")
             }
         }
 
@@ -136,7 +153,7 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
         /*}*/
 
 
-        if (!checkedClassVersion) {
+        if (classVersion != null && !checkedClassVersion) {
             warn("did not check class version!")
             obj = newInstance().apply {
                 wasResetBecauseSerializedDataWasWrongClassVersion = true
@@ -145,17 +162,22 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
         return obj
     }
 
-    override fun serialize(encoder: Encoder, value: T) {
-        println("serializing with classVersion=$classVersion")
+    override fun serialize(
+        encoder: Encoder,
+        value: T
+    ) {
+//        println("serializing with classVersion=$classVersion")
         encoder.encodeStructure(descriptor) {
             var i = 0
-            encodeIntElement(descriptor, i++, classVersion)
+            if (classVersion != null) {
+                encodeIntElement(descriptor, i++, classVersion)
+            }
             value.namedObservables().entries.forEach {
                 it.value.encode(this, descriptor, index = i++)
             }
+
         }
 
+
     }
-
-
 }

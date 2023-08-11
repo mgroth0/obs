@@ -68,13 +68,19 @@ class TypedBindableProperty<T>(val cls: KClass<*>, val nullable: Boolean, value:
         descriptor: SerialDescriptor,
         index: Int
     ) {
-        @Suppress("UNCHECKED_CAST")
-        encoder.encodeSerializableElement(
-            descriptor = descriptor,
-            index = index,
-            serializer = ser as SerializationStrategy<T>,
-            value = value
-        )
+        println("descriptor=${descriptor}")
+        try {
+            @Suppress("UNCHECKED_CAST")
+            encoder.encodeSerializableElement(
+                descriptor = descriptor,
+                index = index,
+                serializer = ser as SerializationStrategy<T>,
+                value = value
+            )
+        } catch(e: Exception) {
+            throw e
+        }
+
     }
 
     override fun decode(decoder: CompositeDecoder, descriptor: SerialDescriptor, index: Int) {

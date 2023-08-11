@@ -23,9 +23,7 @@ class WeakPropWrapper<T>(p: BindableProperty<T>) : MWritableValNewAndOld<T>,
 
     override fun bind(source: ObsVal<out T>) = bindWeakly(source)
 
-    override fun bindWeakly(source: ObsVal<out T>) {
-        prop.bindWeakly(source)
-    }
+    override fun bindWeakly(source: ObsVal<out T>) = prop.bindWeakly(source)
 
     override fun bindBidirectional(
         source: Var<T>,
@@ -33,13 +31,9 @@ class WeakPropWrapper<T>(p: BindableProperty<T>) : MWritableValNewAndOld<T>,
         clean: Boolean,
         debug: Boolean,
         weak: Boolean
-    ) {
-        TODO("Not yet implemented")
-    }
+    ) = TODO("Not yet implemented")
 
-    override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) {
-        TODO("Not yet implemented")
-    }
+    override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) = TODO("Not yet implemented")
 
     override fun releaseUpdatesAfter(op: Op) {
         TODO("Not yet implemented")
