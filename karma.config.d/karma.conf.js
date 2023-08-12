@@ -1,6 +1,4 @@
-    // karma.conf.js
-//    module.exports = function(config) {
-      config.set({
-        browserDisconnectTimeout: 10000 // default: 2000
-      });
-//    };
+config.set({
+  browserDisconnectTimeout: 10000, // default: 2000
+  processKillTimeout: 10000 // default: 2000
+});
