@@ -173,6 +173,8 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
                 encodeIntElement(descriptor, i++, classVersion)
             }
             value.namedObservables().entries.forEach {
+//                println("nameKey=${it.key}")
+//                println("debugValue=${it.value}")
                 it.value.encode(this, descriptor, index = i++)
             }
 

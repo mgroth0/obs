@@ -9,6 +9,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.CompositeEncoder
@@ -60,7 +61,10 @@ class TypedBindableProperty<T>(val cls: KClass<*>, val nullable: Boolean, value:
     TypedSerializableElement {
 
     private val ser by lazy {
-        cls.serializer()
+        cls.serializer().let {
+            if (nullable) it.nullable
+            else it
+        }
     }
 
     override fun encode(
@@ -68,7 +72,7 @@ class TypedBindableProperty<T>(val cls: KClass<*>, val nullable: Boolean, value:
         descriptor: SerialDescriptor,
         index: Int
     ) {
-        println("descriptor=${descriptor}")
+//        println("descriptor=${descriptor}")
         try {
             @Suppress("UNCHECKED_CAST")
             encoder.encodeSerializableElement(
