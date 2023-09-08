@@ -2,25 +2,25 @@
 
 package matt.obs.prop.typed
 
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.CompositeDecoder
-import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.serializer
 import matt.lang.nametoclass.bootStrapClassForNameCache
 import matt.lang.setall.setAll
 import matt.obs.MObservable
+import matt.obs.col.BasicOCollection
 import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
+import matt.obs.col.oset.BasicObservableSet
+import matt.obs.col.oset.MutableObsSet
+import matt.obs.col.oset.ObsSet
 import matt.obs.prop.BindableProperty
 import kotlin.reflect.KClass
 
@@ -37,7 +37,10 @@ class TypedBindablePropertySerializer<T>(private val dataSerializer: KSerializer
 
     override val descriptor: SerialDescriptor = dataSerializer.descriptor
 
-    override fun serialize(encoder: Encoder, value: TypedBindableProperty<T>) {
+    override fun serialize(
+        encoder: Encoder,
+        value: TypedBindableProperty<T>
+    ) {
         dataSerializer.serialize(encoder, value.value)
     }
 
@@ -55,51 +58,32 @@ class TypedBindablePropertySerializer<T>(private val dataSerializer: KSerializer
 
 inline fun <reified T> typedBindableProperty(value: T) = TypedBindableProperty(T::class, null is T, value)
 
-@OptIn(InternalSerializationApi::class)
 @Serializable(with = TypedBindablePropertySerializer::class)
-class TypedBindableProperty<T>(val cls: KClass<*>, val nullable: Boolean, value: T) : BindableProperty<T>(value),
-    TypedSerializableElement {
+class TypedBindableProperty<T>(
+    val cls: KClass<*>,
+    val nullable: Boolean,
+    value: T
+) : BindableProperty<T>(value),
+    TypedSerializableElement<T> {
 
-    private val ser by lazy {
-        cls.serializer().let {
-            if (nullable) it.nullable
-            else it
-        }
+
+    override fun provideEncodable(): T {
+        return value
     }
 
-    override fun encode(
-        encoder: CompositeEncoder,
-        descriptor: SerialDescriptor,
-        index: Int
-    ) {
-//        println("descriptor=${descriptor}")
-        try {
-            @Suppress("UNCHECKED_CAST")
-            encoder.encodeSerializableElement(
-                descriptor = descriptor,
-                index = index,
-                serializer = ser as SerializationStrategy<T>,
-                value = value
-            )
-        } catch(e: Exception) {
-            throw e
-        }
 
-    }
-
-    override fun decode(decoder: CompositeDecoder, descriptor: SerialDescriptor, index: Int) {
-        @Suppress("UNCHECKED_CAST")
-        val loadedValue = decoder.decodeSerializableElement(
-            descriptor = descriptor,
-            index = index,
-            deserializer = ser as DeserializationStrategy<T>
-        )
+    override fun setFromEncoded(loadedValue: T) {
         value = loadedValue
     }
+
 }
 
 
-class TypedMutableObsList<E>(elementCls: KClass<*>, nullableElements: Boolean, list: MutableObsList<E>) :
+class TypedMutableObsList<E>(
+    elementCls: KClass<*>,
+    nullableElements: Boolean,
+    list: MutableObsList<E>
+) :
     AbstractTypedObsList<E>(
         elementCls = elementCls,
         nullableElements = nullableElements,
@@ -116,50 +100,84 @@ class TypedImmutableObsList<E>(
     list = list
 ), ImmutableObsList<E> by list
 
-@OptIn(InternalSerializationApi::class)
 sealed class AbstractTypedObsList<E>(
-    val elementCls: KClass<*>,
-    val nullableElements: Boolean,
+    elementCls: KClass<*>,
+    nullableElements: Boolean,
     private val list: ImmutableObsList<E>
-) : TypedSerializableElement {
-    private val elementSer by lazy {
-        elementCls.serializer()
-    }
+) : AbstractTypedObsCollection<E>(elementCls = elementCls, nullableElements = nullableElements, col = list) {
 
-    private val listSer by lazy {
+    override val colSer by lazy {
         ListSerializer(elementSer)
     }
 
-    override fun encode(encoder: CompositeEncoder, descriptor: SerialDescriptor, index: Int) {
-        @Suppress("UNCHECKED_CAST")
-        encoder.encodeSerializableElement(
-            descriptor = descriptor,
-            index = index,
-            serializer = listSer as SerializationStrategy<List<E>>,
-            value = list
-        )
+
+    override fun setFromEncoded(loadedValue: Collection<E>) {
+        (list as MutableObsList<E>).setAll(loadedValue)
     }
 
-    override fun decode(decoder: CompositeDecoder, descriptor: SerialDescriptor, index: Int) {
-        @Suppress("UNCHECKED_CAST")
-        val loadedValue = decoder.decodeSerializableElement(
-            descriptor = descriptor,
-            index = index,
-            deserializer = listSer as DeserializationStrategy<List<E>>
-        )
-        (list as MutableObsList<E>).setAll(loadedValue)
+}
+
+
+class TypedMutableObsSet<E>(
+    elementCls: KClass<*>,
+    nullableElements: Boolean,
+    set: MutableObsSet<E>
+) : AbstractTypedObsSet<E>(
+    elementCls = elementCls,
+    nullableElements = nullableElements,
+    set = set
+), MutableObsSet<E> by set
+
+class TypedImmutableObsSet<E>(
+    elementCls: KClass<*>,
+    nullableElements: Boolean,
+    set: ObsSet<E>
+) : AbstractTypedObsSet<E>(
+    elementCls = elementCls,
+    nullableElements = nullableElements,
+    set = set
+), ObsSet<E> by set
+
+
+sealed class AbstractTypedObsSet<E>(
+    elementCls: KClass<*>,
+    nullableElements: Boolean,
+    private val set: ObsSet<E>
+) : AbstractTypedObsCollection<E>(elementCls = elementCls, nullableElements = nullableElements, col = set) {
+
+    override val colSer by lazy {
+        SetSerializer(elementSer)
+    }
+
+
+    override fun setFromEncoded(loadedValue: Collection<E>) {
+        (set as BasicObservableSet<E>).setAll(loadedValue)
     }
 }
 
 
-sealed interface TypedSerializableElement : MObservable {
-    fun encode(
-        encoder: CompositeEncoder,
-        descriptor: SerialDescriptor,
-        index: Int
-    )
+@OptIn(InternalSerializationApi::class)
+sealed class AbstractTypedObsCollection<E>(
+    val elementCls: KClass<*>,
+    val nullableElements: Boolean,
+    private val col: BasicOCollection<E, *, *, *>
+) : TypedSerializableElement<Collection<E>> {
+    protected val elementSer by lazy {
+        elementCls.serializer()
+    }
 
-    fun decode(decoder: CompositeDecoder, descriptor: SerialDescriptor, index: Int)
+    protected abstract val colSer: KSerializer<*>
+
+    override fun provideEncodable() = col
+
+}
+
+
+sealed interface TypedSerializableElement<V> : MObservable {
+
+    fun provideEncodable(): V
+
+    fun setFromEncoded(loadedValue: V)
 }
 
 

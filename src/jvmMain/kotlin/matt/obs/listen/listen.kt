@@ -2,13 +2,13 @@
 
 package matt.obs.listen
 
-import matt.model.flowlogic.latch.SimpleLatch
+import matt.model.flowlogic.latch.SimpleThreadLatch
 import matt.obs.col.change.QueueChange
 import matt.obs.listen.update.QueueUpdate
 import matt.obs.prop.ObsVal
 
 fun <T> ObsVal<T>.awaitThisToBe(t: T) {
-  val latch = SimpleLatch()
+  val latch = SimpleThreadLatch()
   whenEqualsOnce(t) {
 	latch.open()
   }
@@ -16,7 +16,3 @@ fun <T> ObsVal<T>.awaitThisToBe(t: T) {
 }
 
 
-class QueueListener<E>(invoke: CollectionListener<E, QueueChange<E>, QueueUpdate<E>>.(change: QueueChange<E>)->Unit):
-	CollectionListener<E, QueueChange<E>, QueueUpdate<E>>(
-	  invoke
-	)

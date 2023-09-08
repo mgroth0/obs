@@ -1,17 +1,19 @@
 package matt.obs.queue
 
+import matt.collect.queue.MyMutableQueue
 import matt.lang.require.requireNotIs
+import matt.obs.col.InternallyBackedOQueue
 import matt.obs.col.change.QueueAdd
 import matt.obs.col.change.QueueRemove
-import matt.obs.col.col.InternallyBackedOQueue
-import java.util.*
 
-fun <E> Queue<E>.wrapInObservableQueue(): ObservableQueue<E> {
+
+fun <E : Any> MyMutableQueue<E>.wrapInObservableQueue(): ObservableQueue<E> {
     requireNotIs<ObservableQueue<*>>(this)
     return ObservableQueue(this)
 }
 
-class ObservableQueue<E> internal constructor(private val q: Queue<E>) : InternallyBackedOQueue<E>(), Queue<E>,
+class ObservableQueue<E : Any> internal constructor(private val q: MyMutableQueue<E>) : InternallyBackedOQueue<E>(),
+    MyMutableQueue<E>,
     Collection<E> by q {
 
     override fun add(element: E): Boolean {
@@ -28,9 +30,6 @@ class ObservableQueue<E> internal constructor(private val q: Queue<E>) : Interna
         TODO("Not yet implemented")
     }
 
-    override fun remove(): E {
-        TODO("Not yet implemented")
-    }
 
     override fun poll(): E? {
         val e = q.poll()

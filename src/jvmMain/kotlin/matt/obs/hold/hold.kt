@@ -2,40 +2,49 @@
 
 package matt.obs.hold
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.nullable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.listSerialDescriptor
-import kotlinx.serialization.encoding.CompositeDecoder.Companion.DECODE_DONE
-import kotlinx.serialization.encoding.CompositeDecoder.Companion.UNKNOWN_NAME
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.encoding.encodeStructure
-import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.serializer
 import matt.lang.err
-import matt.log.warn.warn
+import matt.obs.hold.custom.CustomDecoder
+import matt.obs.hold.custom.CustomSerializer
+import matt.obs.hold.custom.ElementDecoder
+import matt.obs.hold.extra.MetaProp
 import matt.obs.prop.typed.AbstractTypedObsList
+import matt.obs.prop.typed.AbstractTypedObsSet
 import matt.obs.prop.typed.TypedBindableProperty
+import matt.obs.prop.typed.TypedSerializableElement
 import matt.prim.str.elementsToString
 import kotlin.reflect.KClass
 
-@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+
+class MyCustomDecoder<T : TypedObservableHolder>(
+    getNewInstance: () -> T,
+) : CustomDecoder<T> {
+    var obj = getNewInstance()
+    val observables = obj.namedObservables()
+    var gotReplacement = false
+    override fun finishDecoding(): T {
+        return obj
+    }
+}
+
+
+abstract class ElementDecoderImpl<T : TypedObservableHolder, V>(
+    override val key: String,
+    serializer: KSerializer<V>,
+    override val isOptional: Boolean,
+) : ElementDecoder<V, T, MyCustomDecoder<T>>(serializer)
+
+@OptIn(InternalSerializationApi::class)
 open class TypedObsHolderSerializer<T : TypedObservableHolder>(
     private val cls: KClass<out T>,
-    private val classVersion: Int?
-) : KSerializer<T> {
-
-    companion object {
-        private const val CLASS_VERSION_KEY = "classVersion"
-    }
-
+) : CustomSerializer<T, MyCustomDecoder<T>, ElementDecoderImpl<T, *>>() {
 
     @Suppress("UNCHECKED_CAST")
-    private fun newInstance(): T {
+    protected fun newInstance(): T {
         val constructors = cls.java.constructors
         val goodConstructor = constructors.firstOrNull {
             it.parameterCount == 0
@@ -51,135 +60,99 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
         newInstance()
     }
 
-    override val descriptor: SerialDescriptor by lazy {
-        buildClassSerialDescriptor(cls.qualifiedName!!) {
-            if (classVersion != null) {
-                element(
-                    elementName = CLASS_VERSION_KEY,
-                    descriptor = Int::class.serializer().descriptor,
-                    isOptional = true
-                )
-            }
 
+    override fun newDecoder() = MyCustomDecoder<T>(
+        getNewInstance = { newInstance() }
+    )
+
+    internal inner class MyCustomElement<V>(
+        override val key: String,
+        override val serializer: KSerializer<V>,
+        override val isOptional: Boolean,
+    ) : ElementDecoderImpl<T, V>(key = key, serializer = serializer, isOptional = isOptional) {
+
+        override fun handleLoadedValue(
+            v: V,
+            customDecoder: MyCustomDecoder<T>
+        ) {
+            val observable = customDecoder.observables[key]
+            @Suppress("UNCHECKED_CAST")
+            (observable as TypedSerializableElement<V>).setFromEncoded(v)
+        }
+
+        override fun getCurrentValue(obj: T): V {
+            @Suppress("UNCHECKED_CAST")
+            return obj.namedObservables()[key]!!.provideEncodable() as V
+        }
+
+        override fun shouldEncode(v: V): Boolean {
+            return true /*we are encoding defaults here, yes*/
+        }
+
+        override fun handleNotFound(customDecoder: MyCustomDecoder<T>) {
+            error("I am pretty sure this should never happen with this current implementation")
+        }
+
+    }
+
+
+    override val serialName = cls.qualifiedName!!
+    override val elements by lazy {
+        buildList {
+            addAll(metaProps)
+            val metaKeys = metaProps.map { it.key }
             exampleInstance.namedObservables().forEach {
 
-                if (it.key == CLASS_VERSION_KEY) {
-                    err("property can not have the name $CLASS_VERSION_KEY")
+                if (it.key in metaKeys) {
+                    err("property can not have the name ${it.key}, which is used as a meta property")
                 }
 
-
-                val theValue = it.value
-                when (theValue) {
+                when (val theValue = it.value) {
                     is TypedBindableProperty<*> -> {
                         val cls = theValue.cls
-                        val desc = cls.serializer().let {
-                            if (theValue.nullable) it.nullable else it
-                        }.descriptor
-                        element(
-                            elementName = it.key,
-                            descriptor = desc,
-                            isOptional = true
+                        val ser = serializer(
+                            cls,
+                            listOf(),
+                            theValue.nullable
+                        )
+                        add(
+                            MyCustomElement(
+                                key = it.key, serializer = ser, isOptional = true
+                            )
                         )
                     }
 
                     is AbstractTypedObsList<*>  -> {
                         val cls = theValue.elementCls
-                        val elementDescriptor = cls.serializer().descriptor
-                        element(
-                            elementName = it.key,
-                            descriptor = listSerialDescriptor(elementDescriptor),
-                            isOptional = true
+                        val elementSerializer = cls.serializer()
+                        add(
+                            MyCustomElement(
+                                key = it.key,
+                                serializer = ListSerializer(elementSerializer),
+                                isOptional = true
+                            )
                         )
                     }
 
-
-                }
-
-
-            }
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): T {
-
-        var obj = newInstance()
-        var checkedClassVersion = false
-
-        var stopLoading = false
-
-        val compositeDecoder = decoder.beginStructure(descriptor)
-
-
-        val observables = obj.namedObservables()
-        while (true) {
-            val index = compositeDecoder.decodeElementIndex(descriptor)
-            when {
-
-                index == 0 && classVersion != null -> {
-                    checkedClassVersion = true
-                    val loadedClassVersion = compositeDecoder.decodeIntElement(descriptor, index)
-                    if (loadedClassVersion != classVersion) {
-                        obj = newInstance().apply {
-                            warn("class version not compatible! ($loadedClassVersion!=$classVersion)")
-                            wasResetBecauseSerializedDataWasWrongClassVersion = true
-                        }
-                        stopLoading = true
-                        /*break*/
+                    is AbstractTypedObsSet<*>   -> {
+                        val cls = theValue.elementCls
+                        val elementSer = cls.serializer()
+                        add(
+                            MyCustomElement(
+                                key = it.key, serializer = SetSerializer(elementSer), isOptional = true
+                            )
+                        )
                     }
                 }
-
-                index >= 0                         -> {
-
-                    if (stopLoading) {
-                        (compositeDecoder as JsonDecoder).decodeJsonElement()
-                    } else {
-                        val key = descriptor.getElementName(index)
-                        val prop = observables[key]!!
-                        prop.decode(compositeDecoder, descriptor, index = index)
-                    }
-
-
-                }
-
-
-                index == DECODE_DONE               -> break
-                index == UNKNOWN_NAME              -> err("unknown name?")
-                else                               -> error("Unexpected index: $index")
             }
         }
-
-        /*if (!stopLoading) {*/
-        compositeDecoder.endStructure(descriptor)
-        /*}*/
-
-
-        if (classVersion != null && !checkedClassVersion) {
-            warn("did not check class version!")
-            obj = newInstance().apply {
-                wasResetBecauseSerializedDataWasWrongClassVersion = true
-            }
-        }
-        return obj
     }
 
-    override fun serialize(
-        encoder: Encoder,
-        value: T
-    ) {
-//        println("serializing with classVersion=$classVersion")
-        encoder.encodeStructure(descriptor) {
-            var i = 0
-            if (classVersion != null) {
-                encodeIntElement(descriptor, i++, classVersion)
-            }
-            value.namedObservables().entries.forEach {
-//                println("nameKey=${it.key}")
-//                println("debugValue=${it.value}")
-                it.value.encode(this, descriptor, index = i++)
-            }
-
-        }
-
-
+    internal open val metaProps: List<MetaProp<T, *>> = listOf()
+    private val indexedMetaProps by lazy {
+        metaProps.withIndex().associate { it.index to it.value }
     }
+
+
 }
+

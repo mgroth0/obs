@@ -1,5 +1,6 @@
 package matt.obs.col.change
 
+import matt.collect.queue.MyQueue
 import matt.collect.set.ordered.OrderedSet
 import matt.collect.set.ordered.orderedSetOf
 import matt.collect.set.ordered.toOrderedSet
@@ -18,25 +19,43 @@ import matt.model.op.convert.Converter
 import matt.obs.col.change.atomic.compile
 import matt.prim.str.elementsToString
 
+interface NonNullCollectionChange<E, COL : Collection<E>> {
+    val collection: Collection<E>
+    fun <T : Any> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): NonNullCollectionChange<T, out Collection<T>>
+}
 
 interface CollectionChange<E, COL : Collection<E>> {
     val collection: Collection<E>
-    fun <T> convert(collection: Collection<T>, convert: (E) -> T): CollectionChange<T, out Collection<T>>
+    fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): CollectionChange<T, out Collection<T>>
 }
 
 sealed interface SetChange<E> : CollectionChange<E, Set<E>> {
     override val collection: Set<E>
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T): SetChange<T>
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): SetChange<T>
 }
 
 sealed interface ListChange<E> : CollectionChange<E, List<E>> {
     override val collection: List<E>
     val lowestChangedIndex: Int
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T): ListChange<T>
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): ListChange<T>
 }
 
 class AtomicListChange<E>(
-    override val collection: List<E>, val changes: List<ListChange<E>>, var isCompiled: Boolean = false
+    override val collection: List<E>,
+    val changes: List<ListChange<E>>,
+    var isCompiled: Boolean = false
 ) : ListChange<E>, ListAdditionBase<E>, ListRemovalBase<E> {
 
 
@@ -51,7 +70,10 @@ class AtomicListChange<E>(
             changes.minOf { it.lowestChangedIndex }
         }
 
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T): AtomicListChange<T> {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): AtomicListChange<T> {
         return AtomicListChange(
             collection as List<T>, changes.map { it.convert(collection, convert) }, isCompiled = isCompiled
         )
@@ -87,31 +109,53 @@ sealed interface ListRemovalBase<E> : RemovalBase<E, List<E>>, ListChange<E> {
     override val removedElements: List<E> get() = removedElementsIndexed.map { it.element }
 }
 
-sealed class SetAddition<E>(override val collection: Set<E>, val added: E) : SetAdditionBase<E>
-sealed class ListAddition<E>(override val collection: List<E>, val added: E) : ListAdditionBase<E>
+sealed class SetAddition<E>(
+    override val collection: Set<E>,
+    val added: E
+) : SetAdditionBase<E>
+
+sealed class ListAddition<E>(
+    override val collection: List<E>,
+    val added: E
+) : ListAdditionBase<E>
 
 
-class AddIntoSet<E>(override val collection: Set<E>, added: E) : SetAddition<E>(collection, added) {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T): AddIntoSet<T> =
-        AddIntoSet(collection as Set<T>, convert(added))
+class AddIntoSet<E>(
+    override val collection: Set<E>,
+    added: E
+) : SetAddition<E>(collection, added) {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): AddIntoSet<T> = AddIntoSet(collection as Set<T>, convert(added))
 
     override fun toString() = mehToStringBuilder("added" to added)
     override val addedElements = listOf(added)
 }
 
-class AddAtEnd<E>(override val collection: List<E>, added: E) : ListAddition<E>(collection, added) {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        AddAtEnd(collection as List<T>, convert(added))
+class AddAtEnd<E>(
+    override val collection: List<E>,
+    added: E
+) : ListAddition<E>(collection, added) {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = AddAtEnd(collection as List<T>, convert(added))
 
     override fun toString() = mehToStringBuilder("added" to added)
     override val addedElementsIndexed get() = orderedSetOf(added withIndex End)
     override val lowestChangedIndex: Int = collection.size - 1
 }
 
-class AddAt<E>(override val collection: List<E>, added: E, val index: Int) : ListAddition<E>(collection, added),
-    ListAdditionBase<E> {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        AddAt(collection as List<T>, convert(added), index = index)
+class AddAt<E>(
+    override val collection: List<E>,
+    added: E,
+    val index: Int
+) : ListAddition<E>(collection, added), ListAdditionBase<E> {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = AddAt(collection as List<T>, convert(added), index = index)
 
     override fun toString() = mehToStringBuilder("added" to added, "index" to index)
 
@@ -124,11 +168,16 @@ sealed class MultiAddition<E, COL : Collection<E>>(
     override val collection: COL
 ) : AdditionBase<E, COL>
 
-class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>) : MultiAddition<E, Set<E>>(
+class MultiAddIntoSet<E>(
+    collection: Set<E>,
+    val added: Collection<E>
+) : MultiAddition<E, Set<E>>(
     collection
 ), SetChange<E>, SetAdditionBase<E> {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        MultiAddIntoSet(collection as Set<T>, added.map(convert))
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = MultiAddIntoSet(collection as Set<T>, added.map(convert))
 
     override fun toString() = mehToStringBuilder("added" to added)
 
@@ -137,9 +186,14 @@ class MultiAddIntoSet<E>(collection: Set<E>, val added: Collection<E>) : MultiAd
 
 sealed class MultiAdditionIntoList<E>(override val collection: List<E>) : ListAdditionBase<E>
 
-class MultiAddAtEnd<E>(collection: List<E>, val added: Collection<E>) : MultiAdditionIntoList<E>(collection) {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        MultiAddAtEnd(collection as List<T>, added.map(convert))
+class MultiAddAtEnd<E>(
+    collection: List<E>,
+    val added: Collection<E>
+) : MultiAdditionIntoList<E>(collection) {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = MultiAddAtEnd(collection as List<T>, added.map(convert))
 
 
     override fun toString() = mehToStringBuilder("added" to added)
@@ -150,12 +204,17 @@ class MultiAddAtEnd<E>(collection: List<E>, val added: Collection<E>) : MultiAdd
 
 }
 
-class MultiAddAt<E>(collection: List<E>, val added: Collection<E>, val index: Int) :
-    MultiAdditionIntoList<E>(
-        collection
-    ) {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        MultiAddAt(collection as List<T>, added.map(convert), index)
+class MultiAddAt<E>(
+    collection: List<E>,
+    val added: Collection<E>,
+    val index: Int
+) : MultiAdditionIntoList<E>(
+    collection
+) {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = MultiAddAt(collection as List<T>, added.map(convert), index)
 
     override val addedElementsIndexed get() = added.mapIndexed { idx, it -> it withIndex index + idx }.toOrderedSet()
 
@@ -182,16 +241,25 @@ sealed class Removal<E, COL : Collection<E>>(
 ) : RemovalBase<E, COL> { //  override val removedElements get() = listOf(removed)
 }
 
-sealed class SetRemoval<E>(override val collection: Set<E>, removed: E) : Removal<E, Set<E>>(collection, removed),
-    SetRemovalBase<E>
+sealed class SetRemoval<E>(
+    override val collection: Set<E>,
+    removed: E
+) : Removal<E, Set<E>>(collection, removed), SetRemovalBase<E>
 
-sealed class ListRemoval<E>(override val collection: List<E>, removed: E) : Removal<E, List<E>>(collection, removed),
-    ListRemovalBase<E>
+sealed class ListRemoval<E>(
+    override val collection: List<E>,
+    removed: E
+) : Removal<E, List<E>>(collection, removed), ListRemovalBase<E>
 
 
-class RemoveElementFromSet<E>(collection: Set<E>, removed: E) : SetRemoval<E>(collection, removed) {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        RemoveElementFromSet(collection as Set<T>, convert(removed))
+class RemoveElementFromSet<E>(
+    collection: Set<E>,
+    removed: E
+) : SetRemoval<E>(collection, removed) {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = RemoveElementFromSet(collection as Set<T>, convert(removed))
 
     override val removedElements get() = listOf(removed)
 }
@@ -208,9 +276,15 @@ class RemoveElementFromSet<E>(collection: Set<E>, removed: E) : SetRemoval<E>(co
 //}
 
 
-class RemoveElementFromList<E>(collection: List<E>, removed: E, val index: Int) : ListRemoval<E>(collection, removed) {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        RemoveElementFromList(collection as List<T>, convert(removed), index)
+class RemoveElementFromList<E>(
+    collection: List<E>,
+    removed: E,
+    val index: Int
+) : ListRemoval<E>(collection, removed) {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = RemoveElementFromList(collection as List<T>, convert(removed), index)
 
     override val removedElementsIndexed get() = orderedSetOf(removed withIndex First)
 
@@ -218,10 +292,15 @@ class RemoveElementFromList<E>(collection: List<E>, removed: E, val index: Int) 
 }
 
 
-class RemoveAt<E>(collection: List<E>, removed: E, val index: Int) : ListRemoval<E>(collection, removed),
-    ListRemovalBase<E> {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        RemoveAt(collection as List<T>, convert(removed), index)
+class RemoveAt<E>(
+    collection: List<E>,
+    removed: E,
+    val index: Int
+) : ListRemoval<E>(collection, removed), ListRemovalBase<E> {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = RemoveAt(collection as List<T>, convert(removed), index)
 
     override val removedElementsIndexed get() = orderedSetOf(removed withIndex index)
 
@@ -234,27 +313,35 @@ class RemoveAt<E>(collection: List<E>, removed: E, val index: Int) : ListRemoval
 } //class RemoveFirst<E>(collection: Collection<E>, removed: E): matt.obs.map.change.Removal<E>(collection, removed)
 
 sealed class MultiRemoval<E, COL : Collection<E>>(
-    override val collection: COL, val removed: Collection<E>
+    override val collection: COL,
+    val removed: Collection<E>
 ) : RemovalBase<E, COL> { //  override val removedElements get() = removed.toList()
 }
 
 sealed class MultiRemovalFromSet<E>(
-    override val collection: Set<E>, removed: Collection<E>
+    override val collection: Set<E>,
+    removed: Collection<E>
 ) : MultiRemoval<E, Set<E>>(collection, removed), SetRemovalBase<E>
 
 sealed class MultiRemovalFromList<E>(
-    override val collection: List<E>, removed: Collection<E>
+    override val collection: List<E>,
+    removed: Collection<E>
 ) : MultiRemoval<E, List<E>>(collection, removed), ListRemovalBase<E>
 
 
-class RemoveElementsFromSet<E>(collection: Set<E>, removed: Collection<E>) : MultiRemovalFromSet<E>(
+class RemoveElementsFromSet<E>(
+    collection: Set<E>,
+    removed: Collection<E>
+) : MultiRemovalFromSet<E>(
     collection, removed
 ) {
 
     override val removedElements get() = removed.toList()
 
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        RemoveElementsFromSet(collection as Set<T>, removed.map(convert))
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = RemoveElementsFromSet(collection as Set<T>, removed.map(convert))
 
     override fun toString() = mehToStringBuilder(
         mapOf(
@@ -265,13 +352,18 @@ class RemoveElementsFromSet<E>(collection: Set<E>, removed: Collection<E>) : Mul
 }
 
 
-class RemoveElements<E>(collection: List<E>, removed: Collection<E>, override val lowestChangedIndex: Int) :
-    MultiRemovalFromList<E>(collection, removed) {
+class RemoveElements<E>(
+    collection: List<E>,
+    removed: Collection<E>,
+    override val lowestChangedIndex: Int
+) : MultiRemovalFromList<E>(collection, removed) {
 
     override val removedElementsIndexed get() = removed.map { it withIndex All }.toOrderedSet()
 
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        RemoveElements(collection as List<T>, removed.map(convert), lowestChangedIndex = lowestChangedIndex)
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = RemoveElements(collection as List<T>, removed.map(convert), lowestChangedIndex = lowestChangedIndex)
 
     override fun toString() = mehToStringBuilder(
         mapOf(
@@ -307,7 +399,10 @@ class RemoveAtIndices<E>(
             )
         }.toOrderedSet()
 
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T): RemoveAtIndices<T> {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): RemoveAtIndices<T> {
         return RemoveAtIndices(
             collection as List<T>,
             removedWithIndices.map { IndexedValue(it.index, convert(it.value)) },
@@ -337,21 +432,32 @@ class RemoveAtIndices<E>(
 }
 
 
-class RetainAllSet<E>(collection: Set<E>, removed: Collection<E>, val retained: Collection<E>) : MultiRemovalFromSet<E>(
-    collection,
-    removed
+class RetainAllSet<E>(
+    collection: Set<E>,
+    removed: Collection<E>,
+    val retained: Collection<E>
+) : MultiRemovalFromSet<E>(
+    collection, removed
 ), SetChange<E> {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        RetainAllSet(collection as Set<T>, removed.map(convert), retained = retained.map(convert))
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = RetainAllSet(collection as Set<T>, removed.map(convert), retained = retained.map(convert))
 
     override val removedElements = removed.toList()
 }
 
 
 class RetainAllList<E>(
-    collection: List<E>, removed: Collection<E>, val retained: Collection<E>, override val lowestChangedIndex: Int
+    collection: List<E>,
+    removed: Collection<E>,
+    val retained: Collection<E>,
+    override val lowestChangedIndex: Int
 ) : MultiRemovalFromList<E>(collection, removed), ListRemovalBase<E> {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) = RetainAllList(
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = RetainAllList(
         collection as List<T>,
         removed.map(convert),
         retained = retained.map(convert),
@@ -365,19 +471,29 @@ class RetainAllList<E>(
 }
 
 
-sealed class Replacement<E>(override val collection: List<E>, val removed: E, val added: E) : ListAdditionBase<E>,
-    ListRemovalBase<E> { //  override val addedElements get() = listOf(added)
+sealed class Replacement<E>(
+    override val collection: List<E>,
+    val removed: E,
+    val added: E
+) : ListAdditionBase<E>, ListRemovalBase<E> { //  override val addedElements get() = listOf(added)
     //  override val removedElements get() = listOf(removed)
 
 
 }
 
-class ReplaceAt<E>(collection: List<E>, removed: E, added: E, val index: Int) : Replacement<E>(
+class ReplaceAt<E>(
+    collection: List<E>,
+    removed: E,
+    added: E,
+    val index: Int
+) : Replacement<E>(
     collection, removed, added
 ) {
 
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        ReplaceAt(collection as List<T>, convert(removed), added = convert(added), index = index)
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = ReplaceAt(collection as List<T>, convert(removed), added = convert(added), index = index)
 
     override val removedElementsIndexed get() = orderedSetOf(removed.withIndex(index))
     override val addedElementsIndexed get() = orderedSetOf(added withIndex index)
@@ -392,18 +508,26 @@ class ReplaceAt<E>(collection: List<E>, removed: E, added: E, val index: Int) : 
 
 }
 
-class ClearSet<E>(collection: Set<E>, removed: Collection<E>) : MultiRemovalFromSet<E>(collection, removed),
-    SetChange<E> {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        ClearSet(collection as Set<T>, removed = removed.map(convert))
+class ClearSet<E>(
+    collection: Set<E>,
+    removed: Collection<E>
+) : MultiRemovalFromSet<E>(collection, removed), SetChange<E> {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = ClearSet(collection as Set<T>, removed = removed.map(convert))
 
     override val removedElements = removed.toList()
 }
 
-class ClearList<E>(collection: List<E>, removed: Collection<E>) : MultiRemovalFromList<E>(collection, removed),
-    ListRemovalBase<E> {
-    override fun <T> convert(collection: Collection<T>, convert: (E) -> T) =
-        ClearList(collection as List<T>, removed = removed.map(convert))
+class ClearList<E>(
+    collection: List<E>,
+    removed: Collection<E>
+) : MultiRemovalFromList<E>(collection, removed), ListRemovalBase<E> {
+    override fun <T> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ) = ClearList(collection as List<T>, removed = removed.map(convert))
 
     override val removedElementsIndexed: OrderedSet<MyIndexedValue<E, out RemovalIndex>>
         get() = removed.map { it withIndex All }.toOrderedSet()
@@ -431,12 +555,18 @@ fun <E> MutableSet<E>.mirror(c: SetChange<E>): SetChange<E> {
     return c
 }
 
-fun <S, T> MutableSet<T>.mirror(c: SetChange<S>, convert: (S) -> T) {
+fun <S, T> MutableSet<T>.mirror(
+    c: SetChange<S>,
+    convert: (S) -> T
+) {
     mirror(c.convert(this, convert))
 }
 
 
-fun <E> MutableList<E>.mirror(c: ListChange<E>, debug: Boolean = false): ListChange<E> {
+fun <E> MutableList<E>.mirror(
+    c: ListChange<E>,
+    debug: Boolean = false
+): ListChange<E> {
     if (debug) {
         println("mirror: $c")
         taball("before mirror", this)
@@ -456,8 +586,7 @@ fun <E> MutableList<E>.mirror(c: ListChange<E>, debug: Boolean = false): ListCha
             is RemoveAtIndices       -> {
                 require(c.isRange)
                 subList(
-                    c.lowestChangedIndex,
-                    c.removedElementsIndexed.last().index.i + 1
+                    c.lowestChangedIndex, c.removedElementsIndexed.last().index.i + 1
                 ).clear()        //		c.removedElementsIndexed.sortedBy { it.index }.forEach {
                 //		  removeAt(it.index.i)
                 //		}
@@ -479,7 +608,37 @@ fun <E> MutableList<E>.mirror(c: ListChange<E>, debug: Boolean = false): ListCha
     return c
 }
 
-fun <S, T> MutableList<T>.mirror(c: ListChange<S>, convert: (S) -> T) {
+fun <S, T> MutableList<T>.mirror(
+    c: ListChange<S>,
+    convert: (S) -> T
+) {
     mirror(c.convert(this, convert))
 }
 
+
+sealed interface QueueChange<E : Any> : NonNullCollectionChange<E, MyQueue<E>>
+
+
+class QueueAdd<E : Any>(
+    val added: E,
+    override val collection: MyQueue<E>
+) : QueueChange<E> {
+    override fun <T : Any> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): QueueAdd<T> {
+        return QueueAdd(convert(added), collection as MyQueue<T>)
+    }
+}
+
+class QueueRemove<E : Any>(
+    val removed: E,
+    override val collection: MyQueue<E>
+) : QueueChange<E> {
+    override fun <T : Any> convert(
+        collection: Collection<T>,
+        convert: (E) -> T
+    ): QueueRemove<T> {
+        return QueueRemove(convert(removed), collection as MyQueue<T>)
+    }
+}

@@ -233,6 +233,9 @@ fun <E> basicROObservableListOf(vararg elements: E): MutableObsList<E> =
 fun <E> basicMutableObservableListOf(vararg elements: E): MutableObsList<E> =
     BasicObservableListImpl(elements.toList())
 
+fun <E> basicMutableObservableListOf(elements: List<E>): MutableObsList<E> =
+    BasicObservableListImpl(elements.toList())
+
 
 fun <E> ImmutableObsList<E>.toMutableObsList() = toBasicObservableList()
 

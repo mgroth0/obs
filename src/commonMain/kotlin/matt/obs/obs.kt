@@ -1,6 +1,6 @@
 package matt.obs
 
-import matt.lang.function.MetaFunction
+import matt.lang.exec.Exec
 import matt.lang.function.Op
 import matt.lang.require.requireNonNegative
 import matt.lang.require.requireNull
@@ -29,7 +29,7 @@ interface MObservable {
 
     /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
     fun patientlyObserve(
-        scheduleOp: MetaFunction,
+        scheduleOp: Exec,
         op: () -> Unit
     ): MyListenerInter<*> {
         var shouldScheduleAnother = true

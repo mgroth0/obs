@@ -1,9 +1,9 @@
 package matt.obs.bind
 
+import matt.async.thread.namedThread
 import matt.lang.require.requireOne
 import matt.test.yesIUseTestLibs
 import org.junit.jupiter.api.Test
-import kotlin.concurrent.thread
 
 
 class ObsBindTests {
@@ -13,10 +13,10 @@ class ObsBindTests {
 
         yesIUseTestLibs()
 
-        val d = thread(isDaemon = true) {
+        val d = namedThread(isDaemon = true,name = "ObsBindTests deadlock thread 1") {
             var binding: MyBinding<Int>? = null
             binding = MyBinding {
-                thread {
+                namedThread(name="ObsBindTests deadlock thread 2") {
                     binding!!.markInvalid()
                 }.join()
                 1

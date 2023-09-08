@@ -12,22 +12,36 @@ import matt.obs.MObservable
 import matt.obs.col.change.ListChange
 import matt.obs.col.olist.basicMutableObservableListOf
 import matt.obs.col.olist.basicROObservableListOf
+import matt.obs.col.oset.basicImmutableObservableSetOf
+import matt.obs.col.oset.basicObservableSetOf
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.ObsHolderListener
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.typed.TypedBindableProperty
 import matt.obs.prop.typed.TypedImmutableObsList
+import matt.obs.prop.typed.TypedImmutableObsSet
 import matt.obs.prop.typed.TypedMutableObsList
+import matt.obs.prop.typed.TypedMutableObsSet
 import matt.obs.prop.typed.TypedSerializableElement
 
-interface MObsHolder<O : MObservable> : MObservable {
+interface ObservableStructIdea
+
+
+
+
+
+
+interface MObsHolder<O : MObservable> : MObservable, ObservableStructIdea {
     val observables: List<O>
 
     override fun observe(op: () -> Unit) = ObsHolderListener().apply {
         subListeners.setAll(observables.map { it.observe(op) })
     }
 
-    override fun observeWeakly(w: MyWeakRef<*>, op: () -> Unit): MyListenerInter<*> = ObsHolderListener().apply {
+    override fun observeWeakly(
+        w: MyWeakRef<*>,
+        op: () -> Unit
+    ): MyListenerInter<*> = ObsHolderListener().apply {
         subListeners.setAll(observables.map { it.observeWeakly(w, op) })
     }
 
@@ -73,7 +87,10 @@ open class ObservableObjectHolder<T> : ObservableHolderImplBase<BindableProperty
 
 open class ObservableHolderImpl : ObservableHolderImplBase<MObservable>() {
 
-    fun <T> registeredProp(defaultValue: T, onChange: (() -> Unit)? = null) = provider {
+    fun <T> registeredProp(
+        defaultValue: T,
+        onChange: (() -> Unit)? = null
+    ) = provider {
         val fx = BindableProperty(defaultValue)
         onChange?.go { listener ->
             fx.onChange { listener() }
@@ -83,7 +100,10 @@ open class ObservableHolderImpl : ObservableHolderImplBase<MObservable>() {
     }
 
 
-    fun <E> registeredMutableList(vararg default: E, listener: ((ListChange<E>) -> Unit)? = null) = provider {
+    fun <E> registeredMutableList(
+        vararg default: E,
+        listener: ((ListChange<E>) -> Unit)? = null
+    ) = provider {
         val fx = basicMutableObservableListOf(*default).also {
             if (listener != null) it.onChange {
                 listener.invoke(it)
@@ -93,7 +113,10 @@ open class ObservableHolderImpl : ObservableHolderImplBase<MObservable>() {
         SimpleGetter(fx)
     }
 
-    fun <E> registeredList(vararg default: E, listener: ((ListChange<E>) -> Unit)? = null) = provider {
+    fun <E> registeredList(
+        vararg default: E,
+        listener: ((ListChange<E>) -> Unit)? = null
+    ) = provider {
         val fx = basicROObservableListOf(*default).also {
             if (listener != null) it.onChange {
                 listener.invoke(it)
@@ -106,14 +129,17 @@ open class ObservableHolderImpl : ObservableHolderImplBase<MObservable>() {
 }
 
 
-open class TypedObservableHolder : ObservableHolderImplBase<TypedSerializableElement>() {
+open class TypedObservableHolder : ObservableHolderImplBase<TypedSerializableElement<*>>() {
 
     var wasResetBecauseSerializedDataWasWrongClassVersion = false
 
     private val sectionsM = mutableListOf<TypedObservableHolder>()
     val sections: List<TypedObservableHolder> = sectionsM
 
-    inline fun <reified T> registeredProp(defaultValue: T, noinline onChange: (() -> Unit)? = null) = provider {
+    inline fun <reified T> registeredProp(
+        defaultValue: T,
+        noinline onChange: (() -> Unit)? = null
+    ) = provider {
         val fx = TypedBindableProperty(T::class, nullable = null is T, value = defaultValue)
         onChange?.go { listener ->
             fx.onChange { listener() }
@@ -147,6 +173,22 @@ open class TypedObservableHolder : ObservableHolderImplBase<TypedSerializableEle
     inline fun <reified E> registeredList(vararg default: E) = provider {
         val list = basicROObservableListOf(*default)
         val fx = TypedImmutableObsList(elementCls = E::class, nullableElements = null is E, list = list)
+        _observables[it] = fx
+        postRegister(fx)
+        SimpleGetter(fx)
+    }
+
+    inline fun <reified E> registeredSet(vararg default: E) = provider {
+        val set = basicImmutableObservableSetOf(*default)
+        val fx = TypedImmutableObsSet(elementCls = E::class, nullableElements = null is E, set = set)
+        _observables[it] = fx
+        postRegister(fx)
+        SimpleGetter(fx)
+    }
+
+    inline fun <reified E> registeredMutableSet(vararg default: E) = provider {
+        val set = basicObservableSetOf(*default)
+        val fx = TypedMutableObsSet(elementCls = E::class, nullableElements = null is E, set = set)
         _observables[it] = fx
         postRegister(fx)
         SimpleGetter(fx)

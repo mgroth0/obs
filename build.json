@@ -1,12 +1,19 @@
 {
   "type": "MultiPlatformModule",
   "jvm": {},
-  "js": {"type":"lib"},
+  "js": {
+    "type": "lib"
+  },
   "dependencies": [
     {
       "type": "Project",
       "cfg": "commonMainApi",
       "path": ":k:log"
+    },
+    {
+      "type": "Project",
+      "cfg": "jvmMainApi",
+      "path": ":k:async:thread"
     },
     {
       "type": "Project",
@@ -42,6 +49,11 @@
       "type": "Project",
       "cfg": "jvmTestImplementation",
       "path": ":k:reflect"
+    },
+    {
+      "type": "Project",
+      "cfg": "jvmTestImplementation",
+      "path": ":k:async:thread"
     }
   ]
 }
