@@ -148,9 +148,7 @@ abstract class MyBindingBaseImpl<T> :
         w: MyWeakRef<*>,
         op: () -> Unit
     ): WeakInvalidListener<T> {
-        @Suppress("UNCHECKED_CAST")
-        w as MyWeakRef<Any>
-        val l = WeakInvalidListener<T>(w) {
+        val l = WeakInvalidListener<T>(w ) {
             op()
         }
         addListener(l)

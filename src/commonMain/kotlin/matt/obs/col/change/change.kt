@@ -86,6 +86,7 @@ class AtomicListChange<E>(
 }
 
 
+fun <E> CollectionChange<E, *>.addedElementsIfAdditionl() = (this as? AdditionBase<E, *>)?.addedElements
 sealed interface AdditionBase<E, COL : Collection<E>> : CollectionChange<E, COL> {
     val addedElements: List<E>
 }
@@ -98,6 +99,7 @@ sealed interface ListAdditionBase<E> : ListChange<E>, AdditionBase<E, List<E>> {
 }
 
 
+fun <E> CollectionChange<E, *>.removedElementsIfRemoval() = (this as? RemovalBase<E, *>)?.removedElements
 sealed interface RemovalBase<E, COL : Collection<E>> : CollectionChange<E, COL> {
     val removedElements: List<E>
 }

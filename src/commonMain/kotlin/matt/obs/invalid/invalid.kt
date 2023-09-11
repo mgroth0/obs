@@ -1,6 +1,6 @@
 package matt.obs.invalid
 
-import matt.collect.list.single.SingleElementList
+import matt.collect.list.single.SingleElementListImpl
 import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.function.Produce
 import matt.lang.weak.MyWeakRef
@@ -206,7 +206,7 @@ private open class DefaultDepListenerSet(
 	}
 
 	if (moreDeps == null) {
-	  SingleElementList(setup(mainDep, 0))
+	  SingleElementListImpl(setup(mainDep, 0))
 	} else {
 	  (listOf(mainDep) + moreDeps).mapIndexed { index, it ->
 		setup(it, index)
@@ -259,7 +259,7 @@ private open class WeakDepListenerSet(
 	}
 
 	if (moreDeps == null) {
-	  SingleElementList(setup(mainDep, 0))
+	  SingleElementListImpl(setup(mainDep, 0))
 	} else {
 	  (listOf(mainDep) + moreDeps).mapIndexed { index, it ->
 		setup(it, index)

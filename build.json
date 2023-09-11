@@ -12,6 +12,11 @@
     },
     {
       "type": "Project",
+      "cfg": "commonMainImplementation",
+      "path": ":k:classload"
+    },
+    {
+      "type": "Project",
       "cfg": "jvmMainApi",
       "path": ":k:async:thread"
     },

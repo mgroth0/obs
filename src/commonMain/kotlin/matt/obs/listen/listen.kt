@@ -104,7 +104,7 @@ class InvalidListener<T>(private val invoke: InvalidListener<T>.() -> Unit) :
 }
 
 class WeakInvalidListener<T>(
-    override val wref: MyWeakRef<Any>,
+    override val wref: MyWeakRef<out Any>,
     private val invoke: WeakInvalidListener<T>.() -> Unit
 ) : WeakValueListenerBase<Any, T>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<Any, T>> {
 
@@ -119,7 +119,7 @@ class WeakInvalidListener<T>(
         listenerDebugger = null
     }
 
-    override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<Any, T>? {
+    override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<Any, T> {
         return ValueUpdateWithWeakObj(u.new, wref.deref()!!)
     }
 
@@ -212,7 +212,7 @@ abstract class WeakListenerBase<W : Any, U : Update>() : MyListener<U>(), MyWeak
 
 sealed class WeakValueListenerBase<W : Any, T> : ValueListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(),
     MyWeakListener<ValueUpdate<T>> {
-    abstract override val wref: MyWeakRef<W>
+    abstract override val wref: MyWeakRef<out W>
     final override fun shouldBeCleaned() = wref.deref() == null
     override fun shouldRemove(): Boolean {
         return shouldBeCleaned()

@@ -38,297 +38,351 @@ import kotlin.reflect.KProperty
 typealias ObsVal<T> = MObservableVal<T, *, *>
 
 @JvmInline
-value class FakeObsVal<T>(override val value: T): MObservableValNewAndOld<T> {
+value class FakeObsVal<T>(override val value: T) : MObservableValNewAndOld<T> {
 
-  override fun addListener(listener: OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>): OldAndNewListener<T, ValueChange<T>, out ValueChange<T>> {
+    override fun addListener(listener: OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>): OldAndNewListener<T, ValueChange<T>, out ValueChange<T>> {
 //	warnOnce("listening to FakeObsVal")
-	return listener
-  }
+        return listener
+    }
 
-  override var nam: String?
-	get() = TODO("Not yet implemented")
-	set(_) {
-	  TODO("Not yet implemented")
-	}
+    override var nam: String?
+        get() = TODO("Not yet implemented")
+        set(_) {
+            TODO("Not yet implemented")
+        }
 
-  override fun removeListener(listener: MyListenerInter<*>) {
-	TODO("Not yet implemented")
-  }
+    override fun removeListener(listener: MyListenerInter<*>) {
+        TODO("Not yet implemented")
+    }
 
-  override var debugger: Prints?
-	get() = TODO("Not yet implemented")
-	set(_) {
-	  TODO("Not yet implemented")
-	}
+    override var debugger: Prints?
+        get() = TODO("Not yet implemented")
+        set(_) {
+            TODO("Not yet implemented")
+        }
 
-	override fun releaseUpdatesAfter(op: Op) {
-		TODO("Not yet implemented")
-	}
+    override fun releaseUpdatesAfter(op: Op) {
+        TODO("Not yet implemented")
+    }
 }
 
 
-sealed interface MObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, out ValueUpdate<T>>>: MListenable<L>,
-																									   ValueWrapper<T>,
-																									   ReadOnlyProperty<Any?, T> {
-  override val value: T
+sealed interface MObservableVal<T, U : ValueUpdate<T>, L : ValueListenerBase<T, U, out ValueUpdate<T>>> :
+    MListenable<L>,
+    ValueWrapper<T>,
+    ReadOnlyProperty<Any?, T> {
+    override val value: T
 
-  override operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
-	return value
-  }
+    override operator fun getValue(
+        thisRef: Any?,
+        property: KProperty<*>
+    ): T {
+        return value
+    }
 
-  @Suppress("UNCHECKED_CAST")
-  fun <R> cast(): MObservableVal<R, *, *> = binding {
-	it as R
-  }
+    @Suppress("UNCHECKED_CAST")
+    fun <R> cast(): MObservableVal<R, *, *> = binding {
+        it as R
+    }
 
-  override fun observe(op: ()->Unit): MyListenerInter<*> = onChange { op() }
-  override fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit): MyListenerInter<*> =
-	onChangeWithAlreadyWeak(w) { _, _ -> op() }
+    override fun observe(op: () -> Unit): MyListenerInter<*> = onChange { op() }
+    override fun observeWeakly(
+        w: MyWeakRef<*>,
+        op: () -> Unit
+    ): MyListenerInter<*> =
+        onChangeWithAlreadyWeak(w) { _, _ -> op() }
 
-  fun onChange(op: (T)->Unit): L
-
-
-  fun onNonNullChange(op: (T & Any)->Unit) = onChange {
-	if (it != null) op(it)
-  }
-
-  fun on(valueCheck: T, op: (T)->Unit) = onChange {
-	if (it == valueCheck) op(it)
-  }
+    fun onChange(op: (T) -> Unit): L
 
 
-  fun onChangeOnce(op: (T)->Unit) = onChange(op).apply {
-	removeAfterInvocation = true
-  }
+    fun onNonNullChange(op: (T & Any) -> Unit) = onChange {
+        if (it != null) op(it)
+    }
+
+    fun on(
+        valueCheck: T,
+        op: (T) -> Unit
+    ) = onChange {
+        if (it == valueCheck) op(it)
+    }
 
 
-  fun onChangeUntilInclusive(until: (T)->Boolean, op: (T)->Unit) = onChange {
-	op(it)
-  }.apply {
-	this.untilInclusive = {
-	  until(it.new)
-	}
-  }
-
-  fun onChangeUntilExclusive(until: (T)->Boolean, op: (T)->Unit) = onChange {
-	op(it)
-  }.apply {
-	this.untilExclusive = { until(it.new) }
-  }
+    fun onChangeOnce(op: (T) -> Unit) = onChange(op).apply {
+        removeAfterInvocation = true
+    }
 
 
-  infix fun <T> eqNow(value: T) = this.value == value
+    fun onChangeUntilInclusive(
+        until: (T) -> Boolean,
+        op: (T) -> Unit
+    ) = onChange {
+        op(it)
+    }.apply {
+        this.untilInclusive = {
+            until(it.new)
+        }
+    }
 
-  infix fun <T> eqNow(value: ObsVal<T>) = this.value == value.value
-
-  infix fun <T> notEqNow(value: T) = this.value != value
-
-  infix fun <T> notEqNow(value: ObsVal<T>) = this.value != value.value
-
-  fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit): MyListenerInter<*>
-  fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, T)->Unit): MyListenerInter<*>
-
-}
-
-fun <T, O: ObsVal<T>> O.withChangeListener(op: (T)->Unit) = apply {
-  onChange(op)
-}
+    fun onChangeUntilExclusive(
+        until: (T) -> Boolean,
+        op: (T) -> Unit
+    ) = onChange {
+        op(it)
+    }.apply {
+        this.untilExclusive = { until(it.new) }
+    }
 
 
-interface MObservableValNewAndOld<T>:
-	MObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>> {
+    infix fun <T> eqNow(value: T) = this.value == value
 
-  override fun onChange(op: (T)->Unit) = addListener(OldAndNewListenerImpl { _, new ->
-	op(new)
-  })
+    infix fun <T> eqNow(value: ObsVal<T>) = this.value == value.value
 
-  fun onChangeWithOld(op: (old: T, new: T)->Unit) = run {
-	val listener = OldAndNewListenerImpl { old: T, new: T ->
-	  op(old, new)
-	}
-	addListener(listener)
-  }
+    infix fun <T> notEqNow(value: T) = this.value != value
 
-  override fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit) = run {
-	val weakRef = MyWeakRef(o)
-	onChangeWithAlreadyWeak(weakRef, op)
-  }
+    infix fun <T> notEqNow(value: ObsVal<T>) = this.value != value.value
 
-  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, T)->Unit) = run {
-	val listener = WeakListenerWithOld(weakRef) { o: W, _: T, new: T ->
-	  op(o, new)
-	}.apply {
-	  removeCondition = { weakRef.deref() == null }
-	}
-	addListener(listener)
-  }
+    fun <W : Any> onChangeWithWeak(
+        o: W,
+        op: (W, T) -> Unit
+    ): MyListenerInter<*>
 
-  fun <W: Any> onChangeWithAlreadyWeakAndOld(weakRef: WeakRefInter<W>, op: (W, o: T, n: T)->Unit) = run {
-	val listener = WeakListenerWithOld(weakRef) { o: W, old: T, new: T ->
-	  op(o, old, new)
-	}.apply {
-	  removeCondition = { weakRef.deref() == null }
-	}
-	addListener(listener)
-  }
-
-  fun <W: Any> onChangeWithWeakAndOld(o: W, op: (W, T, T)->Unit) = run {
-	val weakRef = MyWeakRef(o)
-	val listener = WeakListenerWithOld(weakRef) { o: W, old: T, new: T ->
-	  op(o, old, new)
-	}.apply {
-	  removeCondition = { weakRef.deref() == null }
-	}
-	addListener(listener)
-  }
+    fun <W : Any> onChangeWithAlreadyWeak(
+        weakRef: MyWeakRef<W>,
+        op: (W, T) -> Unit
+    ): MyListenerInter<*>
 
 }
 
-interface MObservableValNewOnly<T>:
-	MObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
+fun <T, O : ObsVal<T>> O.withChangeListener(op: (T) -> Unit) = apply {
+    onChange(op)
+}
 
 
-  override fun onChange(op: (T)->Unit) = addListener(ChangeListener { new ->
-	op(new)
-  })
+interface MObservableValNewAndOld<T> :
+    MObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>> {
 
-  override fun <W: Any> onChangeWithWeak(o: W, op: (W, T)->Unit) = run {
-	val weakRef = MyWeakRef(o)
-	onChangeWithAlreadyWeak(weakRef, op)
-  }
+    override fun onChange(op: (T) -> Unit) = addListener(OldAndNewListenerImpl { _, new ->
+        op(new)
+    })
 
-  override fun <W: Any> onChangeWithAlreadyWeak(weakRef: MyWeakRef<W>, op: (W, T)->Unit) = run {
-	val listener = WeakChangeListenerWithNewValue(weakRef) { o: W, new: T ->
-	  op(o, new)
-	}.apply {
-	  removeCondition = { weakRef.deref() == null }
-	}
-	addListener(listener)
-  }
+    fun onChangeWithOld(op: (old: T, new: T) -> Unit) = run {
+        val listener = OldAndNewListenerImpl { old: T, new: T ->
+            op(old, new)
+        }
+        addListener(listener)
+    }
+
+    override fun <W : Any> onChangeWithWeak(
+        o: W,
+        op: (W, T) -> Unit
+    ) = run {
+        val weakRef = MyWeakRef(o)
+        onChangeWithAlreadyWeak(weakRef, op)
+    }
+
+    override fun <W : Any> onChangeWithAlreadyWeak(
+        weakRef: MyWeakRef<W>,
+        op: (W, T) -> Unit
+    ) = run {
+        val listener = WeakListenerWithOld(weakRef) { o: W, _: T, new: T ->
+            op(o, new)
+        }.apply {
+            removeCondition = { weakRef.deref() == null }
+        }
+        addListener(listener)
+    }
+
+    fun <W : Any> onChangeWithAlreadyWeakAndOld(
+        weakRef: WeakRefInter<W>,
+        op: (W, o: T, n: T) -> Unit
+    ) = run {
+        val listener = WeakListenerWithOld(weakRef) { o: W, old: T, new: T ->
+            op(o, old, new)
+        }.apply {
+            removeCondition = { weakRef.deref() == null }
+        }
+        addListener(listener)
+    }
+
+    fun <W : Any> onChangeWithWeakAndOld(
+        o: W,
+        op: (W, T, T) -> Unit
+    ) = run {
+        val weakRef = MyWeakRef(o)
+        val listener = WeakListenerWithOld(weakRef) { o: W, old: T, new: T ->
+            op(o, old, new)
+        }.apply {
+            removeCondition = { weakRef.deref() == null }
+        }
+        addListener(listener)
+    }
+
+}
+
+interface MObservableValNewOnly<T> :
+    MObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>> {
+
+
+    override fun onChange(op: (T) -> Unit) = addListener(ChangeListener { new ->
+        op(new)
+    })
+
+    override fun <W : Any> onChangeWithWeak(
+        o: W,
+        op: (W, T) -> Unit
+    ) = run {
+        val weakRef = MyWeakRef(o)
+        onChangeWithAlreadyWeak(weakRef, op)
+    }
+
+    override fun <W : Any> onChangeWithAlreadyWeak(
+        weakRef: MyWeakRef<W>,
+        op: (W, T) -> Unit
+    ) = run {
+        val listener = WeakChangeListenerWithNewValue(weakRef) { o: W, new: T ->
+            op(o, new)
+        }.apply {
+            removeCondition = { weakRef.deref() == null }
+        }
+        addListener(listener)
+    }
 
 }
 
 
 interface FXBackedPropBase {
-  val isFXBound: Boolean
+    val isFXBound: Boolean
 }
 
 typealias Var<T> = WritableMObservableVal<T, *, *>
 
-interface WritableMObservableVal<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, *>>: MObservableVal<T, U, L>,
-																					   BindableValue<T>,
-																					   ReadWriteProperty<Any?, T> {
+interface WritableMObservableVal<T, U : ValueUpdate<T>, L : ValueListenerBase<T, U, *>> : MObservableVal<T, U, L>,
+    BindableValue<T>,
+    ReadWriteProperty<Any?, T> {
 
 
-  override var value: T
+    override var value: T
 
-  override fun getValue(thisRef: Any?, property: KProperty<*>): T {
-	return value
-  }
-
-
-  override operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
-	this.value = value
-  }
+    override fun getValue(
+        thisRef: Any?,
+        property: KProperty<*>
+    ): T {
+        return value
+    }
 
 
-  override fun <R> cast() = CastedWritableProp<T, R>(this)
-  fun <R> proxy(converter: Converter<T, R>) = ProxyProp(this, converter)
-
-  fun <R> proxyInv(converter: Converter<R, T>) = ProxyProp(this, converter.invert())
-
-
-  infix fun v(value: T) {
-	this.value = value
-  }
-
-  fun readOnly() = binding { it }
+    override operator fun setValue(
+        thisRef: Any?,
+        property: KProperty<*>,
+        value: T
+    ) {
+        this.value = value
+    }
 
 
-  fun takeNonNullChangesFrom(o: ObsVal<out T?>) {
-	o.onNonNullChange {
-	  value = it!!
-	}
-  }
+    override fun <R> cast() = CastedWritableProp<T, R>(this)
+    fun <R> proxy(converter: Converter<T, R>) = ProxyProp(this, converter)
 
-  fun takeChangesFrom(o: ObsVal<out T>) {
-	o.onChange {
-	  value = it
-	}
-  }
+    fun <R> proxyInv(converter: Converter<R, T>) = ProxyProp(this, converter.invert())
 
-  fun takeChangesFromWhen(o: ObsVal<out T>, predicate: ()->Boolean) {
-	o.onChange {
-	  if (predicate()) {
-		value = it
-	  }
 
-	}
-  }
+    infix fun v(value: T) {
+        this.value = value
+    }
+
+    fun readOnly() = binding { it }
+
+
+    fun takeNonNullChangesFrom(o: ObsVal<out T?>) {
+        o.onNonNullChange {
+            value = it!!
+        }
+    }
+
+    fun takeChangesFrom(o: ObsVal<out T>) {
+        o.onChange {
+            value = it
+        }
+    }
+
+    fun takeChangesFromWhen(
+        o: ObsVal<out T>,
+        predicate: () -> Boolean
+    ) {
+        o.onChange {
+            if (predicate()) {
+                value = it
+            }
+
+        }
+    }
 
 
 }
 
 
-fun <T, O: Var<T>> O.withNonNullUpdatesFrom(o: ObsVal<out T?>): O = apply {
-  takeNonNullChangesFrom(o)
+fun <T, O : Var<T>> O.withNonNullUpdatesFrom(o: ObsVal<out T?>): O = apply {
+    takeNonNullChangesFrom(o)
 }
 
-fun <T, O: Var<T>> O.withUpdatesFrom(o: ObsVal<out T>): O = apply {
-  takeChangesFrom(o)
+fun <T, O : Var<T>> O.withUpdatesFrom(o: ObsVal<out T>): O = apply {
+    takeChangesFrom(o)
 }
 
-fun <T, O: Var<T>> O.withUpdatesFromWhen(o: ObsVal<out T>, predicate: ()->Boolean): O = apply {
-  takeChangesFromWhen(o, predicate)
+fun <T, O : Var<T>> O.withUpdatesFromWhen(
+    o: ObsVal<out T>,
+    predicate: () -> Boolean
+): O = apply {
+    takeChangesFromWhen(o, predicate)
 }
 
-abstract class MObservableROValBase<T, U: ValueUpdate<T>, L: ValueListenerBase<T, U, *>>: MObservableImpl<U, L>(),
-																						  MObservableVal<T, U, L> {
+abstract class MObservableROValBase<T, U : ValueUpdate<T>, L : ValueListenerBase<T, U, *>> : MObservableImpl<U, L>(),
+    MObservableVal<T, U, L> {
 
 
-  infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
-	it == other.value
-  }
+    infix fun eq(other: ReadOnlyBindableProperty<*>) = binding(other) {
+        it == other.value
+    }
 
 
-  infix fun neq(other: ReadOnlyBindableProperty<*>) = eq(other).not()
+    infix fun neq(other: ReadOnlyBindableProperty<*>) = eq(other).not()
 
-  infix fun eq(other: Any?) = binding {
-	it == other
-  }
+    infix fun eq(other: Any?) = binding {
+        it == other
+    }
 
-  infix fun neq(other: Any?) = eq(other).not()
-
-
-  val isNull by lazySoft {
-	eq(null)
-  }
-
-  val isNotNull by lazySoft {
-	//	println("here again?")
-	isNull.not()
-  }
+    infix fun neq(other: Any?) = eq(other).not()
 
 
-  override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
+    val isNull by lazySoft {
+        eq(null)
+    }
+
+    val isNotNull by lazySoft {
+        //	println("here again?")
+        isNull.not()
+    }
+
+
+    override fun toString() = "[${this::class.simpleName} value=${value.toString()}]"
 
 
 }
 
 typealias ValProp<T> = ReadOnlyBindableProperty<T>
 
-open class ReadOnlyBindableProperty<T>(value: T):
-	MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>(),
-	MObservableValNewAndOld<T> {
+open class ReadOnlyBindableProperty<T>(value: T) :
+    MObservableROValBase<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>(),
+    MObservableValNewAndOld<T> {
 
-  override var value = value
-	protected set(v) {
-	  if (v != field) {
-		val old = v
-		field = v
-		notifyListeners(ValueChange(old, v))
-	  }
-	}
+    override var value = value
+        protected set(v) {
+            if (v != field) {
+                val old = v
+                field = v
+                notifyListeners(ValueChange(old, v))
+            }
+        }
 
 }
 
@@ -338,116 +392,119 @@ typealias VarProp<T> = BindableProperty<T>
 
 typealias GoodVar<T> = MWritableValNewAndOld<T>
 
-interface MWritableValNewAndOld<T>:
-	WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>,
-	MObservableValNewAndOld<T>
+interface MWritableValNewAndOld<T> :
+    WritableMObservableVal<T, ValueChange<T>, OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>>,
+    MObservableValNewAndOld<T>
 
-class SynchronizedProperty<T>(value: T): BindableProperty<T>(value) {
-  @PublishedApi
-  internal val monitor = {}
-  fun <R> with(op: Produce<R>) = inSync(monitor, op)
+class SynchronizedProperty<T>(value: T) : BindableProperty<T>(value) {
+    @PublishedApi
+    internal val monitor = {}
+    fun <R> with(op: Produce<R>) = inSync(monitor, op)
 
 
-  override var value: T
-	get() = inSync(monitor) { super.value }
-	set(value) {
-	  inSync(monitor) {
-		super.value = value
-	  }
-	}
+    override var value: T
+        get() = inSync(monitor) { super.value }
+        set(value) {
+            inSync(monitor) {
+                super.value = value
+            }
+        }
 }
 
-open class BindableProperty<T>(value: T): ReadOnlyBindableProperty<T>(value),
-										  MWritableValNewAndOld<T>,
-										  BindableValue<T> {
+open class BindableProperty<T>(value: T) : ReadOnlyBindableProperty<T>(value),
+    MWritableValNewAndOld<T>,
+    BindableValue<T> {
 
 
-  val monitorForSetting = object {}
+    val monitorForSetting = object {}
 
-  private val bindWritePass by lazy { KeyPass() }
+    private val bindWritePass by lazy { KeyPass() }
 
-  fun setIfDifferent(newValue: T) {
-	if (value != newValue) {
-	  value = newValue
-	}
-  }
+    fun setIfDifferent(newValue: T) {
+        if (value != newValue) {
+            value = newValue
+        }
+    }
 
-  override var value = value
-	set(v) {
-	  if (v != field) {
-		require(!this.isBoundUnidirectionally || bindWritePass.isHeld) {
-		  "isBoundUnidirectionally=$isBoundUnidirectionally, bindWritePass.isHeld=${bindWritePass.isHeld}"
-		}
-		inSyncOrJustRun(monitorForSetting) {
-		  val old = field
-		  field = v
-		  notifyListeners(ValueChange(old, v))
-		}
-	  }
-	}
+    override var value = value
+        set(v) {
+            if (v != field) {
+                require(!this.isBoundUnidirectionally || bindWritePass.isHeld) {
+                    "isBoundUnidirectionally=$isBoundUnidirectionally, bindWritePass.isHeld=${bindWritePass.isHeld}"
+                }
+                inSyncOrJustRun(monitorForSetting) {
+                    val old = field
+                    field = v
+                    notifyListeners(ValueChange(old, v))
+                }
+            }
+        }
 
-  internal fun setFromBinding(new: T) {
-	bindWritePass.with {
-	  value = new
-	}
-  }
+    internal fun setFromBinding(new: T) {
+        bindWritePass.with {
+            value = new
+        }
+    }
 
-  final override val bindManager by lazy { BindableValueHelper(this) }
+    final override val bindManager by lazy { BindableValueHelper(this) }
 
 
-  override infix fun bind(source: ObsVal<out T>) = bindManager.bind(source)
-  override infix fun bindWeakly(source: ObsVal<out T>) = bindManager.bindWeakly(source)
+    override infix fun bind(source: ObsVal<out T>) = bindManager.bind(source)
+    override infix fun bindWeakly(source: ObsVal<out T>) = bindManager.bindWeakly(source)
 
-  /*allows property to still be set by other means*/
-  fun pseudoBind(source: ObsVal<out T>) {
-	value = source.value
-	source.onChange {
-	  value = it
-	}
-  }
+    /*allows property to still be set by other means*/
+    fun pseudoBind(source: ObsVal<out T>) {
+        value = source.value
+        source.onChange {
+            value = it
+        }
+    }
 
-  override fun bindBidirectional(
-	source: Var<T>,
-	checkEquality: Boolean,
-	clean: Boolean,
-	debug: Boolean,
-	weak: Boolean
-  ) =
-	bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug, weak = weak)
+    override fun bindBidirectional(
+        source: Var<T>,
+        checkEquality: Boolean,
+        clean: Boolean,
+        debug: Boolean,
+        weak: Boolean
+    ) =
+        bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug, weak = weak)
 
-  override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) =
-	bindManager.bindBidirectional(source, converter)
+    override fun <S> bindBidirectional(
+        source: Var<S>,
+        converter: Converter<T, S>
+    ) =
+        bindManager.bindBidirectional(source, converter)
 
-  override var theBind by bindManager::theBind
-  override fun unbind() = bindManager.unbind()
+    override var theBind by bindManager::theBind
+    override fun unbind() = bindManager.unbind()
 }
 
 
 fun Var<Boolean>.toggle() {
-  value = !value
+    value = !value
 }
 
-fun <A: Any?> A.toVarProp() = VarProp<A>(this)
+fun <A : Any?> A.toVarProp() = VarProp<A>(this)
 
 
 fun <T> ObsVal<T>.wrapWithScheduledUpdates(scheduler: Scheduler? = null): ObsVal<T> {
-  val w = BindableProperty(value)
-  if (scheduler != null) onChange {
-	scheduler.schedule {
-	  w.value = it
-	}
-  }
-  else onChange {
-	w.value = it
-  }
-  return w
+    val w = BindableProperty(value)
+    if (scheduler != null) onChange {
+        scheduler.schedule {
+            w.value = it
+        }
+    }
+    else onChange {
+        w.value = it
+    }
+    return w
 }
 
 
 /**
  * Listen to changes and update the value of the property if the given mutator results in a different value
  */
-fun <T> Var<T>.mutateOnChange(mutator: (T)->T) = onChange {
-  val changed = mutator(value)
-  if (changed != value) value = changed
+fun <T> Var<T>.mutateOnChange(mutator: (T) -> T) = onChange {
+    val changed = mutator(value)
+    if (changed != value) value = changed
 }

@@ -1,14 +1,15 @@
 package matt.obs.fx
 
+import matt.classload.systemClassGetter
+import matt.lang.classname.JvmQualifiedClassName
 import matt.lang.go
-import matt.lang.nametoclass.classForName
 import matt.lang.require.requireNot
 
 internal val JAVAFX_OBSERVABLE_CLASS by lazy {
-    classForName("javafx.beans.Observable") ?: run {
+    with(systemClassGetter()) {
         /*warn("observableClass is null")*/
         /*It's gonna be null when using a program that doesn't depend on javafx... which I finally am capable of*/
-        null
+        JvmQualifiedClassName("javafx.beans.Observable").get()
     }
 }
 

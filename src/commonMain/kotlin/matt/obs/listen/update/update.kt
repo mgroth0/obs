@@ -1,5 +1,6 @@
 package matt.obs.listen.update
 
+import matt.lang.idea.EventIdea
 import matt.obs.col.change.CollectionChange
 import matt.obs.col.change.ListChange
 import matt.obs.col.change.NonNullCollectionChange
@@ -8,7 +9,7 @@ import matt.obs.col.change.SetChange
 import matt.obs.map.change.MapChange
 
 sealed interface Update
-interface Event : Update
+interface Event : Update, EventIdea
 object Beep : Event
 class PagerMessage<M>(val message: M) : Event
 sealed interface ValueUpdate<T> : Update {

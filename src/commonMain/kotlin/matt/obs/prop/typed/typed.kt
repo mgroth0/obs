@@ -1,5 +1,3 @@
-@file:OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class, ExperimentalSerializationApi::class)
-
 package matt.obs.prop.typed
 
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -12,7 +10,8 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.serializer
-import matt.lang.nametoclass.bootStrapClassForNameCache
+import matt.classload.systemClassGetter
+import matt.lang.classname.JvmQualifiedClassName
 import matt.lang.setall.setAll
 import matt.obs.MObservable
 import matt.obs.col.BasicOCollection
@@ -28,13 +27,6 @@ import kotlin.reflect.KClass
 class TypedBindablePropertySerializer<T>(private val dataSerializer: KSerializer<T>) :
     KSerializer<TypedBindableProperty<T>> {
 
-    companion object {
-        private var classCache = bootStrapClassForNameCache()
-        fun clearClassCache() {
-            classCache = bootStrapClassForNameCache()
-        }
-    }
-
     override val descriptor: SerialDescriptor = dataSerializer.descriptor
 
     override fun serialize(
@@ -47,7 +39,10 @@ class TypedBindablePropertySerializer<T>(private val dataSerializer: KSerializer
     override fun deserialize(decoder: Decoder): TypedBindableProperty<T> {
         val value = dataSerializer.deserialize(decoder)
         val valueDescriptor = dataSerializer.descriptor
-        val cls = classCache[valueDescriptor.serialName]
+        val cls = with(systemClassGetter()) {
+            val serialName = valueDescriptor.serialName.removeSuffix("?") /*? at the end of a serialDescriptor means it is nullable*/
+            JvmQualifiedClassName(serialName).get() ?: error("Could not get class for serial name: $serialName")
+        }
         return TypedBindableProperty(
             cls = cls,
             nullable = valueDescriptor.isNullable,
