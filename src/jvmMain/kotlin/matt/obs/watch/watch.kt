@@ -32,6 +32,7 @@ fun <T> watchProp(
 }
 
 
+/*this is so old and broken...*/
 private object Watcher {
     private val watchProps = mutableListOf<WatchProp<*>>()
 
@@ -43,9 +44,9 @@ private object Watcher {
         var lastUpdate: UnixTime? = null
             set(value) {
                 field = value
-                nextUpdate = lazy { (lastUpdate ?: UnixTime(Duration.ZERO)) + interval }
+                nextUpdate = lazy { (lastUpdate ?: UnixTime.EPOCH) + interval }
             }
-        var nextUpdate = lazy { (lastUpdate ?: UnixTime(Duration.ZERO)) + interval }
+        var nextUpdate = lazy { (lastUpdate ?: UnixTime.EPOCH) + interval }
             private set
 
         fun update() {
