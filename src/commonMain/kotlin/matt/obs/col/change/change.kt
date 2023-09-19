@@ -4,6 +4,7 @@ import matt.collect.queue.MyQueue
 import matt.collect.set.ordered.OrderedSet
 import matt.collect.set.ordered.orderedSetOf
 import matt.collect.set.ordered.toOrderedSet
+import matt.lang.convert.BiConverter
 import matt.lang.tostring.mehToStringBuilder
 import matt.log.taball
 import matt.model.data.index.AdditionIndex
@@ -15,7 +16,6 @@ import matt.model.data.index.MyIndexedValue
 import matt.model.data.index.RemovalIndex
 import matt.model.data.index.withIndex
 import matt.model.data.proxy.list.proxy
-import matt.model.op.convert.Converter
 import matt.obs.col.change.atomic.compile
 import matt.prim.str.elementsToString
 
@@ -376,12 +376,13 @@ class RemoveElements<E>(
 }
 
 
-class IndexedValueConverter<E> : Converter<IndexedValue<E>, E> {
+class IndexedValueConverter<E> : BiConverter<IndexedValue<E>, E> {
     override fun convertToB(a: IndexedValue<E>): E {
         return a.value
     }
 
     override fun convertToA(b: E): IndexedValue<E> {
+        /*TODO: then this shouldn't be a BiConverter!!!*/
         error("only goes one way")
     }
 

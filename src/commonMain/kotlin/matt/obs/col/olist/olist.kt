@@ -45,7 +45,7 @@ import matt.obs.col.change.RetainAllList
 import matt.obs.col.olist.dynamic.BasicFilteredList
 import matt.obs.col.olist.dynamic.BasicSortedList
 import matt.obs.col.olist.dynamic.DynamicList
-import matt.obs.fx.requireNotObservable
+import matt.obs.fx.requireNotFxObservable
 import matt.obs.listen.ListListener
 import matt.obs.listen.ListListenerBase
 import matt.obs.listen.MyListenerInter
@@ -249,7 +249,7 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
     List<E> by list {
 
 
-    constructor(c: Iterable<E>) : this(c.requireNotObservable().toMutableList())
+    constructor(c: Iterable<E>) : this(c.requireNotFxObservable().toMutableList())
 
     constructor() : this(mutableListOf())
 

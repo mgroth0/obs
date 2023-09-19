@@ -1,8 +1,8 @@
 package matt.obs.prop.weak
 
+import matt.lang.convert.BiConverter
 import matt.lang.function.Op
 import matt.lang.weak.MyWeakRef
-import matt.model.op.convert.Converter
 import matt.model.op.prints.Prints
 import matt.obs.bindhelp.ABind
 import matt.obs.bindhelp.Bindable
@@ -33,7 +33,7 @@ class WeakPropWrapper<T>(p: BindableProperty<T>) : MWritableValNewAndOld<T>,
         weak: Boolean
     ) = TODO("Not yet implemented")
 
-    override fun <S> bindBidirectional(source: Var<S>, converter: Converter<T, S>) = TODO("Not yet implemented")
+    override fun <S> bindBidirectional(source: Var<S>, converter: BiConverter<T, S>) = TODO("Not yet implemented")
 
     override fun releaseUpdatesAfter(op: Op) {
         TODO("Not yet implemented")

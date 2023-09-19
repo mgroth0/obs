@@ -13,7 +13,7 @@ import matt.obs.col.change.RemoveElementFromSet
 import matt.obs.col.change.RemoveElementsFromSet
 import matt.obs.col.change.RetainAllSet
 import matt.obs.col.change.SetChange
-import matt.obs.fx.requireNotObservable
+import matt.obs.fx.requireNotFxObservable
 import matt.obs.listen.SetListenerBase
 import matt.obs.listen.WeakSetListener
 import matt.obs.listen.update.SetUpdate
@@ -63,7 +63,7 @@ open class BasicImmutableObservableSet<E>(private val theSet: Set<E>) : Internal
     ObsSet<E> {
 
 
-    constructor(c: Collection<E>) : this(c.requireNotObservable().toMutableSet())
+    constructor(c: Collection<E>) : this(c.requireNotFxObservable().toMutableSet())
     constructor() : this(emptySet())
 
 
@@ -112,7 +112,7 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>) : BasicImmutableO
     MutableObsSet<E> {
 
 
-    constructor(c: Collection<E>) : this(c.requireNotObservable().toMutableSet())
+    constructor(c: Collection<E>) : this(c.requireNotFxObservable().toMutableSet())
     constructor() : this(emptySet())
 
 

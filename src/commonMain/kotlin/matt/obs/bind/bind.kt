@@ -1,11 +1,12 @@
 package matt.obs.bind
 
 import matt.lang.anno.OnlySynchronizedOnJvm
+import matt.lang.convert.BiConverter
 import matt.lang.err
 import matt.lang.setall.setAll
 import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.keypass.KeyPass
-import matt.model.op.convert.Converter
+import matt.lang.convert.Converter
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.bindhelp.BindableValue
@@ -310,7 +311,7 @@ open class LazyBindableProp<T>(
 
     override fun <S> bindBidirectional(
         source: Var<S>,
-        converter: Converter<T, S>
+        converter: BiConverter<T, S>
     ) =
         bindManager.bindBidirectional(source, converter)
 

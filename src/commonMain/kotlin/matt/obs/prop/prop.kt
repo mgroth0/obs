@@ -1,5 +1,6 @@
 package matt.obs.prop
 
+import matt.lang.convert.BiConverter
 import matt.lang.function.Op
 import matt.lang.function.Produce
 import matt.lang.model.value.ValueWrapper
@@ -9,7 +10,6 @@ import matt.lang.weak.MyWeakRef
 import matt.lang.weak.WeakRefInter
 import matt.lang.weak.lazySoft
 import matt.model.flowlogic.keypass.KeyPass
-import matt.model.op.convert.Converter
 import matt.model.op.prints.Prints
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
@@ -281,9 +281,9 @@ interface WritableMObservableVal<T, U : ValueUpdate<T>, L : ValueListenerBase<T,
 
 
     override fun <R> cast() = CastedWritableProp<T, R>(this)
-    fun <R> proxy(converter: Converter<T, R>) = ProxyProp(this, converter)
+    fun <R> proxy(converter: BiConverter<T, R>) = ProxyProp(this, converter)
 
-    fun <R> proxyInv(converter: Converter<R, T>) = ProxyProp(this, converter.invert())
+    fun <R> proxyInv(converter: BiConverter<R, T>) = ProxyProp(this, converter.invert())
 
 
     infix fun v(value: T) {
@@ -471,7 +471,7 @@ open class BindableProperty<T>(value: T) : ReadOnlyBindableProperty<T>(value),
 
     override fun <S> bindBidirectional(
         source: Var<S>,
-        converter: Converter<T, S>
+        converter: BiConverter<T, S>
     ) =
         bindManager.bindBidirectional(source, converter)
 

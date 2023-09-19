@@ -1,7 +1,7 @@
 package matt.obs.col.change
 
 import matt.reflect.scan.mattSubClasses
-import matt.reflect.scan.systemScanner
+import matt.reflect.scan.systemScope
 import matt.test.yesIUseTestLibs
 import kotlin.reflect.full.functions
 import kotlin.test.Test
@@ -13,7 +13,7 @@ class ObsColChangeTests {
 
         yesIUseTestLibs()
 
-        with(systemScanner().usingClassGraph()) {
+        with(systemScope().usingClassGraph()) {
 
             CollectionChange::class.mattSubClasses().filter { !it.isAbstract && !it.isSealed }.forEach {
                 val classifier = it.functions.first { it.name == "convert" }.returnType.classifier

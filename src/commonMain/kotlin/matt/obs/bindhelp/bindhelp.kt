@@ -1,12 +1,13 @@
 package matt.obs.bindhelp
 
 import matt.lang.anno.OnlySynchronizedOnJvm
+import matt.lang.convert.BiConverter
+import matt.lang.convert.Converter
 import matt.lang.go
 import matt.lang.setall.setAll
 import matt.lang.weak.MyWeakRef
 import matt.lang.weak.getValue
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
-import matt.model.op.convert.Converter
 import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
 import matt.obs.bind.binding
@@ -182,7 +183,7 @@ interface BindableValue<T> : Bindable {
 
     fun <S> bindBidirectional(
         source: Var<S>,
-        converter: Converter<T, S>
+        converter: BiConverter<T, S>
     ): ABind
 }
 
@@ -195,13 +196,13 @@ fun <S, T> BindableValue<T>.bind(
 
 fun <S, T> BindableValue<T>.bindInv(
     source: ObsVal<out S>,
-    converter: Converter<T, S>
+    converter: BiConverter<T, S>
 ) =
     bind(source.binding { converter.convertToA(it) })
 
 fun <S, T> BindableValue<T>.bindBidirectionalInv(
     source: Var<S>,
-    converter: Converter<S, T>
+    converter: BiConverter<S, T>
 ) =
     bindBidirectional(source, converter.invert())
 
@@ -339,7 +340,7 @@ class BindableValueHelper<T>(internal val wProp: Var<T>) : BindableImpl(), Binda
     @OnlySynchronizedOnJvm
     override fun <S> bindBidirectional(
         source: Var<S>,
-        converter: Converter<T, S>
+        converter: BiConverter<T, S>
     ): BiTheBind {
         unbind()
         source.unbind()
