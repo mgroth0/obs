@@ -13,7 +13,7 @@ class ObsColChangeTests {
 
         yesIUseTestLibs()
 
-        with(systemScope().usingClassGraph()) {
+        with(systemScope(includePlatformClassloader=false).usingClassGraph()) {
 
             CollectionChange::class.mattSubClasses().filter { !it.isAbstract && !it.isSealed }.forEach {
                 val classifier = it.functions.first { it.name == "convert" }.returnType.classifier
