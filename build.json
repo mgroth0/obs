@@ -33,11 +33,6 @@
     {
       "type": "Project",
       "cfg": "commonMainImplementation",
-      "path": ":k:time"
-    },
-    {
-      "type": "Project",
-      "cfg": "commonMainImplementation",
       "path": ":k:json"
     },
     {
