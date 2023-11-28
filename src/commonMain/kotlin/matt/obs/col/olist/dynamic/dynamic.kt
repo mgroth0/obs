@@ -1,7 +1,7 @@
 package matt.obs.col.olist.dynamic
 
 import matt.collect.list.setAllOneByOneNeverAllowingDuplicates
-import matt.lang.require.requireNull
+import matt.lang.assertions.require.requireNull
 import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.model.op.debug.DebugLogger

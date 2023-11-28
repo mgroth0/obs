@@ -1,9 +1,10 @@
 package matt.obs.listen
 
 import matt.lang.NEVER
-import matt.lang.anno.OnlySynchronizedOnJvm
 import matt.lang.ifTrue
 import matt.lang.model.value.Value
+import matt.lang.sync.ReferenceMonitor
+import matt.lang.sync.inSync
 import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.lang.weak.WeakRefInter
@@ -177,7 +178,7 @@ class NewListener<T>(private val invoke: NewListener<T>.(new: T) -> Unit) :
 
 
 class ChangeListener<T>(private val invoke: ChangeListener<T>.(new: T) -> Unit) :
-    ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>> {
+    ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>, ReferenceMonitor {
 
     private var lastUpdate: Value<T>? = null
 
@@ -193,11 +194,10 @@ class ChangeListener<T>(private val invoke: ChangeListener<T>.(new: T) -> Unit) 
         return false
     }
 
-    @OnlySynchronizedOnJvm
     override fun subNotify(
         update: ValueUpdate<T>,
         debugger: Prints?
-    ) = invoke(update.new)
+    ) = inSync { invoke(update.new) }
 }
 
 interface MyWeakListener<U : Update> : MyListenerInter<U> {

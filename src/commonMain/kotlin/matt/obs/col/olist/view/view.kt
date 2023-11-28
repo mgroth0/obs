@@ -168,8 +168,7 @@ class NonNullsOfObsList<E>(val source: ImmutableObsList<E?>) : ImmutableObsList<
             do {
                 val n = itr.next()
                 if (n != null) return n
-            } while (n == null)
-            error("should have found non null element")
+            } while (true)
         }
 
         override fun nextIndex(): Int {

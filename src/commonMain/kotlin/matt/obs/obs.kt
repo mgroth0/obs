@@ -1,9 +1,9 @@
 package matt.obs
 
+import matt.lang.assertions.require.requireNonNegative
+import matt.lang.assertions.require.requireNull
 import matt.lang.exec.Exec
 import matt.lang.function.Op
-import matt.lang.require.requireNonNegative
-import matt.lang.require.requireNull
 import matt.lang.tostring.mehToStringBuilder
 import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
@@ -57,7 +57,7 @@ interface MListenable<L : MyListenerInter<*>> : MObservable {
 
 expect fun maybeRemoveByRefQueue(wl: MyWeakListener<*>): Boolean
 
-abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> internal constructor() : MListenable<L> {
+abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : MListenable<L> {
 
     override var nam: String? = null
 

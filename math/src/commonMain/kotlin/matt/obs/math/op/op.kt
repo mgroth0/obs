@@ -1,11 +1,11 @@
 package matt.obs.math.op
 
 import matt.lang.Num
-import matt.math.op.div
-import matt.math.op.minus
-import matt.math.op.plus
-import matt.math.op.rem
-import matt.math.op.times
+import matt.math.langg.arithmetic.op.div
+import matt.math.langg.arithmetic.op.minus
+import matt.math.langg.arithmetic.op.plus
+import matt.math.langg.arithmetic.op.rem
+import matt.math.langg.arithmetic.op.times
 import matt.obs.bind.binding
 import matt.obs.math.ObsNum
 import matt.obs.prop.Var

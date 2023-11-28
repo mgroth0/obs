@@ -4,6 +4,7 @@ import matt.lang.convert.BiConverter
 import matt.lang.function.Op
 import matt.lang.function.Produce
 import matt.lang.model.value.ValueWrapper
+import matt.lang.sync.SimpleReferenceMonitor
 import matt.lang.sync.inSync
 import matt.lang.sync.inSyncOrJustRun
 import matt.lang.weak.MyWeakRef
@@ -398,7 +399,7 @@ interface MWritableValNewAndOld<T> :
 
 class SynchronizedProperty<T>(value: T) : BindableProperty<T>(value) {
     @PublishedApi
-    internal val monitor = {}
+    internal val monitor = SimpleReferenceMonitor()
     fun <R> with(op: Produce<R>) = inSync(monitor, op)
 
 
@@ -416,7 +417,7 @@ open class BindableProperty<T>(value: T) : ReadOnlyBindableProperty<T>(value),
     BindableValue<T> {
 
 
-    val monitorForSetting = object {}
+    val monitorForSetting = SimpleReferenceMonitor()
 
     private val bindWritePass by lazy { KeyPass() }
 
@@ -427,7 +428,7 @@ open class BindableProperty<T>(value: T) : ReadOnlyBindableProperty<T>(value),
     }
 
     override var value = value
-        set(v) {
+        public set(v) {
             if (v != field) {
                 require(!this.isBoundUnidirectionally || bindWritePass.isHeld) {
                     "isBoundUnidirectionally=$isBoundUnidirectionally, bindWritePass.isHeld=${bindWritePass.isHeld}"

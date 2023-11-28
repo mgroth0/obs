@@ -2,7 +2,7 @@ package matt.obs.hold.extra
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
-import matt.lang.require.requireNot
+import matt.lang.assertions.require.requireNot
 import matt.log.warn.warn
 import matt.obs.hold.ElementDecoderImpl
 import matt.obs.hold.MyCustomDecoder

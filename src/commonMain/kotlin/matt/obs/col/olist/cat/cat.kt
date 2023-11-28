@@ -1,6 +1,7 @@
 package matt.obs.col.olist.cat
 
 import matt.lang.setall.setAll
+import matt.lang.sync.SimpleReferenceMonitor
 import matt.lang.sync.inSync
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.ImmutableObsList
@@ -20,7 +21,7 @@ class ConcatList<E>(
         var realPartStart = firstList.size
         var realPartEndExclusive = firstList.size + secondList.size
 
-        val monitor = object {}
+        val monitor = SimpleReferenceMonitor()
 
         target.setAll(firstList + secondList)
 

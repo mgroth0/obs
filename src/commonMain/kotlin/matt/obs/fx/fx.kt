@@ -7,7 +7,7 @@ import matt.lang.platform.KotlinPlatform.JS
 import matt.lang.platform.KotlinPlatform.JVM
 import matt.lang.platform.KotlinPlatform.Native
 import matt.lang.platform.currentPlatform
-import matt.lang.require.requireNot
+import matt.lang.assertions.require.requireNot
 
 internal val JAVAFX_OBSERVABLE_CLASS by lazy {
     with(systemClassGetter()) {

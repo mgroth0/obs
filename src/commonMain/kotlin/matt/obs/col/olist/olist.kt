@@ -11,12 +11,12 @@ import matt.lang.ILLEGAL
 import matt.lang.NEVER
 import matt.lang.NOT_IMPLEMENTED
 import matt.lang.anno.NeedsTest
-import matt.lang.anno.OnlySynchronizedOnJvm
+import matt.lang.assertions.require.requireNonNegative
+import matt.lang.assertions.require.requireNot
 import matt.lang.compare.comparableComparator
 import matt.lang.function.Consume
 import matt.lang.function.Op
-import matt.lang.require.requireNonNegative
-import matt.lang.require.requireNot
+import matt.lang.sync.ReferenceMonitor
 import matt.lang.sync.inSync
 import matt.lang.weak.MyWeakRef
 import matt.model.op.prints.Prints
@@ -164,6 +164,7 @@ abstract class BaseBasicWritableOList<E> : InternallyBackedOList<E>(),
     MutableObsList<E>,
     BindableList<E> {
 
+
     val bindableListHelper by lazy { BindableListImpl(this) }
     override fun <S> bind(
         source: ImmutableObsList<S>,
@@ -245,9 +246,41 @@ class ReadOnlyObsList<E>(private val obsList: ImmutableObsList<E>) : ImmutableOb
 
 
 open class BasicObservableListImpl<E> private constructor(private val list: MutableList<E>) :
-    BaseBasicWritableOList<E>(),
-    List<E> by list {
+    BaseBasicWritableOList<E>(), List<E>, ReferenceMonitor {
 
+
+
+
+    /*
+    used to be delegated  List<E> by list, but not any more due to https://youtrack.jetbrains.com/issue/KT-57299/K2-VerifyError-due-to-overriding-final-method-size-on-a-subclass-of-Collection-and-Set
+    * */
+
+    override val size: Int
+        get() = list.size
+
+    override fun contains(element: E): Boolean {
+        return list.contains(element)
+    }
+
+    override fun containsAll(elements: Collection<E>): Boolean {
+        return list.containsAll(elements)
+    }
+
+    override fun indexOf(element: E): Int {
+        return list.indexOf(element)
+    }
+
+    override fun lastIndexOf(element: E): Int {
+        return list.lastIndexOf(element)
+    }
+
+    override fun isEmpty(): Boolean {
+        return list.isEmpty()
+    }
+
+    override fun get(index: Int): E {
+        return list[index]
+    }
 
     constructor(c: Iterable<E>) : this(c.requireNotFxObservable().toMutableList())
 
@@ -420,21 +453,18 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
     }
 
 
-    @OnlySynchronizedOnJvm
     override fun subList(
         fromIndex: Int,
         toIndex: Int
-    ) = SubList(fromIndex, toIndex)
+    ) = inSync { SubList(fromIndex, toIndex) }
 
-    @OnlySynchronizedOnJvm
-    private fun invalidateSubLists() {
+    private fun invalidateSubLists() = inSync {
         validSubLists.forEach { it.isValid = false }
         validSubLists.clear()
     }
 
     private var validSubLists = mutableListOf<SubList>()
 
-    @OptIn(ExperimentalStdlibApi::class)
     inner class SubList(
         private val fromIndex: Int,
         private var toIndexExclusive: Int

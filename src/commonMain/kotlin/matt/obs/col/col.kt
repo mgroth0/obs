@@ -194,6 +194,8 @@ abstract class InternallyBackedOList<E> internal constructor() :
         val l = ListListener<E>(invoke)
         return l
     }
+
+    abstract override val size: Int
 }
 
 interface BasicOMutableCollection<E, C : CollectionChange<E, out Collection<E>>, U : CollectionUpdate<E, C>> :

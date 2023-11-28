@@ -18,6 +18,7 @@ import matt.obs.map.change.Remove
 import matt.obs.map.change.RemoveValue
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
+import kotlin.collections.Map.Entry
 import kotlin.collections.MutableMap.MutableEntry
 
 interface BasicOMap<K, V> : Map<K, V>, MListenable<MapListener<K, V>> {
@@ -35,8 +36,40 @@ interface BasicOMap<K, V> : Map<K, V>, MListenable<MapListener<K, V>> {
 
 }
 
-abstract class InternallyBackedOMap<K, V> internal constructor(map: Map<K, V>) :
-    MObservableImpl<MapUpdate<K, V>, MapListener<K, V>>(), BasicOMap<K, V>, Map<K, V> by map {
+abstract class InternallyBackedOMap<K, V> internal constructor(private val map: Map<K, V>) :
+    MObservableImpl<MapUpdate<K, V>, MapListener<K, V>>(), BasicOMap<K, V>, Map<K, V>/* by map*/ {
+
+    init {
+        warn("DELEGATION USED TO WORK FOR THIS CLASS BEFORE K2")
+    }
+
+    override fun containsKey(key: K): Boolean {
+        warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
+        return map.containsKey(key)
+    }
+
+    override fun containsValue(value: V): Boolean {
+        warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
+        return map.containsValue(value)
+    }
+
+    override fun get(key: K): V? {
+        return map.get(key)
+    }
+
+    override val keys: Set<K>
+        get() = map.keys
+    override val values: Collection<V>
+        get() = map.values
+    override val entries: Set<Entry<K, V>>
+        get() = map.entries
+
+    override fun isEmpty(): Boolean {
+        return map.isEmpty()
+    }
+
+    override val size: Int
+        get() = map.size
 
     companion object {
         private var didWarn = false
@@ -77,6 +110,8 @@ interface BasicOMutableMap<K, V> : BasicOMap<K, V>, MutableMap<K, V>
 
 class BasicOMutableMapImpl<K, V>(private val map: MutableMap<K, V> = mutableMapOf()) : InternallyBackedOMap<K, V>(map),
     BasicOMutableMap<K, V> {
+
+
     override val entries: MutableSet<MutableEntry<K, V>> = object : MutableSet<MutableEntry<K, V>> {
 
         inner class ObsMutableEntry(entry: MutableEntry<K, V>) : MutableEntry<K, V> {

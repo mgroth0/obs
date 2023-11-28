@@ -1,7 +1,7 @@
 package matt.obs.queue
 
 import matt.collect.queue.MyMutableQueue
-import matt.lang.require.requireNotIs
+import matt.lang.assertions.require.requireNotIs
 import matt.obs.col.InternallyBackedOQueue
 import matt.obs.col.change.QueueAdd
 import matt.obs.col.change.QueueRemove

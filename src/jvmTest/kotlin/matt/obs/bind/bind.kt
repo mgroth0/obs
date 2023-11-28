@@ -1,7 +1,7 @@
 package matt.obs.bind
 
 import matt.async.thread.namedThread
-import matt.lang.require.requireOne
+import matt.lang.assertions.require.requireOne
 import matt.test.yesIUseTestLibs
 import org.junit.jupiter.api.Test
 
