@@ -12,7 +12,7 @@ import matt.obs.col.change.RemoveAt
 import matt.obs.col.change.RemoveAtIndices
 import matt.obs.col.change.ReplaceAt
 
-const val DEV = true
+const val DEV = false
 
 fun <E> AtomicListChange<E>.compile(): AtomicListChange<E> {
 

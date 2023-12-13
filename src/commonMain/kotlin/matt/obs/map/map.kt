@@ -40,16 +40,23 @@ abstract class InternallyBackedOMap<K, V> internal constructor(private val map: 
     MObservableImpl<MapUpdate<K, V>, MapListener<K, V>>(), BasicOMap<K, V>, Map<K, V>/* by map*/ {
 
     init {
-        warn("DELEGATION USED TO WORK FOR THIS CLASS BEFORE K2")
+        if (KotlinVersion.CURRENT > KotlinVersion(2, 0, 0)) {
+            warn("DELEGATION USED TO WORK FOR THIS CLASS BEFORE K2")
+        }
+
     }
 
     override fun containsKey(key: K): Boolean {
-        warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
+        if (KotlinVersion.CURRENT > KotlinVersion(2, 0, 0)) {
+            warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
+        }
         return map.containsKey(key)
     }
 
     override fun containsValue(value: V): Boolean {
-        warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
+        if (KotlinVersion.CURRENT > KotlinVersion(2, 0, 0)) {
+            warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
+        }
         return map.containsValue(value)
     }
 
