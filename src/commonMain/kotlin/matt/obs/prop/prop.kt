@@ -255,6 +255,8 @@ interface FXBackedPropBase {
     val isFXBound: Boolean
 }
 
+
+
 typealias Var<T> = WritableMObservableVal<T, *, *>
 
 interface WritableMObservableVal<T, U : ValueUpdate<T>, L : ValueListenerBase<T, U, *>> : MObservableVal<T, U, L>,
