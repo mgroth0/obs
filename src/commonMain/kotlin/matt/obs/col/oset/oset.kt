@@ -2,6 +2,7 @@ package matt.obs.col.oset
 
 import matt.collect.itr.IteratorExtender
 import matt.collect.itr.MutableIteratorExtender
+import matt.lang.model.value.Value
 import matt.lang.weak.MyWeakRef
 import matt.obs.bind.binding
 import matt.obs.col.BasicOCollection
@@ -42,7 +43,6 @@ interface ObsSet<E> : Set<E>, BasicOCollection<E, SetChange<E>, SetUpdate<E>, Se
 
 
 }
-
 
 
 fun <E> Collection<E>.toBasicImmutableObservableSet(): ObsSet<E> {
@@ -117,15 +117,18 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>) : BasicImmutableO
 
 
     override fun iterator() = object : MutableIteratorExtender<E>(theSet) {
-        var lastNext: E? = null
+        var lastNext: Value<E>? = null
         override fun postNext(e: E) {
-            lastNext = e
+            lastNext = Value(e)
         }
 
         override fun remove() {
             super.remove()
             emitChange(
-                RemoveElementFromSet(theSet, lastNext ?: error("todo: this does not work with null elements yet"))
+                RemoveElementFromSet(
+                    theSet,
+                    lastNext!!.value
+                )
             )
         }
     }
@@ -177,3 +180,7 @@ val <E> ObsSet<E>.sizeProperty get() = binding { size }
 
 val <E> ObsSet<E>.isEmptyProperty get() = binding { isEmpty() }
 val <E> ObsSet<E>.isNotEmptyProperty get() = binding { isNotEmpty() }
+
+
+
+

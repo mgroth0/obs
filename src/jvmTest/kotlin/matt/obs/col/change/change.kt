@@ -2,7 +2,6 @@ package matt.obs.col.change
 
 import matt.reflect.scan.mattSubClasses
 import matt.reflect.scan.systemScope
-import matt.test.yesIUseTestLibs
 import kotlin.reflect.full.functions
 import kotlin.test.Test
 
@@ -11,7 +10,6 @@ class ObsColChangeTests {
     @Test
     fun testWrappers() {
 
-        yesIUseTestLibs()
 
         with(systemScope(includePlatformClassloader=false).usingClassGraph()) {
 

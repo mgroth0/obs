@@ -382,8 +382,7 @@ class IndexedValueConverter<E> : BiConverter<IndexedValue<E>, E> {
     }
 
     override fun convertToA(b: E): IndexedValue<E> {
-        /*TODO: then this shouldn't be a BiConverter!!!*/
-        error("only goes one way")
+        error("only goes one way (this shouldn't be a BiConverter!!!)")
     }
 
 }

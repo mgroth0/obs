@@ -77,10 +77,14 @@ abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : MListena
             requireNull(listener.currentObservable)
             listener.currentObservable = MyWeakRef(this)
             if (listener is MyWeakListener<*>) {
+
+
                 if (!maybeRemoveByRefQueue(listener)) {
                     listeners.remove(listener)
                     (listener as? MyListener<*>)?.currentObservable = null
                 }
+
+
             }
         }
         return listener
@@ -119,14 +123,13 @@ abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : MListena
         }
     }
 
-    /*TODO: This should be done by a ReferencesQueue on JVM*/
-    fun cleanWeakListeners() {
-        listeners.filterIsInstance<MyWeakListener<*>>().forEach {
-            if (it.shouldBeCleaned()) {
-                removeListener(it)
-            }
-        }
-    }
+//    fun cleanWeakListeners() {
+//        listeners.filterIsInstance<MyWeakListener<*>>().forEach {
+//            if (it.shouldBeCleaned()) {
+//                removeListener(it)
+//            }
+//        }
+//    }
 
 
     override fun releaseUpdatesAfter(op: Op) = synchronizer.useInternalData {

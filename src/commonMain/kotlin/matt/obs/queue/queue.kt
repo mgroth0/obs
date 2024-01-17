@@ -23,11 +23,11 @@ class ObservableQueue<E : Any> internal constructor(private val q: MyMutableQueu
     }
 
     override fun addAll(elements: Collection<E>): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun clear() {
-        TODO("Not yet implemented")
+        TODO()
     }
 
 
@@ -38,30 +38,30 @@ class ObservableQueue<E : Any> internal constructor(private val q: MyMutableQueu
     }
 
     override fun element(): E {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun peek(): E {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun offer(e: E): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun retainAll(elements: Collection<E>): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun removeAll(elements: Collection<E>): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun remove(element: E): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun iterator(): MutableIterator<E> {
-        TODO("Not yet implemented")
+        TODO()
     }
 }

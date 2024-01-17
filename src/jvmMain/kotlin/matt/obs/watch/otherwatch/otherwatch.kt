@@ -2,8 +2,8 @@ package matt.obs.watch.otherwatch
 
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.internal.synchronized
-import matt.async.thread.namedThread
 import matt.lang.function.Op
+import matt.lang.service.ThreadProvider
 import matt.obs.prop.BindableProperty
 import matt.obs.prop.ObsVal
 import matt.obs.prop.Var
@@ -14,7 +14,7 @@ import kotlin.time.Duration.Companion.seconds
 fun <T : Any> ObsVal<T>.watchedFrom(watcher: PropertyWatcher) = watcher.watch(this)
 
 @OptIn(InternalCoroutinesApi::class)
-abstract class PropertyWatcher {
+abstract class PropertyWatcher(threadProvider: ThreadProvider) {
 
     abstract fun runOps(ops: List<Op>)
 
@@ -35,7 +35,7 @@ abstract class PropertyWatcher {
     }
 
     init {
-        namedThread(isDaemon = true, name = "PropertyWatcher Thread") {
+        threadProvider.namedThread(isDaemon = true, name = "PropertyWatcher Thread") {
             while (true) {
                 val updates = synchronized(this@PropertyWatcher) {
                     watches.mapNotNull {
@@ -52,6 +52,7 @@ abstract class PropertyWatcher {
 
 
 private class PropertyWatch<T : Any>(
+
     val watching: ObsVal<T>,
     val updating: Var<T>,
     var update: T? = null

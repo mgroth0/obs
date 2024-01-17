@@ -4,6 +4,9 @@
   "js": {
     "type": "lib"
   },
+  "android": {
+    "type": "Lib"
+  },
   "dependencies": [
     {
       "type": "Project",
@@ -17,8 +20,18 @@
     },
     {
       "type": "Project",
-      "cfg": "jvmMainApi",
+      "cfg": "commonMainImplementation",
+      "path": ":k:time"
+    },
+    {
+      "type": "Project",
+      "cfg": "commonJvmAndroidMainApi",
       "path": ":k:async:thread"
+    },
+    {
+      "type": "Lib",
+      "cfg": "commonJvmAndroidMainApi",
+      "key": "kotlinx-coroutines"
     },
     {
       "type": "Project",
@@ -36,11 +49,6 @@
       "path": ":k:json"
     },
     {
-      "type": "Project",
-      "cfg": "jvmTestImplementation",
-      "path": ":k:test"
-    },
-    {
       "type": "Lib",
       "cfg": "jvmMainImplementation",
       "key": "kt-reflect"
@@ -48,12 +56,17 @@
     {
       "type": "Project",
       "cfg": "jvmTestImplementation",
-      "path": ":k:reflect"
+      "path": ":k:test"
     },
     {
       "type": "Project",
       "cfg": "jvmTestImplementation",
-      "path": ":k:async:thread"
+      "path": ":k:reflect"
+    },
+    {
+      "type": "Lib",
+      "cfg": "jvmTestImplementation",
+      "key": "junit-platform-suite-api"
     }
   ]
 }

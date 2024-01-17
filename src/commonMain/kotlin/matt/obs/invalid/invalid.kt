@@ -184,9 +184,7 @@ private sealed interface DepListenerSet {
     fun removeAllListeners()
 }
 
-private sealed class DepListenerSetBase : DepListenerSet {
-
-}
+private sealed class DepListenerSetBase : DepListenerSet
 
 private open class DefaultDepListenerSet(
     override val obs: CustomInvalidations,

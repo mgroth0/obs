@@ -529,14 +529,14 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
             index: Int,
             elements: Collection<E>
         ): Boolean {
-            TODO("Not yet implemented")
+            TODO()
         }
 
         override fun add(
             index: Int,
             element: E
         ) {
-            TODO("Not yet implemented")
+            TODO()
         }
 
         override fun add(element: E): Boolean {
@@ -671,7 +671,7 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObs
     override fun iterator(): Iterator<R> = listIterator()
 
     override fun addListener(listener: ListListenerBase<R>): ListListener<R> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override var nam: String?
@@ -681,7 +681,7 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObs
         }
 
     override fun removeListener(listener: MyListenerInter<*>) {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override var debugger: Prints?
@@ -701,21 +701,21 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObs
         override fun hasNext() = itr.hasNext()
 
         override fun hasPrevious(): Boolean {
-            TODO("Not yet implemented")
+            TODO()
         }
 
         override fun next() = converter(itr.next())
 
         override fun nextIndex(): Int {
-            TODO("Not yet implemented")
+            TODO()
         }
 
         override fun previous(): R {
-            TODO("Not yet implemented")
+            TODO()
         }
 
         override fun previousIndex(): Int {
-            TODO("Not yet implemented")
+            TODO()
         }
 
     }
@@ -724,11 +724,11 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObs
         fromIndex: Int,
         toIndex: Int
     ): List<R> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun lastIndexOf(element: R): Int {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun indexOf(element: R): Int {
@@ -739,15 +739,15 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObs
     }
 
     override fun containsAll(elements: Collection<R>): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun contains(element: R): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun releaseUpdatesAfter(op: Op) {
-        TODO("Not yet implemented")
+        TODO()
     }
 
 }

@@ -38,19 +38,19 @@ class NonNullsOfObsList<E>(val source: ImmutableObsList<E?>) : ImmutableObsList<
 
 
     override fun onChange(listenerName: String?, op: (ListChange<E & Any>) -> Unit): MyListenerInter<*> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override val size get() = source.count { it != null }
 
     override fun isEmpty(): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun iterator() = listIterator()
 
     override fun releaseUpdatesAfter(op: Op) {
-        TODO("Not yet implemented")
+        TODO()
     }
 
 
@@ -116,24 +116,24 @@ class NonNullsOfObsList<E>(val source: ImmutableObsList<E?>) : ImmutableObsList<
 
     @Suppress("UNUSED_PARAMETER")
     override var nam: String?
-        get() = TODO("Not yet implemented")
+        get() = TODO()
         set(value) {
-            TODO("Not yet implemented")
+            TODO()
         }
 
     override fun removeListener(listener: MyListenerInter<*>) {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     @Suppress("UNUSED_PARAMETER")
     override var debugger: Prints?
-        get() = TODO("Not yet implemented")
+        get() = TODO()
         set(value) {
-            TODO("Not yet implemented")
+            TODO()
         }
 
     override fun get(index: Int): E & Any {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun listIterator() = listIterator(0)
@@ -172,37 +172,37 @@ class NonNullsOfObsList<E>(val source: ImmutableObsList<E?>) : ImmutableObsList<
         }
 
         override fun nextIndex(): Int {
-            TODO("Not yet implemented")
+            TODO()
         }
 
         override fun previous(): E & Any {
-            TODO("Not yet implemented")
+            TODO()
         }
 
         override fun previousIndex(): Int {
-            TODO("Not yet implemented")
+            TODO()
         }
 
     }
 
     override fun subList(fromIndex: Int, toIndex: Int): List<E & Any> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun lastIndexOf(element: E & Any): Int {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun indexOf(element: E & Any): Int {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun containsAll(elements: Collection<E & Any>): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun contains(element: E & Any): Boolean {
-        TODO("Not yet implemented")
+        TODO()
     }
 
 }

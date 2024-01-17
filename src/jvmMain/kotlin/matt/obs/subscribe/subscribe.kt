@@ -1,6 +1,6 @@
 package matt.obs.subscribe
 
-import matt.collect.weak.bag.WeakBag
+import matt.collect.weak.WeakSet
 import matt.lang.go
 import matt.model.flowlogic.latch.LatchCancelled
 import matt.model.flowlogic.latch.SimpleThreadLatch
@@ -17,7 +17,7 @@ fun Subscription<*>.waitForThereToBeAtLeastOneNotificationThenUnsubscribe(latchM
 
 
 class LatchManager {
-    private val latches = WeakBag<SimpleThreadLatch>()
+    private val latches = WeakSet<SimpleThreadLatch>()
     private var cancellation: LatchCancelled? = null
 
     @Synchronized
@@ -25,7 +25,7 @@ class LatchManager {
         if (cancellation != null) {
             println("WARNING: $this cancelled twice")
         }
-        latches.values().forEach { it.cancel(e = cause) }
+        latches.forEach { it.cancel(e = cause) }
         cancellation = LatchCancelled(cause = cause)
     }
 

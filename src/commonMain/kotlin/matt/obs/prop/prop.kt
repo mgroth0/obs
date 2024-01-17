@@ -47,23 +47,23 @@ value class FakeObsVal<T>(override val value: T) : MObservableValNewAndOld<T> {
     }
 
     override var nam: String?
-        get() = TODO("Not yet implemented")
+        get() = TODO()
         set(_) {
-            TODO("Not yet implemented")
+            TODO()
         }
 
     override fun removeListener(listener: MyListenerInter<*>) {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override var debugger: Prints?
-        get() = TODO("Not yet implemented")
+        get() = TODO()
         set(_) {
-            TODO("Not yet implemented")
+            TODO()
         }
 
     override fun releaseUpdatesAfter(op: Op) {
-        TODO("Not yet implemented")
+        TODO()
     }
 }
 

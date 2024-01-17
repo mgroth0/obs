@@ -2,7 +2,6 @@ package matt.obs.bind
 
 import matt.async.thread.namedThread
 import matt.lang.assertions.require.requireOne
-import matt.test.yesIUseTestLibs
 import org.junit.jupiter.api.Test
 
 
@@ -11,7 +10,6 @@ class ObsBindTests {
     @Test
     fun deadlock() {
 
-        yesIUseTestLibs()
 
         val d = namedThread(isDaemon = true,name = "ObsBindTests deadlock thread 1") {
             var binding: MyBinding<Int>? = null

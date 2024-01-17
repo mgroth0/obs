@@ -24,7 +24,7 @@ open class Channel<E : Event> : MObservableImpl<E, MyEventListener<in E>>() {
         w: MyWeakRef<*>,
         op: () -> Unit
     ): MyListenerInter<*> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
 }

@@ -31,16 +31,16 @@ class WeakPropWrapper<T>(p: BindableProperty<T>) : MWritableValNewAndOld<T>,
         clean: Boolean,
         debug: Boolean,
         weak: Boolean
-    ) = TODO("Not yet implemented")
+    ) = TODO()
 
-    override fun <S> bindBidirectional(source: Var<S>, converter: BiConverter<T, S>) = TODO("Not yet implemented")
+    override fun <S> bindBidirectional(source: Var<S>, converter: BiConverter<T, S>) = TODO()
 
     override fun releaseUpdatesAfter(op: Op) {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun addListener(listener: OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>): OldAndNewListener<T, ValueChange<T>, out ValueChange<T>> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override var value: T
@@ -64,13 +64,13 @@ class WeakPropWrapper<T>(p: BindableProperty<T>) : MWritableValNewAndOld<T>,
             prop.debugger = value
         }
     override val bindManager: Bindable
-        get() = TODO("Not yet implemented")
+        get() = TODO()
 
     @Suppress("UNUSED_PARAMETER")
     override var theBind: ABind?
-        get() = TODO("Not yet implemented")
+        get() = TODO()
         set(value) {
-            TODO("Not yet implemented")
+            TODO()
         }
 
     override fun unbind() {

@@ -1,6 +1,7 @@
 package matt.obs.map
 
 import matt.lang.ILLEGAL
+import matt.lang.ktversion.ifPastInitialK2
 import matt.lang.weak.MyWeakRef
 import matt.log.warn.warn
 import matt.model.flowlogic.keypass.KeyPass
@@ -28,7 +29,7 @@ interface BasicOMap<K, V> : Map<K, V>, MListenable<MapListener<K, V>> {
         w: MyWeakRef<*>,
         op: () -> Unit
     ): MyListenerInter<*> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     fun onChange(op: (MapChange<K, V>) -> Unit): MapListener<K, V>
@@ -40,21 +41,21 @@ abstract class InternallyBackedOMap<K, V> internal constructor(private val map: 
     MObservableImpl<MapUpdate<K, V>, MapListener<K, V>>(), BasicOMap<K, V>, Map<K, V>/* by map*/ {
 
     init {
-        if (KotlinVersion.CURRENT > KotlinVersion(2, 0, 0)) {
+        ifPastInitialK2 {
             warn("DELEGATION USED TO WORK FOR THIS CLASS BEFORE K2")
         }
 
     }
 
     override fun containsKey(key: K): Boolean {
-        if (KotlinVersion.CURRENT > KotlinVersion(2, 0, 0)) {
+        ifPastInitialK2 {
             warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
         }
         return map.containsKey(key)
     }
 
     override fun containsValue(value: V): Boolean {
-        if (KotlinVersion.CURRENT > KotlinVersion(2, 0, 0)) {
+        ifPastInitialK2 {
             warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
         }
         return map.containsValue(value)

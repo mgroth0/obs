@@ -1,56 +1,39 @@
 package matt.obs.col.olist.map
 
-import matt.obs.col.change.AtomicListChange
-import matt.obs.col.change.ClearList
-import matt.obs.col.change.ListAddition
-import matt.obs.col.change.ListRemoval
-import matt.obs.col.change.MultiAdditionIntoList
-import matt.obs.col.change.MultiRemovalFromList
-import matt.obs.col.change.Replacement
-import matt.obs.col.olist.MutableObsList
+import matt.obs.col.change.ClearSet
+import matt.obs.col.change.MultiAddIntoSet
+import matt.obs.col.change.RemoveElementsFromSet
+import matt.obs.col.change.RetainAllSet
+import matt.obs.col.change.SetAddition
+import matt.obs.col.change.SetRemoval
+import matt.obs.col.oset.ObsSet
 import matt.obs.map.BasicOMap
 import matt.obs.map.BasicOMutableMapImpl
 
-fun <V, K> MutableObsList<V>.toMappedMap(keySelectorFun: (V)->K): BasicOMap<K, V> {
-  /*WARNING/TODO: this must be limited to sets to work as expected...*/
-  val map = BasicOMutableMapImpl<K, V>()
-  onChange {
-	when (it) {
-	  is ListAddition          -> map[keySelectorFun(it.added)] = it.added
-	  is MultiAdditionIntoList -> it.addedElements.forEach { map[keySelectorFun(it)] }
-	  is Replacement           -> {
-		map[keySelectorFun(it.added)] = it.added
-		map.remove(keySelectorFun(it.removed))
-	  }
+fun <V, K> ObsSet<V>.toMappedMap(keySelectorFun: (V) -> K): BasicOMap<K, V> {
 
-	  is ClearList             -> map.clear()
-	  is MultiRemovalFromList  -> it.removed.forEach {
-		map.remove(keySelectorFun(it))
-	  }
 
-	  is ListRemoval           -> map.remove(keySelectorFun(it.removed))
 
-	  is AtomicListChange      -> TODO("AtomicListChange")
-	}
-  }
-  return map
+    val map = BasicOMutableMapImpl<K, V>()
+    onChange {
+        when (it) {
+            is SetAddition           -> map[keySelectorFun(it.added)] = it.added
+            is MultiAddIntoSet       -> it.addedElements.forEach { map[keySelectorFun(it)] }
+            /* is Replacement           -> {
+                 map[keySelectorFun(it.added)] = it.added
+                 map.remove(keySelectorFun(it.removed))
+             }*/
+
+            is ClearSet              -> map.clear()
+            is RemoveElementsFromSet -> it.removed.forEach {
+                map.remove(keySelectorFun(it))
+            }
+
+            is SetRemoval            -> map.remove(keySelectorFun(it.removed))
+
+            /*is AtomicListChange      -> TODO("AtomicListChange")*/
+            is RetainAllSet          -> TODO()
+        }
+    }
+    return map
 }
-
-//class MappedMap<O, K>(
-//  sourceList: BasicROObservableList<O>,
-//  keySelectorFun: (O)->K,
-//  map: MutableMap<K, O> = mutableMapOf()
-//): Map<K, O> by map, BasicOCollection {
-//  init {
-//	map.clear()
-//	map.putAll(sourceList.associateBy(keySelectorFun))
-//	sourceList.onChange {
-//	  while (it.next()) {
-//		map.putAll(it.addedSubList.associateBy(keySelectorFun))
-//		it.removed.forEach {
-//		  map.remove(keySelectorFun(it))
-//		}
-//	  }
-//	}
-//  }
-//}

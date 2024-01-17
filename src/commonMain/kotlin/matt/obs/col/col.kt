@@ -143,7 +143,6 @@ abstract class InternallyBackedOCollection<E, C : CollectionChange<E, out Collec
         op: (C) -> Unit
     ): L {
         val l = createListener {
-            //	  println("addListener c = $it")
             op(it)
         }
         return addListener(l.also {
@@ -218,14 +217,14 @@ abstract class InternallyBackedOQueue<E : Any> internal constructor() :
         weakRef: MyWeakRef<W>,
         op: (W, QueueChange<E>) -> Unit
     ): MyListenerInter<*> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     override fun <W : Any> onChangeWithWeak(
         o: W,
         op: (W, QueueChange<E>) -> Unit
     ): MyListenerInter<*> {
-        TODO("Not yet implemented")
+        TODO()
     }
 
 }
