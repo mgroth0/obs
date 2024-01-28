@@ -3,7 +3,7 @@ package matt.obs.col.olist.mappedlist
 
 import matt.lang.model.value.LazyValue
 import matt.lang.setall.setAll
-import matt.lang.weak.MyWeakRef
+import matt.lang.weak.weak
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.col.olist.ImmutableObsList
@@ -54,7 +54,7 @@ class WeakMappedList<W : Any, S, T>(
     private val target: MutableObsList<T>,
     private val converter: (W, S) -> T
 ) : ImmutableObsList<T> by target, MappedList<T> {
-    private val weakRef = MyWeakRef(weakObj)
+    private val weakRef = weak(weakObj)
 
     override fun refresh() {
         target.atomicChange {
@@ -127,7 +127,7 @@ class LazyWeakMappedList<W : Any, S, T>(
     private val converter: (W, S) -> T,
 ) : ImmutableObsList<T> by target.view({ it.value }), MappedList<T> {
 
-    private val weakRef = MyWeakRef(weakObject)
+    private val weakRef = weak(weakObject)
 
     override fun refresh() {
         target.setAll(source.map {

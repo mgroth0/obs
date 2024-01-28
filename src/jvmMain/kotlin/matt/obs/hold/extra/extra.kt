@@ -65,7 +65,7 @@ open class VersionedTypedObsHolderSerializer<T : TypedObservableHolder>(
     cls: KClass<out T>,
     classVersion: Int
 ) : TypedObsHolderSerializer<T>(cls) {
-    override val metaProps =
+    final override val metaProps =
         listOf(MetaProp(key = "classVersion", serializer = serializer<Int>(), onLoad = { loadedClassVersion ->
             if (loadedClassVersion != classVersion) {
                 Replace(newInstance().apply {

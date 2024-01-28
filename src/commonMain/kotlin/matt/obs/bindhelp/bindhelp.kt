@@ -1,13 +1,14 @@
 package matt.obs.bindhelp
 
+import matt.lang.anno.Open
 import matt.lang.convert.BiConverter
 import matt.lang.convert.Converter
 import matt.lang.go
 import matt.lang.setall.setAll
 import matt.lang.sync.ReferenceMonitor
 import matt.lang.sync.inSync
-import matt.lang.weak.MyWeakRef
 import matt.lang.weak.getValue
+import matt.lang.weak.weak
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
 import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
@@ -28,16 +29,19 @@ sealed interface Bindable {
     val bindManager: Bindable
     var theBind: ABind?
     fun unbind()
+    @Open
     val isBound: Boolean get() = theBind != null
+    @Open
     val isBoundUnidirectionally: Boolean get() = theBind is TheBind
+    @Open
     val isBoundBidirectionally: Boolean get() = theBind is BiTheBind
 }
 
 sealed class BindableImpl : Bindable, ReferenceMonitor {
-    override val bindManager get() = this
-    override var theBind: ABind? = null
+    final override val bindManager get() = this
+    final override var theBind: ABind? = null
 
-    override fun unbind() = inSync {
+    final override fun unbind() = inSync {
         require(this !is FXBackedPropBase || !isFXBound)
         theBind?.cut()
         theBind = null
@@ -47,6 +51,7 @@ sealed class BindableImpl : Bindable, ReferenceMonitor {
 }
 
 interface BindableList<E> : Bindable {
+    @Open
     fun bind(source: ImmutableObsList<E>) = bind(source) { it }
     fun <S> bind(
         source: ImmutableObsList<S>,
@@ -65,6 +70,7 @@ interface BindableList<E> : Bindable {
 }
 
 interface BindableSet<E> : Bindable {
+    @Open
     fun bind(source: ObsSet<E>) = bind(source) { it }
     fun <S> bind(
         source: ObsSet<S>,
@@ -366,8 +372,8 @@ class TheBind(
     source: MListenable<*>,
     listener: MyListenerInter<*>
 ) : ABind {
-    private val source by MyWeakRef(source)
-    private val listener by MyWeakRef(listener)
+    private val source by weak(source)
+    private val listener by weak(listener)
     override fun cut() {
         listener?.go { l ->
             source?.removeListener(l)
@@ -383,10 +389,10 @@ class BiTheBind(
     targetListener: MyListenerInter<*>,
     private val debug: Boolean = false
 ) : ABind {
-    private val source by MyWeakRef(source)
-    private val target by MyWeakRef(target)
-    private val sourceListener by MyWeakRef(sourceListener)
-    private val targetListener by MyWeakRef(targetListener)
+    private val source by weak(source)
+    private val target by weak(target)
+    private val sourceListener by weak(sourceListener)
+    private val targetListener by weak(targetListener)
     override fun cut() {
         if (debug) println("cutting $this")
         sourceListener?.go {

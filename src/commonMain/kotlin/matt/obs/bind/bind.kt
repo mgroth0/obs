@@ -3,11 +3,12 @@ package matt.obs.bind
 import matt.lang.convert.BiConverter
 import matt.lang.err
 import matt.lang.setall.setAll
-import matt.lang.weak.MyWeakRef
 import matt.model.flowlogic.keypass.KeyPass
 import matt.lang.convert.Converter
 import matt.lang.sync.ReferenceMonitor
 import matt.lang.sync.inSync
+import matt.lang.weak.WeakRefInter
+import matt.lang.weak.weak
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.bindhelp.BindableValue
@@ -127,7 +128,11 @@ fun <T> MyBinding<T>.eager() = BindableProperty(value).also { prop ->
     }
 }
 
-interface MyBindingBase<T> : MObservableValNewOnly<T>, CustomDependencies
+interface MyBindingBase<T> : MObservableValNewOnly<T>, CustomDependencies {
+    open override fun removeDependency(o: MObservable) {
+
+    }
+}
 
 
 abstract class MyBindingBaseImpl<T> :
@@ -141,9 +146,8 @@ abstract class MyBindingBaseImpl<T> :
         op()
     })
 
-
     final override fun observeWeakly(
-        w: MyWeakRef<*>,
+        w: WeakRefInter<*>,
         op: () -> Unit
     ): WeakInvalidListener<T> {
         val l = WeakInvalidListener<T>(w) {
@@ -190,7 +194,7 @@ abstract class MyBindingBaseImpl<T> :
     fun removeAllDependencies() = depHelper.removeAllDependencies()
 
     final override fun <O : MObservable> addWeakDependency(
-        weakRef: MyWeakRef<*>,
+        weakRef: WeakRefInter<*>,
         mainDep: O,
         moreDeps: List<MObservable>?,
         debugLogger: DebugLogger?,
@@ -207,7 +211,7 @@ open class MyBinding<T>(
     private val calcArg: () -> T
 ) : MyBindingBaseImpl<T>() {
 
-    override fun calc(): T {
+    final override fun calc(): T {
         return calcArg()
     }
 
@@ -215,7 +219,7 @@ open class MyBinding<T>(
         addDependencies(*dependencies)
     }
 
-    override val value: T get() = cVal.get()
+    final override val value: T get() = cVal.get()
 
 
 }
@@ -226,9 +230,9 @@ open class MyWeakBinding<W : Any, T>(
     private val calcArg: (W) -> T
 ) : MyBindingBaseImpl<T>() {
 
-    private val weakRef = MyWeakRef(w)
+    private val weakRef = weak(w)
 
-    override fun calc(): T {
+    final override fun calc(): T {
         val w = weakRef.deref()
         if (w == null) {
             err("I guess this does not work yet")
@@ -242,7 +246,7 @@ open class MyWeakBinding<W : Any, T>(
         addWeakDependencies(weakRef, *dependencies)
     }
 
-    override val value: T get() = cVal.get()
+    final override val value: T get() = cVal.get()
 
 
 }
@@ -256,12 +260,12 @@ open class LazyBindableProp<T>(
 
     constructor(t: T) : this({ t })
 
-    override fun calc(): T {
+    final override fun calc(): T {
         return calcArg()
     }
 
     private val bindWritePass = KeyPass()
-    override var value: T
+    final override var value: T
         get() = inSync { cVal.get() }
         set(value) {
             require(!this.isBound || bindWritePass.isHeld)
@@ -289,9 +293,9 @@ open class LazyBindableProp<T>(
     }
 
     final override val bindManager by lazy { BindableValueHelper(this) }
-    override fun bind(source: ObsVal<out T>) = bindManager.bind(source)
-    override fun bindWeakly(source: ObsVal<out T>) = bindManager.bindWeakly(source)
-    override fun bindBidirectional(
+    final override fun bind(source: ObsVal<out T>) = bindManager.bind(source)
+    final override fun bindWeakly(source: ObsVal<out T>) = bindManager.bindWeakly(source)
+    final override fun bindBidirectional(
         source: Var<T>,
         checkEquality: Boolean,
         clean: Boolean,
@@ -299,13 +303,13 @@ open class LazyBindableProp<T>(
         weak: Boolean
     ) = bindManager.bindBidirectional(source, checkEquality = checkEquality, clean = clean, debug = debug, weak = weak)
 
-    override fun <S> bindBidirectional(
+    final override fun <S> bindBidirectional(
         source: Var<S>,
         converter: BiConverter<T, S>
     ) = bindManager.bindBidirectional(source, converter)
 
-    override var theBind by bindManager::theBind
-    override fun unbind() = bindManager.unbind()
+    final override var theBind by bindManager::theBind
+    final override fun unbind() = bindManager.unbind()
 
 }
 

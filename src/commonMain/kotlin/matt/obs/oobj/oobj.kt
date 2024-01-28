@@ -1,6 +1,7 @@
 package matt.obs.oobj
 
-import matt.lang.weak.MyWeakRef
+import matt.lang.anno.Open
+import matt.lang.weak.WeakRefInter
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
 import matt.obs.invalid.CustomInvalidations
@@ -9,27 +10,34 @@ import matt.obs.listen.MyListenerInter
 import matt.obs.listen.update.ContextUpdate
 
 
-interface MObservableObject<T>: MListenable<ContextListener<T>>, CustomInvalidations {
+interface MObservableObject<T> : MListenable<ContextListener<T>>, CustomInvalidations {
+    @Open
+    @Suppress("UNCHECKED_CAST")
+    val uncheckedThis get() = this as T
 
-  @Suppress("UNCHECKED_CAST") val uncheckedThis get() = this as T
+    @Open
+    override fun observe(op: () -> Unit) = onChange { op() }
 
-  override fun observe(op: ()->Unit) = onChange { op() }
-  override fun observeWeakly(w: MyWeakRef<*>, op: ()->Unit): MyListenerInter<*> {
-	TODO()
-  }
-
-  fun onChange(op: T.()->Unit) = addListener(ContextListener(uncheckedThis) {
-	op()
-  })
+    @Open
+    override fun observeWeakly(
+        w: WeakRefInter<*>,
+        op: () -> Unit
+    ): MyListenerInter<*> {
+        TODO()
+    }
+    @Open
+    fun onChange(op: T.() -> Unit) = addListener(ContextListener(uncheckedThis) {
+        op()
+    })
 
 
 }
 
-abstract class ObservableObject<T: ObservableObject<T>>: MObservableImpl<ContextUpdate, ContextListener<T>>(),
-														 MObservableObject<T> {
+abstract class ObservableObject<T : ObservableObject<T>> : MObservableImpl<ContextUpdate, ContextListener<T>>(),
+    MObservableObject<T> {
 
-  override fun markInvalid() {
-	notifyListeners(ContextUpdate)
-  }
+    final override fun markInvalid() {
+        notifyListeners(ContextUpdate)
+    }
 
 }

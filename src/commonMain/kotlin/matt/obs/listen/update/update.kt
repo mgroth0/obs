@@ -16,7 +16,7 @@ sealed interface ValueUpdate<T> : Update {
     val new: T
 }
 
-open class NewValueUpdate<T>(override val new: T) : ValueUpdate<T>
+open class NewValueUpdate<T>(final override val new: T) : ValueUpdate<T>
 
 interface WeakUpdate<W : Any> : Update {
     val weakObj: W
@@ -31,11 +31,11 @@ class ValueUpdateWithWeakObj<W : Any, T>(
 /*inspired by invalidation listeners!*/
 /*sometimes listeners don't always need to calculate stuff, so that stuff should not be calculated eagerly*/
 open class LazyNewValueUpdate<T>(private val newOp: () -> T) : ValueUpdate<T> {
-    override val new by lazy { newOp() }
+    final override val new by lazy { newOp() }
 }
 
 open class LazyMaybeNewValueUpdate<T>(private val newOp: () -> T) : ValueUpdate<T> {
-    override val new by lazy { newOp() }
+    final override val new by lazy { newOp() }
 }
 
 

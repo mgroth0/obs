@@ -7,6 +7,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.serializer
+import matt.lang.anno.Open
 import matt.lang.err
 import matt.obs.hold.custom.CustomDecoder
 import matt.obs.hold.custom.CustomSerializer
@@ -33,9 +34,9 @@ class MyCustomDecoder<T : TypedObservableHolder>(
 
 
 abstract class ElementDecoderImpl<T : TypedObservableHolder, V>(
-    override val key: String,
+    @Open override val key: String,
     serializer: KSerializer<V>,
-    override val isOptional: Boolean,
+    @Open override val isOptional: Boolean,
 ) : ElementDecoder<V, T, MyCustomDecoder<T>>(serializer)
 
 @OptIn(InternalSerializationApi::class)
@@ -61,7 +62,7 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
     }
 
 
-    override fun newDecoder() = MyCustomDecoder<T>(
+    final override fun newDecoder() = MyCustomDecoder<T>(
         getNewInstance = { newInstance() }
     )
 
@@ -96,8 +97,8 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
     }
 
 
-    override val serialName = cls.qualifiedName!!
-    override val elements by lazy {
+final    override val serialName = cls.qualifiedName!!
+    final override val elements by lazy {
         buildList {
             addAll(metaProps)
             val metaKeys = metaProps.map { it.key }

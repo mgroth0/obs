@@ -1,11 +1,13 @@
 package matt.obs
 
+import matt.lang.anno.Open
 import matt.lang.assertions.require.requireNonNegative
 import matt.lang.assertions.require.requireNull
 import matt.lang.exec.Exec
 import matt.lang.function.Op
-import matt.lang.tostring.mehToStringBuilder
-import matt.lang.weak.MyWeakRef
+import matt.lang.tostring.SimpleStringableClass
+import matt.lang.weak.WeakRefInter
+import matt.lang.weak.weak
 import matt.model.flowlogic.syncop.AntiDeadlockSynchronizer
 import matt.model.op.prints.Prints
 import matt.obs.listen.MyListener
@@ -21,12 +23,13 @@ interface MObservable {
     var nam: String?
     fun observe(op: () -> Unit): MyListenerInter<*>
     fun observeWeakly(
-        w: MyWeakRef<*>,
+        w: WeakRefInter<*>,
         op: () -> Unit
     ): MyListenerInter<*>
 
     fun removeListener(listener: MyListenerInter<*>)
 
+    @Open
     /*critical if an observer is receiving a batch of redundant notifications and only needs to act once*/
     fun patientlyObserve(
         scheduleOp: Exec,
@@ -57,13 +60,17 @@ interface MListenable<L : MyListenerInter<*>> : MObservable {
 
 expect fun maybeRemoveByRefQueue(wl: MyWeakListener<*>): Boolean
 
-abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : MListenable<L> {
+abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : SimpleStringableClass(), MListenable<L> {
 
-    override var nam: String? = null
+    final override var nam: String? = null
 
-    override fun toString() = mehToStringBuilder(
-        "name" to nam, "#listeners" to listeners.size
+
+    @Open
+    override fun toStringProps() = mapOf(
+        "name" to nam,
+        "#listeners" to listeners.size
     )
+
 
     private val listeners = mutableListOf<L>()
 
@@ -75,7 +82,7 @@ abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : MListena
             listeners += listener
             listener as MyListener<*>
             requireNull(listener.currentObservable)
-            listener.currentObservable = MyWeakRef(this)
+            listener.currentObservable = weak(this)
             if (listener is MyWeakListener<*>) {
 
 
@@ -90,7 +97,7 @@ abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : MListena
         return listener
     }
 
-    override var debugger: Prints? = null
+    final override var debugger: Prints? = null
 
     private var currentUpdateCount = 0
 
@@ -116,7 +123,7 @@ abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : MListena
     }
 
 
-    override fun removeListener(listener: MyListenerInter<*>) {
+    final override fun removeListener(listener: MyListenerInter<*>) {
         synchronizer.operateOnInternalDataNowOrLater {
             listeners.remove(listener)
             (listener as? MyListener<*>)?.currentObservable = null
@@ -132,7 +139,7 @@ abstract class MObservableImpl<U : Update, L : MyListenerInter<in U>> : MListena
 //    }
 
 
-    override fun releaseUpdatesAfter(op: Op) = synchronizer.useInternalData {
+    final override fun releaseUpdatesAfter(op: Op) = synchronizer.useInternalData {
         notifyAfterDepth += 1
         op()
         notifyAfterDepth -= 1

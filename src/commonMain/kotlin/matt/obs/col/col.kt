@@ -1,6 +1,7 @@
 package matt.obs.col
 
-import matt.lang.weak.MyWeakRef
+import matt.lang.anno.Open
+import matt.lang.weak.WeakRefInter
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
 import matt.obs.MObservableImpl
@@ -31,27 +32,29 @@ import matt.obs.prop.VarProp
 interface NonNullBasicOCollection<E, C : NonNullCollectionChange<E, out Collection<E>>, U : NonNullCollectionUpdate<E, C>, L : NonNullCollectionListenerBase<E, C, U>> :
     Collection<E>,
     MListenable<L> {
+    @Open
     override fun observe(op: () -> Unit) = onChange { op() }
 
+    @Open
     override fun observeWeakly(
-        w: MyWeakRef<*>,
+        w: WeakRefInter<*>,
         op: () -> Unit
     ) = onChangeWithAlreadyWeak(w) { _, _ ->
         op()
     }
 
-    fun onChange(
+    abstract fun onChange(
         listenerName: String? = null,
         op: (C) -> Unit
     ): MyListenerInter<*>
 
-    fun <W : Any> onChangeWithWeak(
+    abstract fun <W : Any> onChangeWithWeak(
         o: W,
         op: (W, C) -> Unit
     ): MyListenerInter<*>
 
-    fun <W : Any> onChangeWithAlreadyWeak(
-        weakRef: MyWeakRef<W>,
+    abstract fun <W : Any> onChangeWithAlreadyWeak(
+        weakRef: WeakRefInter<W>,
         op: (W, C) -> Unit
     ): MyListenerInter<*>
 
@@ -62,14 +65,17 @@ interface NonNullBasicOCollection<E, C : NonNullCollectionChange<E, out Collecti
 interface BasicOCollection<E, C : CollectionChange<E, out Collection<E>>, U : CollectionUpdate<E, C>, L : CollectionListenerBase<E, C, U>> :
     Collection<E>,
     MListenable<L> {
+    @Open
     override fun observe(op: () -> Unit) = onChange { op() }
 
+    @Open
     override fun observeWeakly(
-        w: MyWeakRef<*>,
+        w: WeakRefInter<*>,
         op: () -> Unit
     ) = onChangeWithAlreadyWeak(w) { _, _ ->
         op()
     }
+
 
     fun onChange(
         listenerName: String? = null,
@@ -82,15 +88,12 @@ interface BasicOCollection<E, C : CollectionChange<E, out Collection<E>>, U : Co
     ): MyListenerInter<*>
 
     fun <W : Any> onChangeWithAlreadyWeak(
-        weakRef: MyWeakRef<W>,
+        weakRef: WeakRefInter<W>,
         op: (W, C) -> Unit
     ): MyListenerInter<*>
 
 
 }
-
-
-
 
 
 typealias IBObsCol = InternallyBackedOCollection<*, *, *, *>
@@ -100,7 +103,7 @@ abstract class InternallyBackedONonNullCollection<E, C : NonNullCollectionChange
     NonNullBasicOCollection<E, C, U, L> {
 
 
-    override fun onChange(
+    final override fun onChange(
         listenerName: String?,
         op: (C) -> Unit
     ): L {
@@ -138,7 +141,7 @@ abstract class InternallyBackedOCollection<E, C : CollectionChange<E, out Collec
     BasicOCollection<E, C, U, L> {
 
 
-    override fun onChange(
+    final override fun onChange(
         listenerName: String?,
         op: (C) -> Unit
     ): L {
@@ -173,11 +176,11 @@ abstract class InternallyBackedOCollection<E, C : CollectionChange<E, out Collec
 abstract class InternallyBackedOSet<E> internal constructor() :
     InternallyBackedOCollection<E, SetChange<E>, SetUpdate<E>, SetListenerBase<E>>() {
 
-    override fun updateFrom(c: SetChange<E>): SetUpdate<E> {
+    final override fun updateFrom(c: SetChange<E>): SetUpdate<E> {
         return SetUpdate(c)
     }
 
-    override fun createListener(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>) -> Unit): SetListenerBase<E> {
+    final override fun createListener(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>) -> Unit): SetListenerBase<E> {
         val l = SetListener<E>(invoke)
         return l
     }
@@ -185,11 +188,11 @@ abstract class InternallyBackedOSet<E> internal constructor() :
 
 abstract class InternallyBackedOList<E> internal constructor() :
     InternallyBackedOCollection<E, ListChange<E>, ListUpdate<E>, ListListenerBase<E>>() {
-    override fun updateFrom(c: ListChange<E>): ListUpdate<E> {
+    final override fun updateFrom(c: ListChange<E>): ListUpdate<E> {
         return ListUpdate(c)
     }
 
-    override fun createListener(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>) -> Unit): ListListenerBase<E> {
+    final override fun createListener(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>) -> Unit): ListListenerBase<E> {
         val l = ListListener<E>(invoke)
         return l
     }
@@ -204,23 +207,23 @@ interface BasicOMutableCollection<E, C : CollectionChange<E, out Collection<E>>,
 
 abstract class InternallyBackedOQueue<E : Any> internal constructor() :
     InternallyBackedONonNullCollection<E, QueueChange<E>, QueueUpdate<E>, QueueListener<E>>() {
-    override fun updateFrom(c: QueueChange<E>): QueueUpdate<E> {
+    final override fun updateFrom(c: QueueChange<E>): QueueUpdate<E> {
         return QueueUpdate(c)
     }
 
-    override fun createListener(invoke: NonNullCollectionListener<E, QueueChange<E>, QueueUpdate<E>>.(change: QueueChange<E>) -> Unit): QueueListener<E> {
+    final override fun createListener(invoke: NonNullCollectionListener<E, QueueChange<E>, QueueUpdate<E>>.(change: QueueChange<E>) -> Unit): QueueListener<E> {
         val l = QueueListener<E>(invoke)
         return l
     }
 
-    override fun <W : Any> onChangeWithAlreadyWeak(
-        weakRef: MyWeakRef<W>,
+    final override fun <W : Any> onChangeWithAlreadyWeak(
+        weakRef: WeakRefInter<W>,
         op: (W, QueueChange<E>) -> Unit
     ): MyListenerInter<*> {
         TODO()
     }
 
-    override fun <W : Any> onChangeWithWeak(
+    final override fun <W : Any> onChangeWithWeak(
         o: W,
         op: (W, QueueChange<E>) -> Unit
     ): MyListenerInter<*> {

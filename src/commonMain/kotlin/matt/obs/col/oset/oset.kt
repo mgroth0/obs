@@ -2,8 +2,10 @@ package matt.obs.col.oset
 
 import matt.collect.itr.IteratorExtender
 import matt.collect.itr.MutableIteratorExtender
+import matt.lang.anno.Open
 import matt.lang.model.value.Value
-import matt.lang.weak.MyWeakRef
+import matt.lang.weak.WeakRefInter
+import matt.lang.weak.weak
 import matt.obs.bind.binding
 import matt.obs.col.BasicOCollection
 import matt.obs.col.InternallyBackedOSet
@@ -21,18 +23,20 @@ import matt.obs.listen.update.SetUpdate
 
 interface ObsSet<E> : Set<E>, BasicOCollection<E, SetChange<E>, SetUpdate<E>, SetListenerBase<E>> {
 
+    @Open
     override fun <W : Any> onChangeWithWeak(
         o: W,
         op: (W, SetChange<E>) -> Unit
     ) = run {
-        val weakRef = MyWeakRef(o)
+        val weakRef = weak(o)
         onChangeWithAlreadyWeak(weakRef) { w, c ->
             op(w, c)
         }
     }
 
+    @Open
     override fun <W : Any> onChangeWithAlreadyWeak(
-        weakRef: MyWeakRef<W>,
+        weakRef: WeakRefInter<W>,
         op: (W, SetChange<E>) -> Unit
     ) = run {
         val listener = WeakSetListener(weakRef) { o: W, c: SetChange<E> ->
@@ -82,6 +86,7 @@ open class BasicImmutableObservableSet<E>(private val theSet: Set<E>) : Internal
         return theSet.isEmpty()
     }
 
+    @Open
     override fun iterator(): Iterator<E> = object : IteratorExtender<E>(theSet) {
         var lastNext: E? = null
         override fun postNext(e: E) {

@@ -1,7 +1,7 @@
 package matt.obs.subscribe
 
 import matt.lang.function.Consume
-import matt.lang.weak.MyWeakRef
+import matt.lang.weak.WeakRefInter
 import matt.obs.MObservableImpl
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.event.BasicEventListener
@@ -19,9 +19,9 @@ open class Channel<E : Event> : MObservableImpl<E, MyEventListener<in E>>() {
 
     fun subscribe() = addListener(Subscription()) as Subscription
 
-    override fun observe(op: () -> Unit) = addListener(BasicEventListener { op() })
-    override fun observeWeakly(
-        w: MyWeakRef<*>,
+    final override fun observe(op: () -> Unit) = addListener(BasicEventListener { op() })
+    final override fun observeWeakly(
+        w: WeakRefInter<*>,
         op: () -> Unit
     ): MyListenerInter<*> {
         TODO()

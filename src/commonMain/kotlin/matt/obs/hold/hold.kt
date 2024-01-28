@@ -1,10 +1,12 @@
 package matt.obs.hold
 
 import matt.collect.itr.filterNotNull
+import matt.lang.anno.Open
 import matt.lang.delegation.provider
 import matt.lang.go
 import matt.lang.setall.setAll
-import matt.lang.weak.MyWeakRef
+import matt.lang.tostring.SimpleStringableClass
+import matt.lang.weak.WeakRefInter
 import matt.model.code.delegate.SimpleGetter
 import matt.model.op.debug.DebugLogger
 import matt.model.op.prints.Prints
@@ -27,24 +29,23 @@ import matt.obs.prop.typed.TypedSerializableElement
 interface ObservableStructIdea
 
 
-
-
-
-
 interface MObsHolder<O : MObservable> : MObservable, ObservableStructIdea {
     val observables: List<O>
 
+    @Open
     override fun observe(op: () -> Unit) = ObsHolderListener().apply {
         subListeners.setAll(observables.map { it.observe(op) })
     }
 
+    @Open
     override fun observeWeakly(
-        w: MyWeakRef<*>,
+        w: WeakRefInter<*>,
         op: () -> Unit
     ): MyListenerInter<*> = ObsHolderListener().apply {
         subListeners.setAll(observables.map { it.observeWeakly(w, op) })
     }
 
+    @Open
     override fun removeListener(listener: MyListenerInter<*>) {
         (listener as? ObsHolderListener)?.subListeners?.forEach { it.tryRemovingListener() }
     }
@@ -52,13 +53,15 @@ interface MObsHolder<O : MObservable> : MObservable, ObservableStructIdea {
 
 
 interface NamedObsHolder<O : MObservable> : MObsHolder<O> {
-    fun namedObservables(): Map<String, O>
+    abstract fun namedObservables(): Map<String, O>
+
+    @Open
     override val observables get() = namedObservables().values.toList()
 }
 
 
-sealed class ObservableHolderImplBase<O : MObservable> : NamedObsHolder<O> {
-    override var nam: String? = null
+sealed class ObservableHolderImplBase<O : MObservable> : SimpleStringableClass(), NamedObsHolder<O> {
+    final override var nam: String? = null
 
     @PublishedApi
     internal val _observables = mutableMapOf<String, O>()

@@ -101,12 +101,12 @@ sealed class AbstractTypedObsList<E>(
     private val list: ImmutableObsList<E>
 ) : AbstractTypedObsCollection<E>(elementCls = elementCls, nullableElements = nullableElements, col = list) {
 
-    override val colSer by lazy {
+    final override val colSer by lazy {
         ListSerializer(elementSer)
     }
 
 
-    override fun setFromEncoded(loadedValue: Collection<E>) {
+    final override fun setFromEncoded(loadedValue: Collection<E>) {
         (list as MutableObsList<E>).setAll(loadedValue)
     }
 
@@ -140,12 +140,12 @@ sealed class AbstractTypedObsSet<E>(
     private val set: ObsSet<E>
 ) : AbstractTypedObsCollection<E>(elementCls = elementCls, nullableElements = nullableElements, col = set) {
 
-    override val colSer by lazy {
+    final override val colSer by lazy {
         SetSerializer(elementSer)
     }
 
 
-    override fun setFromEncoded(loadedValue: Collection<E>) {
+    final override fun setFromEncoded(loadedValue: Collection<E>) {
         (set as BasicObservableSet<E>).setAll(loadedValue)
     }
 }
@@ -163,7 +163,7 @@ sealed class AbstractTypedObsCollection<E>(
 
     protected abstract val colSer: KSerializer<*>
 
-    override fun provideEncodable() = col
+    final override fun provideEncodable() = col
 
 }
 

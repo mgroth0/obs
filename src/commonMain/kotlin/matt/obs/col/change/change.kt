@@ -4,8 +4,9 @@ import matt.collect.queue.MyQueue
 import matt.collect.set.ordered.OrderedSet
 import matt.collect.set.ordered.orderedSetOf
 import matt.collect.set.ordered.toOrderedSet
+import matt.lang.anno.Open
 import matt.lang.convert.BiConverter
-import matt.lang.tostring.mehToStringBuilder
+import matt.lang.tostring.SimpleStringableClass
 import matt.log.taball
 import matt.model.data.index.AdditionIndex
 import matt.model.data.index.All
@@ -56,7 +57,7 @@ class AtomicListChange<E>(
     override val collection: List<E>,
     val changes: List<ListChange<E>>,
     var isCompiled: Boolean = false
-) : ListChange<E>, ListAdditionBase<E>, ListRemovalBase<E> {
+) : SimpleStringableClass(), ListChange<E>, ListAdditionBase<E>, ListRemovalBase<E> {
 
 
     override val addedElementsIndexed: OrderedSet<out MyIndexedValue<E, out AdditionIndex>>
@@ -80,9 +81,7 @@ class AtomicListChange<E>(
     }
 
 
-    override fun toString(): String {
-        return mehToStringBuilder(mapOf("changes" to changes.elementsToString(delimiter = "\n\t")))
-    }
+    override fun toStringProps() = mapOf(("changes" to changes.elementsToString(delimiter = "\n\t")))
 }
 
 
@@ -95,6 +94,8 @@ sealed interface SetAdditionBase<E> : SetChange<E>, AdditionBase<E, Set<E>>
 
 sealed interface ListAdditionBase<E> : ListChange<E>, AdditionBase<E, List<E>> {
     val addedElementsIndexed: OrderedSet<out MyIndexedValue<E, out AdditionIndex>>
+
+    @Open
     override val addedElements: List<E> get() = addedElementsIndexed.map { it.element }
 }
 
@@ -108,30 +109,36 @@ sealed interface SetRemovalBase<E> : SetChange<E>, RemovalBase<E, Set<E>>
 
 sealed interface ListRemovalBase<E> : RemovalBase<E, List<E>>, ListChange<E> {
     val removedElementsIndexed: OrderedSet<out MyIndexedValue<E, out RemovalIndex>>
+
+    @Open
     override val removedElements: List<E> get() = removedElementsIndexed.map { it.element }
 }
 
 sealed class SetAddition<E>(
-    override val collection: Set<E>,
+    @Open override val collection: Set<E>,
     val added: E
-) : SetAdditionBase<E>
+) : SimpleStringableClass(), SetAdditionBase<E>
 
 sealed class ListAddition<E>(
-    override val collection: List<E>,
+    @Open override val collection: List<E>,
     val added: E
-) : ListAdditionBase<E>
+) : SimpleStringableClass(), ListAdditionBase<E>
 
 
 class AddIntoSet<E>(
     override val collection: Set<E>,
     added: E
 ) : SetAddition<E>(collection, added) {
+
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
     ): AddIntoSet<T> = AddIntoSet(collection as Set<T>, convert(added))
 
-    override fun toString() = mehToStringBuilder("added" to added)
+    override fun toStringProps() = mapOf(
+        "added" to added
+    )
+
     override val addedElements = listOf(added)
 }
 
@@ -144,7 +151,10 @@ class AddAtEnd<E>(
         convert: (E) -> T
     ) = AddAtEnd(collection as List<T>, convert(added))
 
-    override fun toString() = mehToStringBuilder("added" to added)
+    override fun toStringProps() = mapOf(
+        "added" to added
+    )
+
     override val addedElementsIndexed get() = orderedSetOf(added withIndex End)
     override val lowestChangedIndex: Int = collection.size - 1
 }
@@ -159,7 +169,9 @@ class AddAt<E>(
         convert: (E) -> T
     ) = AddAt(collection as List<T>, convert(added), index = index)
 
-    override fun toString() = mehToStringBuilder("added" to added, "index" to index)
+    override fun toStringProps() = mapOf(
+        "added" to added, "index" to index
+    )
 
     override val addedElementsIndexed get() = orderedSetOf(added withIndex index)
     override val lowestChangedIndex: Int = index
@@ -167,8 +179,8 @@ class AddAt<E>(
 
 
 sealed class MultiAddition<E, COL : Collection<E>>(
-    override val collection: COL
-) : AdditionBase<E, COL>
+    final override val collection: COL
+) : SimpleStringableClass(), AdditionBase<E, COL>
 
 class MultiAddIntoSet<E>(
     collection: Set<E>,
@@ -181,12 +193,13 @@ class MultiAddIntoSet<E>(
         convert: (E) -> T
     ) = MultiAddIntoSet(collection as Set<T>, added.map(convert))
 
-    override fun toString() = mehToStringBuilder("added" to added)
+    override fun toStringProps() = mapOf("added" to added)
 
     override val addedElements get() = added.toList()
 }
 
-sealed class MultiAdditionIntoList<E>(override val collection: List<E>) : ListAdditionBase<E>
+sealed class MultiAdditionIntoList<E>(@Open override val collection: List<E>) : SimpleStringableClass(),
+    ListAdditionBase<E>
 
 class MultiAddAtEnd<E>(
     collection: List<E>,
@@ -198,7 +211,8 @@ class MultiAddAtEnd<E>(
     ) = MultiAddAtEnd(collection as List<T>, added.map(convert))
 
 
-    override fun toString() = mehToStringBuilder("added" to added)
+    override fun toStringProps() = mapOf("added" to added)
+
 
     override val addedElementsIndexed get() = added.map { it withIndex End }.toOrderedSet()
 
@@ -227,9 +241,7 @@ class MultiAddAt<E>(
 
     override val lowestChangedIndex = index
 
-    override fun toString(): String {
-        return mehToStringBuilder(mapOf("index" to index, "size" to added.size))
-    }
+    override fun toStringProps() = mapOf("index" to index, "size" to added.size)
 
     val isRange by lazy {
         true
@@ -238,18 +250,18 @@ class MultiAddAt<E>(
 }
 
 sealed class Removal<E, COL : Collection<E>>(
-    override val collection: COL,
+    @Open override val collection: COL,
     val removed: E
-) : RemovalBase<E, COL> { //  override val removedElements get() = listOf(removed)
+) : SimpleStringableClass(), RemovalBase<E, COL> { //  override val removedElements get() = listOf(removed)
 }
 
 sealed class SetRemoval<E>(
-    override val collection: Set<E>,
+    @Open   override val collection: Set<E>,
     removed: E
 ) : Removal<E, Set<E>>(collection, removed), SetRemovalBase<E>
 
 sealed class ListRemoval<E>(
-    override val collection: List<E>,
+    @Open  override val collection: List<E>,
     removed: E
 ) : Removal<E, List<E>>(collection, removed), ListRemovalBase<E>
 
@@ -264,6 +276,9 @@ class RemoveElementFromSet<E>(
     ) = RemoveElementFromSet(collection as Set<T>, convert(removed))
 
     override val removedElements get() = listOf(removed)
+
+
+    override fun toStringProps() = mapOf("removed" to removed)
 }
 
 //open class RemoveElement<E>(collection: Collection<E>, removed: E, override val lowestChangedIndex: Int): Removal<E>(
@@ -291,6 +306,8 @@ class RemoveElementFromList<E>(
     override val removedElementsIndexed get() = orderedSetOf(removed withIndex First)
 
     override val lowestChangedIndex: Int = index
+
+    override fun toStringProps() = mapOf("index" to index, "removed" to removed)
 }
 
 
@@ -308,25 +325,23 @@ class RemoveAt<E>(
 
     override val lowestChangedIndex = index
 
-    override fun toString(): String {
-        return mehToStringBuilder(mapOf("index" to index, "removed" to removed))
-    }
+    override fun toStringProps() = mapOf("index" to index, "removed" to removed)
 
 } //class RemoveFirst<E>(collection: Collection<E>, removed: E): matt.obs.map.change.Removal<E>(collection, removed)
 
 sealed class MultiRemoval<E, COL : Collection<E>>(
-    override val collection: COL,
+    @Open override val collection: COL,
     val removed: Collection<E>
-) : RemovalBase<E, COL> { //  override val removedElements get() = removed.toList()
+) : SimpleStringableClass(), RemovalBase<E, COL> { //  override val removedElements get() = removed.toList()
 }
 
 sealed class MultiRemovalFromSet<E>(
-    override val collection: Set<E>,
+    @Open   override val collection: Set<E>,
     removed: Collection<E>
 ) : MultiRemoval<E, Set<E>>(collection, removed), SetRemovalBase<E>
 
 sealed class MultiRemovalFromList<E>(
-    override val collection: List<E>,
+    @Open  override val collection: List<E>,
     removed: Collection<E>
 ) : MultiRemoval<E, List<E>>(collection, removed), ListRemovalBase<E>
 
@@ -345,10 +360,8 @@ class RemoveElementsFromSet<E>(
         convert: (E) -> T
     ) = RemoveElementsFromSet(collection as Set<T>, removed.map(convert))
 
-    override fun toString() = mehToStringBuilder(
-        mapOf(
-            "removed" to removed.elementsToString()
-        )
+    override fun toStringProps() = mapOf(
+        "removed" to removed.elementsToString()
     )
 
 }
@@ -367,10 +380,8 @@ class RemoveElements<E>(
         convert: (E) -> T
     ) = RemoveElements(collection as List<T>, removed.map(convert), lowestChangedIndex = lowestChangedIndex)
 
-    override fun toString() = mehToStringBuilder(
-        mapOf(
-            "removed" to removed.elementsToString()
-        )
+    override fun toStringProps() = mapOf(
+        "removed" to removed.elementsToString()
     )
 
 }
@@ -428,9 +439,11 @@ class RemoveAtIndices<E>(
         } else removed.minOf { it.index }
     }
 
-    override fun toString(): String {
-        return "${this::class.simpleName}[size=${removed.size},firstIndex=$firstIndex,lastIndex=$lastIndex]"
-    }
+    override fun toStringProps() = mapOf(
+        "size" to removed.size,
+        "firstIndex" to firstIndex,
+        "lastIndex" to lastIndex
+    )
 }
 
 
@@ -447,6 +460,7 @@ class RetainAllSet<E>(
     ) = RetainAllSet(collection as Set<T>, removed.map(convert), retained = retained.map(convert))
 
     override val removedElements = removed.toList()
+
 }
 
 
@@ -474,10 +488,11 @@ class RetainAllList<E>(
 
 
 sealed class Replacement<E>(
-    override val collection: List<E>,
+  final  override val collection: List<E>,
     val removed: E,
     val added: E
-) : ListAdditionBase<E>, ListRemovalBase<E> { //  override val addedElements get() = listOf(added)
+) : SimpleStringableClass(), ListAdditionBase<E>,
+    ListRemovalBase<E> { //  override val addedElements get() = listOf(added)
     //  override val removedElements get() = listOf(removed)
 
 
@@ -502,10 +517,8 @@ class ReplaceAt<E>(
     override val lowestChangedIndex: Int
         get() = index
 
-    override fun toString() = mehToStringBuilder(
-        mapOf(
-            "removed" to removed, "added" to added, "index" to index
-        )
+    override fun toStringProps() = mapOf(
+        "removed" to removed, "added" to added, "index" to index
     )
 
 }

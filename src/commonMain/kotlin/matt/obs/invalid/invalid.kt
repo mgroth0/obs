@@ -1,10 +1,11 @@
 package matt.obs.invalid
 
 import matt.collect.list.single.SingleElementListImpl
+import matt.lang.anno.Open
 import matt.lang.function.Produce
 import matt.lang.sync.ReferenceMonitor
 import matt.lang.sync.inSync
-import matt.lang.weak.MyWeakRef
+import matt.lang.weak.WeakRefInter
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.listen.Listener
@@ -17,15 +18,16 @@ interface CustomInvalidations : MObservable {
 
 interface CustomDependencies : CustomInvalidations {
 
+    @Open
     fun addDependencies(vararg obs: MObservable) {
         obs.forEach {
             addDependency(it)
         }
     }
 
-
+    @Open
     fun addWeakDependencies(
-        w: MyWeakRef<*>,
+        w: WeakRefInter<*>,
         vararg obs: MObservable
     ) {
         obs.forEach {
@@ -42,7 +44,7 @@ interface CustomDependencies : CustomInvalidations {
     )
 
     fun <O : MObservable> addWeakDependency(
-        weakRef: MyWeakRef<*>,
+        weakRef: WeakRefInter<*>,
         mainDep: O,
         moreDeps: List<MObservable>? = null,
         debugLogger: DebugLogger? = null,
@@ -71,7 +73,7 @@ class DependencyHelper(main: CustomInvalidations) : CustomDependencies,
     private val deps = mutableListOf<DepListenerSet>()
 
     override fun <O : MObservable> addWeakDependency(
-        weakRef: MyWeakRef<*>,
+        weakRef: WeakRefInter<*>,
         mainDep: O,
         moreDeps: List<MObservable>?,
         debugLogger: DebugLogger?,
@@ -187,7 +189,7 @@ private sealed interface DepListenerSet {
 private sealed class DepListenerSetBase : DepListenerSet
 
 private open class DefaultDepListenerSet(
-    override val obs: CustomInvalidations,
+    final override val obs: CustomInvalidations,
     mainDep: MObservable,
     moreDeps: List<MObservable>?,
     getDeepDeps: ((dep: MObservable) -> List<MObservable>)?,
@@ -228,7 +230,7 @@ private open class DefaultDepListenerSet(
 
     }
 
-    override fun removeAllListeners() {
+    final override fun removeAllListeners() {
         mainListeners.forEach {
             it.tryRemovingListener()
         }
@@ -241,8 +243,8 @@ private open class DefaultDepListenerSet(
 
 
 private open class WeakDepListenerSet(
-    override val obs: CustomInvalidations,
-    weakRef: MyWeakRef<*>,
+    final override val obs: CustomInvalidations,
+    weakRef: WeakRefInter<*>,
     mainDep: MObservable,
     moreDeps: List<MObservable>?,
     getDeepDeps: ((dep: MObservable) -> List<MObservable>)?,
@@ -284,7 +286,7 @@ private open class WeakDepListenerSet(
 
     }
 
-    override fun removeAllListeners() {
+    final override fun removeAllListeners() {
         mainListeners.forEach {
             it.tryRemovingListener()
         }

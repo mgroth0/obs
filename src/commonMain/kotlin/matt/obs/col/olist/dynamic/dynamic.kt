@@ -2,8 +2,8 @@ package matt.obs.col.olist.dynamic
 
 import matt.collect.list.setAllOneByOneNeverAllowingDuplicates
 import matt.lang.assertions.require.requireNull
-import matt.lang.tostring.mehToStringBuilder
-import matt.lang.weak.MyWeakRef
+import matt.lang.tostring.SimpleStringableClass
+import matt.lang.weak.WeakRefInter
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.bindings.bool.ObsB
@@ -36,10 +36,10 @@ class DynamicList<E>(
     private val dynamicFilter: ((E) -> ObsB)? = null,
     comparator: Comparator<in E>? = null,
     private val target: MutableObsList<E> = basicMutableObservableListOf()
-) : ImmutableObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies, InterestingList {
+) : SimpleStringableClass(), ImmutableObsList<E> by target, BasicFilteredList<E>, BasicSortedList<E>, CustomDependencies, InterestingList {
 
 
-    override fun toString() = mehToStringBuilder("name" to nam)
+    override fun toStringProps() = mapOf("name" to nam)
 
     override val predicate = BindableProperty(filter)
     override val comparator = BindableProperty(comparator)
@@ -153,7 +153,7 @@ class DynamicList<E>(
     override fun removeDependency(o: MObservable) = dependencyHelper.removeDependency(o)
 
     override fun <O : MObservable> addWeakDependency(
-        weakRef: MyWeakRef<*>,
+        weakRef: WeakRefInter<*>,
         mainDep: O,
         moreDeps: List<MObservable>?,
         debugLogger: DebugLogger?,

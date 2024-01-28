@@ -1,8 +1,8 @@
 package matt.obs.map
 
 import matt.lang.ILLEGAL
-import matt.lang.ktversion.ifPastInitialK2
-import matt.lang.weak.MyWeakRef
+import matt.lang.anno.Open
+import matt.lang.weak.WeakRefInter
 import matt.log.warn.warn
 import matt.model.flowlogic.keypass.KeyPass
 import matt.obs.MListenable
@@ -19,14 +19,15 @@ import matt.obs.map.change.Remove
 import matt.obs.map.change.RemoveValue
 import matt.obs.prop.ValProp
 import matt.obs.prop.VarProp
-import kotlin.collections.Map.Entry
 import kotlin.collections.MutableMap.MutableEntry
 
 interface BasicOMap<K, V> : Map<K, V>, MListenable<MapListener<K, V>> {
-    override fun observe(op: () -> Unit) = onChange { op() }
+    @Open
+     override fun observe(op: () -> Unit) = onChange { op() }
 
-    override fun observeWeakly(
-        w: MyWeakRef<*>,
+    @Open
+     override fun observeWeakly(
+        w: WeakRefInter<*>,
         op: () -> Unit
     ): MyListenerInter<*> {
         TODO()
@@ -37,53 +38,16 @@ interface BasicOMap<K, V> : Map<K, V>, MListenable<MapListener<K, V>> {
 
 }
 
-abstract class InternallyBackedOMap<K, V> internal constructor(private val map: Map<K, V>) :
-    MObservableImpl<MapUpdate<K, V>, MapListener<K, V>>(), BasicOMap<K, V>, Map<K, V>/* by map*/ {
+abstract class InternallyBackedOMap<K, V> internal constructor(map: Map<K, V>) :
+    MObservableImpl<MapUpdate<K, V>, MapListener<K, V>>(), BasicOMap<K, V>, Map<K, V> by map {
 
-    init {
-        ifPastInitialK2 {
-            warn("DELEGATION USED TO WORK FOR THIS CLASS BEFORE K2")
-        }
 
-    }
-
-    override fun containsKey(key: K): Boolean {
-        ifPastInitialK2 {
-            warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
-        }
-        return map.containsKey(key)
-    }
-
-    override fun containsValue(value: V): Boolean {
-        ifPastInitialK2 {
-            warn("Didn't need this override before K2... and as a result map didn't need to be a property either")
-        }
-        return map.containsValue(value)
-    }
-
-    override fun get(key: K): V? {
-        return map.get(key)
-    }
-
-    override val keys: Set<K>
-        get() = map.keys
-    override val values: Collection<V>
-        get() = map.values
-    override val entries: Set<Entry<K, V>>
-        get() = map.entries
-
-    override fun isEmpty(): Boolean {
-        return map.isEmpty()
-    }
-
-    override val size: Int
-        get() = map.size
 
     companion object {
         private var didWarn = false
     }
 
-    override fun onChange(op: (MapChange<K, V>) -> Unit): MapListener<K, V> {
+    final override fun onChange(op: (MapChange<K, V>) -> Unit): MapListener<K, V> {
         return addListener(MapListener {
             op(it)
         })

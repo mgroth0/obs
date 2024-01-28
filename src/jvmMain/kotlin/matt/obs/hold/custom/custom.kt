@@ -8,6 +8,7 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
+import matt.lang.anno.Open
 import matt.lang.err
 
 abstract class CustomSerializer<T, D : CustomDecoder<T>, E : ElementDecoder<*, T, D>> : KSerializer<T> {
@@ -30,7 +31,7 @@ abstract class CustomSerializer<T, D : CustomDecoder<T>, E : ElementDecoder<*, T
     abstract val elements: List<E>
 
 
-    override fun deserialize(decoder: Decoder): T {
+    final override fun deserialize(decoder: Decoder): T {
 
         val customDecoder = newDecoder()
         val compositeDecoder = decoder.beginStructure(descriptor)
@@ -93,7 +94,7 @@ interface Element<V, D> {
 }
 
 abstract class ElementDecoder<V, T, D : CustomDecoder<T>>(
-    override val serializer: KSerializer<V>
+    @Open override val serializer: KSerializer<V>
 ) : Element<V, D> {
     fun load(
         descriptor: SerialDescriptor,

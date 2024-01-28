@@ -2,7 +2,7 @@ package matt.obs.prop.weak
 
 import matt.lang.convert.BiConverter
 import matt.lang.function.Op
-import matt.lang.weak.MyWeakRef
+import matt.lang.weak.weak
 import matt.model.op.prints.Prints
 import matt.obs.bindhelp.ABind
 import matt.obs.bindhelp.Bindable
@@ -18,7 +18,7 @@ import matt.obs.prop.Var
 class WeakPropWrapper<T>(p: BindableProperty<T>) : MWritableValNewAndOld<T>,
     BindableValue<T> {
 
-    private val weakProp = MyWeakRef(p)
+    private val weakProp = weak(p)
     private val prop get() = weakProp.deref()!!
 
     override fun bind(source: ObsVal<out T>) = bindWeakly(source)
