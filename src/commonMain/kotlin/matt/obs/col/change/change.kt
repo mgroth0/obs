@@ -74,11 +74,9 @@ class AtomicListChange<E>(
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
-    ): AtomicListChange<T> {
-        return AtomicListChange(
-            collection as List<T>, changes.map { it.convert(collection, convert) }, isCompiled = isCompiled
-        )
-    }
+    ): AtomicListChange<T> = AtomicListChange(
+        collection as List<T>, changes.map { it.convert(collection, convert) }, isCompiled = isCompiled
+    )
 
 
     override fun toStringProps() = mapOf(("changes" to changes.elementsToString(delimiter = "\n\t")))
@@ -186,8 +184,8 @@ class MultiAddIntoSet<E>(
     collection: Set<E>,
     val added: Collection<E>
 ) : MultiAddition<E, Set<E>>(
-    collection
-), SetChange<E>, SetAdditionBase<E> {
+        collection
+    ), SetChange<E>, SetAdditionBase<E> {
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
@@ -225,8 +223,8 @@ class MultiAddAt<E>(
     val added: Collection<E>,
     val index: Int
 ) : MultiAdditionIntoList<E>(
-    collection
-) {
+        collection
+    ) {
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
@@ -350,8 +348,8 @@ class RemoveElementsFromSet<E>(
     collection: Set<E>,
     removed: Collection<E>
 ) : MultiRemovalFromSet<E>(
-    collection, removed
-) {
+        collection, removed
+    ) {
 
     override val removedElements get() = removed.toList()
 
@@ -388,9 +386,7 @@ class RemoveElements<E>(
 
 
 class IndexedValueConverter<E> : BiConverter<IndexedValue<E>, E> {
-    override fun convertToB(a: IndexedValue<E>): E {
-        return a.value
-    }
+    override fun convertToB(a: IndexedValue<E>): E = a.value
 
     override fun convertToA(b: E): IndexedValue<E> {
         error("only goes one way (this shouldn't be a BiConverter!!!)")
@@ -415,13 +411,11 @@ class RemoveAtIndices<E>(
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
-    ): RemoveAtIndices<T> {
-        return RemoveAtIndices(
-            collection as List<T>,
-            removedWithIndices.map { IndexedValue(it.index, convert(it.value)) },
-            quickIsRange = quickIsRange
-        )
-    }
+    ): RemoveAtIndices<T> = RemoveAtIndices(
+        collection as List<T>,
+        removedWithIndices.map { IndexedValue(it.index, convert(it.value)) },
+        quickIsRange = quickIsRange
+    )
 
     override val lowestChangedIndex: Int = removed.minOfOrNull { it.index }!!
 
@@ -452,8 +446,8 @@ class RetainAllSet<E>(
     removed: Collection<E>,
     val retained: Collection<E>
 ) : MultiRemovalFromSet<E>(
-    collection, removed
-), SetChange<E> {
+        collection, removed
+    ), SetChange<E> {
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
@@ -488,7 +482,7 @@ class RetainAllList<E>(
 
 
 sealed class Replacement<E>(
-  final  override val collection: List<E>,
+    final  override val collection: List<E>,
     val removed: E,
     val added: E
 ) : SimpleStringableClass(), ListAdditionBase<E>,
@@ -504,8 +498,8 @@ class ReplaceAt<E>(
     added: E,
     val index: Int
 ) : Replacement<E>(
-    collection, removed, added
-) {
+        collection, removed, added
+    ) {
 
     override fun <T> convert(
         collection: Collection<T>,
@@ -561,7 +555,8 @@ fun <E> MutableSet<E>.mirror(c: SetChange<E>): SetChange<E> {
             is MultiAddIntoSet       -> addAll(c.added)
             is RemoveElementsFromSet -> removeAll(c.removed)
         }
-    } catch (e: IllegalArgumentException) {    /*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
+    } catch (e: IllegalArgumentException) {
+        /*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
         println("c=$c")
         taball("mirroring set", this)
         throw e
@@ -614,7 +609,8 @@ fun <E> MutableList<E>.mirror(
                 }
             }
         }
-    } catch (e: IllegalArgumentException) {    /*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
+    } catch (e: IllegalArgumentException) {
+        /*Throwable:  Throwable=java.lang.IllegalArgumentException: Children: duplicate children added: parent = TextFlow@36365ac6*/
         println("c=$c")
         taball("mirroring list", this)
         throw e
@@ -641,9 +637,7 @@ class QueueAdd<E : Any>(
     override fun <T : Any> convert(
         collection: Collection<T>,
         convert: (E) -> T
-    ): QueueAdd<T> {
-        return QueueAdd(convert(added), collection as MyQueue<T>)
-    }
+    ): QueueAdd<T> = QueueAdd(convert(added), collection as MyQueue<T>)
 }
 
 class QueueRemove<E : Any>(
@@ -653,7 +647,5 @@ class QueueRemove<E : Any>(
     override fun <T : Any> convert(
         collection: Collection<T>,
         convert: (E) -> T
-    ): QueueRemove<T> {
-        return QueueRemove(convert(removed), collection as MyQueue<T>)
-    }
+    ): QueueRemove<T> = QueueRemove(convert(removed), collection as MyQueue<T>)
 }

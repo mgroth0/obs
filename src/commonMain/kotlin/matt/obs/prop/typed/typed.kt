@@ -62,9 +62,7 @@ class TypedBindableProperty<T>(
     TypedSerializableElement<T> {
 
 
-    override fun provideEncodable(): T {
-        return value
-    }
+    override fun provideEncodable(): T = value
 
 
     override fun setFromEncoded(loadedValue: T) {
@@ -80,20 +78,20 @@ class TypedMutableObsList<E>(
     list: MutableObsList<E>
 ) :
     AbstractTypedObsList<E>(
-        elementCls = elementCls,
-        nullableElements = nullableElements,
-        list = list
-    ), MutableObsList<E> by list
+            elementCls = elementCls,
+            nullableElements = nullableElements,
+            list = list
+        ), MutableObsList<E> by list
 
 class TypedImmutableObsList<E>(
     elementCls: KClass<*>,
     nullableElements: Boolean,
     list: ImmutableObsList<E>
 ) : AbstractTypedObsList<E>(
-    elementCls = elementCls,
-    nullableElements = nullableElements,
-    list = list
-), ImmutableObsList<E> by list
+        elementCls = elementCls,
+        nullableElements = nullableElements,
+        list = list
+    ), ImmutableObsList<E> by list
 
 sealed class AbstractTypedObsList<E>(
     elementCls: KClass<*>,
@@ -118,20 +116,20 @@ class TypedMutableObsSet<E>(
     nullableElements: Boolean,
     set: MutableObsSet<E>
 ) : AbstractTypedObsSet<E>(
-    elementCls = elementCls,
-    nullableElements = nullableElements,
-    set = set
-), MutableObsSet<E> by set
+        elementCls = elementCls,
+        nullableElements = nullableElements,
+        set = set
+    ), MutableObsSet<E> by set
 
 class TypedImmutableObsSet<E>(
     elementCls: KClass<*>,
     nullableElements: Boolean,
     set: ObsSet<E>
 ) : AbstractTypedObsSet<E>(
-    elementCls = elementCls,
-    nullableElements = nullableElements,
-    set = set
-), ObsSet<E> by set
+        elementCls = elementCls,
+        nullableElements = nullableElements,
+        set = set
+    ), ObsSet<E> by set
 
 
 sealed class AbstractTypedObsSet<E>(

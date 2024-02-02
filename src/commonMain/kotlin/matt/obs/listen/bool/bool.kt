@@ -8,17 +8,17 @@ import matt.obs.listen.whenEqualsOnce
 import kotlin.jvm.JvmName
 
 fun ObsB.whenTrue(op: ()->Unit): MyListenerInter<*> {
-  if (value) op()
-  return onChange {
-	if (it) op()
-  }
+    if (value) op()
+    return onChange {
+        if (it) op()
+    }
 }
 
 fun ObsB.whenFalse(op: ()->Unit): MyListenerInter<*> {
-  if (!value) op()
-  return onChange {
-	if (!it) op()
-  }
+    if (!value) op()
+    return onChange {
+        if (!it) op()
+    }
 }
 
 fun ObsB.whenTrueOnce(op: ()->Unit) = whenEqualsOnce(true, op)

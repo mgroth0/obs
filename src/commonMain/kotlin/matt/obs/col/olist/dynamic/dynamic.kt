@@ -146,9 +146,7 @@ class DynamicList<E>(
     override fun <O : ObsVal<*>> addDependencyIgnoringFutureNullOuterChanges(
         o: O,
         vararg deepDependencies: (O) -> MObservable?
-    ) {
-        return dependencyHelper.addDependencyIgnoringFutureNullOuterChanges(o, *deepDependencies)
-    }
+    ) = dependencyHelper.addDependencyIgnoringFutureNullOuterChanges(o, *deepDependencies)
 
     override fun removeDependency(o: MObservable) = dependencyHelper.removeDependency(o)
 

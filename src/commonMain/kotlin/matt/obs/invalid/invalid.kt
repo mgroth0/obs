@@ -200,7 +200,9 @@ private open class DefaultDepListenerSet(
     private val getTheDeepDeps: Produce<List<MObservable>> = getDeepDeps?.let {
         { it.invoke(mainDep) }
         //	it(mainDep)
-    } ?: { listOf() /*dont save mainDep in memory*/ }
+    } ?: {
+        listOf() /*dont save mainDep in memory*/
+    }
 
     open val mainListeners = run {
 
@@ -255,7 +257,9 @@ private open class WeakDepListenerSet(
     private val getTheDeepDeps: Produce<List<MObservable>> = getDeepDeps?.let {
         { it.invoke(mainDep) }
         //	it(mainDep)
-    } ?: { listOf() /*dont save mainDep in memory*/ }
+    } ?: {
+        listOf() /*dont save mainDep in memory*/
+    }
 
 
     open val mainListeners = run {
@@ -309,7 +313,9 @@ private class DepListenerSetIgnoringNullOuterValues(
     private val getTheDeepDeps: Produce<List<MObservable>> = getDeepDeps?.let {
         { it.invoke(mainDep) }
         //	it(mainDep)
-    } ?: { listOf() /*dont save mainDep in memory*/ }
+    } ?: {
+        listOf() /*dont save mainDep in memory*/
+    }
 
 
     override val mainListeners = listOf(mainDep.onChange { new ->

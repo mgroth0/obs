@@ -297,21 +297,19 @@ class BindableValueHelper<T>(internal val wProp: Var<T>) : BindableImpl(), Binda
         fun createListener(
             theSource: Var<T>,
             theTarget: Var<T>
-        ): MyListenerInter<*> {
-            return if (weak) {
-                theSource.onChangeWithWeak(theTarget) { deRefedTarget, newValue ->
-                    if (!checkEquality || newValue != deRefedTarget.value) {
-                        rBlocker.with {
-                            deRefedTarget setCorrectlyTo { newValue }
-                        }
+        ): MyListenerInter<*> = if (weak) {
+            theSource.onChangeWithWeak(theTarget) { deRefedTarget, newValue ->
+                if (!checkEquality || newValue != deRefedTarget.value) {
+                    rBlocker.with {
+                        deRefedTarget setCorrectlyTo { newValue }
                     }
                 }
-            } else {
-                theSource.onChange { newValue ->
-                    if (!checkEquality || newValue != theTarget.value) {
-                        rBlocker.with {
-                            theTarget setCorrectlyTo { newValue }
-                        }
+            }
+        } else {
+            theSource.onChange { newValue ->
+                if (!checkEquality || newValue != theTarget.value) {
+                    rBlocker.with {
+                        theTarget setCorrectlyTo { newValue }
                     }
                 }
             }

@@ -120,9 +120,7 @@ class WeakInvalidListener<T>(
         listenerDebugger = null
     }
 
-    override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<Any, T> {
-        return ValueUpdateWithWeakObj(u.new, wref.deref()!!)
-    }
+    override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<Any, T> = ValueUpdateWithWeakObj(u.new, wref.deref()!!)
 
 }
 
@@ -215,9 +213,7 @@ sealed class WeakValueListenerBase<W : Any, T> : ValueListener<T, ValueUpdate<T>
     MyWeakListener<ValueUpdate<T>> {
     abstract override val wref: WeakRefInter<out W>
     final override fun shouldBeCleaned() = wref.deref() == null
-    final override fun shouldRemove(): Boolean {
-        return shouldBeCleaned()
-    }
+    final override fun shouldRemove(): Boolean = shouldBeCleaned()
 }
 
 sealed class WeakChangeListenerBase<W : Any, T> : ValueListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(),
@@ -235,9 +231,7 @@ sealed class WeakChangeListenerBase<W : Any, T> : ValueListener<T, ValueUpdate<T
     }
 
     final override fun shouldBeCleaned() = wref.deref() == null
-    final override fun shouldRemove(): Boolean {
-        return shouldBeCleaned()
-    }
+    final override fun shouldRemove(): Boolean = shouldBeCleaned()
 }
 
 abstract class WeakCollectionListener<W : Any, E, C : CollectionChange<E, out Collection<E>>, U : CollectionUpdate<E, C>>(
@@ -269,10 +263,8 @@ class WeakChangeListenerWithNewValue<W : Any, T>(
     internal val invoke: WeakChangeListenerWithNewValue<W, T>.(ref: W, new: T) -> Unit
 ) : WeakChangeListenerBase<W, T>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>> {
 
-    override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<W, T>? {
-        return wref.deref()?.let {
-            ValueUpdateWithWeakObj(u.new, it)
-        }
+    override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<W, T>? = wref.deref()?.let {
+        ValueUpdateWithWeakObj(u.new, it)
     }
 
     override fun subNotify(
@@ -295,10 +287,8 @@ class WeakListenerWithOld<W : Any, T>(
 
     override fun shouldBeCleaned() = wref.deref() == null
 
-    override fun transformUpdate(u: ValueChange<T>): ValueUpdateWithWeakObjAndOld<W, T>? {
-        return wref.deref()?.let {
-            ValueUpdateWithWeakObjAndOld(new = u.new, old = u.old, weakObj = it)
-        }
+    override fun transformUpdate(u: ValueChange<T>): ValueUpdateWithWeakObjAndOld<W, T>? = wref.deref()?.let {
+        ValueUpdateWithWeakObjAndOld(new = u.new, old = u.old, weakObj = it)
     }
 
     override fun subNotify(

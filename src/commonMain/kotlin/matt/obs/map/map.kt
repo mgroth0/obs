@@ -23,10 +23,10 @@ import kotlin.collections.MutableMap.MutableEntry
 
 interface BasicOMap<K, V> : Map<K, V>, MListenable<MapListener<K, V>> {
     @Open
-     override fun observe(op: () -> Unit) = onChange { op() }
+    override fun observe(op: () -> Unit) = onChange { op() }
 
     @Open
-     override fun observeWeakly(
+    override fun observeWeakly(
         w: WeakRefInter<*>,
         op: () -> Unit
     ): MyListenerInter<*> {
@@ -43,40 +43,38 @@ abstract class InternallyBackedOMap<K, V> internal constructor(map: Map<K, V>) :
 
 
 
-    companion object {
-        private var didWarn = false
-    }
+        companion object {
+            private var didWarn = false
+        }
 
-    final override fun onChange(op: (MapChange<K, V>) -> Unit): MapListener<K, V> {
-        return addListener(MapListener {
+        final override fun onChange(op: (MapChange<K, V>) -> Unit): MapListener<K, V> = addListener(MapListener {
             op(it)
         })
-    }
 
-    internal val bindWritePass = KeyPass()
-    protected fun emitChange(change: MapChange<K, V>) {
-        if (!didWarn) {
-            warn(
-                """
-		I guess InternallyBackedOMap needs similar infrastructural support as ObsList? like:
-	require(this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)  
-	""".trimIndent()
-            )
-            didWarn = true
+        internal val bindWritePass = KeyPass()
+        protected fun emitChange(change: MapChange<K, V>) {
+            if (!didWarn) {
+                warn(
+                    """
+                    	I guess InternallyBackedOMap needs similar infrastructural support as ObsList? like:
+                    require(this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)  
+                    """.trimIndent()
+                )
+                didWarn = true
+            }
+
+            notifyListeners(MapUpdate((change)))
         }
 
-        notifyListeners(MapUpdate((change)))
-    }
-
-    val isEmptyProp: ValProp<Boolean> by lazy {
-        VarProp(this.isEmpty()).apply {
-            onChange {
-                value = this@InternallyBackedOMap.isEmpty()
+        val isEmptyProp: ValProp<Boolean> by lazy {
+            VarProp(this.isEmpty()).apply {
+                onChange {
+                    value = this@InternallyBackedOMap.isEmpty()
+                }
             }
         }
-    }
 
-}
+    }
 
 interface BasicOMutableMap<K, V> : BasicOMap<K, V>, MutableMap<K, V>
 
@@ -117,25 +115,17 @@ class BasicOMutableMapImpl<K, V>(private val map: MutableMap<K, V> = mutableMapO
             this@BasicOMutableMapImpl.clear()
         }
 
-        override fun isEmpty(): Boolean {
-            return this@BasicOMutableMapImpl.isEmpty()
-        }
+        override fun isEmpty(): Boolean = this@BasicOMutableMapImpl.isEmpty()
 
-        override fun containsAll(elements: Collection<MutableEntry<K, V>>): Boolean {
-            return elements.all { contains(it) }
-        }
+        override fun containsAll(elements: Collection<MutableEntry<K, V>>): Boolean = elements.all { contains(it) }
 
         override fun contains(element: MutableEntry<K, V>) = (get(element.key) == element.value)
 
         override fun iterator(): MutableIterator<MutableEntry<K, V>> = object : MutableIterator<MutableEntry<K, V>> {
             private val itr = map.entries.iterator()
-            override fun hasNext(): Boolean {
-                return itr.hasNext()
-            }
+            override fun hasNext(): Boolean = itr.hasNext()
 
-            override fun next(): MutableEntry<K, V> {
-                return ObsMutableEntry(itr.next())
-            }
+            override fun next(): MutableEntry<K, V> = ObsMutableEntry(itr.next())
 
             override fun remove() {
                 itr.remove()
@@ -187,27 +177,17 @@ class BasicOMutableMapImpl<K, V>(private val map: MutableMap<K, V> = mutableMapO
             this@BasicOMutableMapImpl.clear()
         }
 
-        override fun isEmpty(): Boolean {
-            return map.keys.isEmpty()
-        }
+        override fun isEmpty(): Boolean = map.keys.isEmpty()
 
-        override fun containsAll(elements: Collection<K>): Boolean {
-            return elements.all { contains(it) }
-        }
+        override fun containsAll(elements: Collection<K>): Boolean = elements.all { contains(it) }
 
-        override fun contains(element: K): Boolean {
-            return map.keys.contains(element)
-        }
+        override fun contains(element: K): Boolean = map.keys.contains(element)
 
         override fun iterator(): MutableIterator<K> = object : MutableIterator<K> {
             private val itr = map.keys.iterator()
-            override fun hasNext(): Boolean {
-                return itr.hasNext()
-            }
+            override fun hasNext(): Boolean = itr.hasNext()
 
-            override fun next(): K {
-                return itr.next()
-            }
+            override fun next(): K = itr.next()
 
             override fun remove() {
                 itr.remove()
@@ -259,27 +239,17 @@ class BasicOMutableMapImpl<K, V>(private val map: MutableMap<K, V> = mutableMapO
             this@BasicOMutableMapImpl.clear()
         }
 
-        override fun isEmpty(): Boolean {
-            return map.values.isEmpty()
-        }
+        override fun isEmpty(): Boolean = map.values.isEmpty()
 
-        override fun containsAll(elements: Collection<V>): Boolean {
-            return elements.all { contains(it) }
-        }
+        override fun containsAll(elements: Collection<V>): Boolean = elements.all { contains(it) }
 
-        override fun contains(element: V): Boolean {
-            return map.values.contains(element)
-        }
+        override fun contains(element: V): Boolean = map.values.contains(element)
 
         override fun iterator(): MutableIterator<V> = object : MutableIterator<V> {
             private val itr = map.values.iterator()
-            override fun hasNext(): Boolean {
-                return itr.hasNext()
-            }
+            override fun hasNext(): Boolean = itr.hasNext()
 
-            override fun next(): V {
-                return itr.next()
-            }
+            override fun next(): V = itr.next()
 
             override fun remove() {
                 itr.remove()

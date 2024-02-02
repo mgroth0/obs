@@ -50,8 +50,8 @@ class ValueUpdateWithWeakObjAndOld<W : Any, T>(
     override val weakObj: W
 ) :
     ValueChange<T>(
-        old = old, new = new
-    ), WeakUpdate<W>
+            old = old, new = new
+        ), WeakUpdate<W>
 
 abstract class NonNullCollectionUpdate<E, C : NonNullCollectionChange<E, out Collection<E>>>(internal open val change: C) : Update
 abstract class CollectionUpdate<E, C : CollectionChange<E, out Collection<E>>>(internal open val change: C) : Update

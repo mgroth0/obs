@@ -1,14 +1,14 @@
 package matt.obs.bind
 
 import matt.lang.convert.BiConverter
+import matt.lang.convert.Converter
 import matt.lang.err
 import matt.lang.setall.setAll
-import matt.model.flowlogic.keypass.KeyPass
-import matt.lang.convert.Converter
 import matt.lang.sync.ReferenceMonitor
 import matt.lang.sync.inSync
 import matt.lang.weak.WeakRefInter
 import matt.lang.weak.weak
+import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.debug.DebugLogger
 import matt.obs.MObservable
 import matt.obs.bindhelp.BindableValue
@@ -211,9 +211,7 @@ open class MyBinding<T>(
     private val calcArg: () -> T
 ) : MyBindingBaseImpl<T>() {
 
-    final override fun calc(): T {
-        return calcArg()
-    }
+    final override fun calc(): T = calcArg()
 
     init {
         addDependencies(*dependencies)
@@ -260,9 +258,7 @@ open class LazyBindableProp<T>(
 
     constructor(t: T) : this({ t })
 
-    final override fun calc(): T {
-        return calcArg()
-    }
+    final override fun calc(): T = calcArg()
 
     private val bindWritePass = KeyPass()
     final override var value: T

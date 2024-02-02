@@ -7,17 +7,17 @@ import matt.obs.prop.ObsVal
 typealias ObsI = ObsVal<I>
 
 fun sum(vararg values: ObsI) = reduction(*values) {
-  it.sumOf { it.value }
+    it.sumOf { it.value }
 }
 
 fun mean(vararg values: ObsI) = reduction(*values) {
-  it.sumOf { it.value }/it.size
+    it.sumOf { it.value }/it.size
 }
 
 fun max(vararg values: ObsI) = reduction(*values) {
-  it.maxOf { it.value }
+    it.maxOf { it.value }
 }
 
 fun min(vararg values: ObsI) = reduction(*values) {
-  it.minOf { it.value }
+    it.minOf { it.value }
 }

@@ -49,17 +49,11 @@ interface ObsSet<E> : Set<E>, BasicOCollection<E, SetChange<E>, SetUpdate<E>, Se
 }
 
 
-fun <E> Collection<E>.toBasicImmutableObservableSet(): ObsSet<E> {
-    return BasicImmutableObservableSet(this)
-}
+fun <E> Collection<E>.toBasicImmutableObservableSet(): ObsSet<E> = BasicImmutableObservableSet(this)
 
-fun <E> Iterable<E>.toBasicImmutableObservableSet(): ObsSet<E> {
-    return BasicImmutableObservableSet(this.toSet())
-}
+fun <E> Iterable<E>.toBasicImmutableObservableSet(): ObsSet<E> = BasicImmutableObservableSet(this.toSet())
 
-fun <E> Sequence<E>.toBasicImmutableObservableSet(): ObsSet<E> {
-    return BasicImmutableObservableSet(this.toSet())
-}
+fun <E> Sequence<E>.toBasicImmutableObservableSet(): ObsSet<E> = BasicImmutableObservableSet(this.toSet())
 
 fun <E> basicImmutableObservableSetOf(vararg values: E) = BasicImmutableObservableSet<E>(values.toSet())
 
@@ -74,17 +68,11 @@ open class BasicImmutableObservableSet<E>(private val theSet: Set<E>) : Internal
     final override val size: Int
         get() = theSet.size
 
-    final override fun contains(element: E): Boolean {
-        return theSet.contains(element)
-    }
+    final override fun contains(element: E): Boolean = theSet.contains(element)
 
-    final override fun containsAll(elements: Collection<E>): Boolean {
-        return theSet.containsAll(elements)
-    }
+    final override fun containsAll(elements: Collection<E>): Boolean = theSet.containsAll(elements)
 
-    final override fun isEmpty(): Boolean {
-        return theSet.isEmpty()
-    }
+    final override fun isEmpty(): Boolean = theSet.isEmpty()
 
     @Open
     override fun iterator(): Iterator<E> = object : IteratorExtender<E>(theSet) {
@@ -99,17 +87,11 @@ open class BasicImmutableObservableSet<E>(private val theSet: Set<E>) : Internal
 
 interface MutableObsSet<E> : ObsSet<E>, MutableSet<E>
 
-fun <E> Collection<E>.toBasicObservableSet(): BasicObservableSet<E> {
-    return BasicObservableSet(this)
-}
+fun <E> Collection<E>.toBasicObservableSet(): BasicObservableSet<E> = BasicObservableSet(this)
 
-fun <E> Iterable<E>.toBasicObservableSet(): BasicObservableSet<E> {
-    return BasicObservableSet(this.toSet())
-}
+fun <E> Iterable<E>.toBasicObservableSet(): BasicObservableSet<E> = BasicObservableSet(this.toSet())
 
-fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> {
-    return BasicObservableSet(this.toSet())
-}
+fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> = BasicObservableSet(this.toSet())
 
 fun <E> basicObservableSetOf(vararg values: E) = BasicObservableSet<E>(values.toMutableSet())
 

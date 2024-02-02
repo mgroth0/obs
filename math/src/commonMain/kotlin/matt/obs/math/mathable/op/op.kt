@@ -11,11 +11,11 @@ import matt.obs.prop.Var
 }*/
 
 operator fun <T: Mathable<T>> T.minus(other: ObsVal<T>): ObsVal<T> = other.binding {
-  this - it
+    this - it
 }
 
 operator fun <T: Mathable<T>> T.plus(other: ObsVal<T>): ObsVal<T> = other.binding {
-  this + it
+    this + it
 }
 
 /*operator fun <T: Mathable<T>> T.div(other: ObsVal<T>): ObsVal<T> = other.binding {
@@ -28,11 +28,11 @@ operator fun <T: Mathable<T>> T.plus(other: ObsVal<T>): ObsVal<T> = other.bindin
 }*/
 
 operator fun <T: Mathable<T>> ObsVal<T>.minus(other: ObsVal<T>): ObsVal<T> = binding(other) {
-  it - other.value
+    it - other.value
 }
 
 operator fun <T: Mathable<T>> ObsVal<T>.plus(other: ObsVal<T>): ObsVal<T> = binding(other) {
-  it + other.value
+    it + other.value
 }
 
 /*
@@ -47,11 +47,11 @@ operator fun <T: Mathable<T>> ObsVal<T>.div(other: ObsVal<T>): ObsVal<T> = bindi
 }*/
 
 operator fun <T: Mathable<T>> Var<T>.minusAssign(other: ObsVal<T>) {
-  value -= other.value
+    value -= other.value
 }
 
 operator fun <T: Mathable<T>> Var<T>.plusAssign(other: ObsVal<T>) {
-  value += other.value
+    value += other.value
 }
 
 /*operator fun <T: Mathable<T>> Var<T>.divAssign(other: ObsVal<T>) {
@@ -64,11 +64,11 @@ operator fun <T: Mathable<T>> Var<T>.plusAssign(other: ObsVal<T>) {
 }*/
 
 operator fun <T: Mathable<T>> ObsVal<T>.minus(other: T): ObsVal<T> = binding {
-  it - other
+    it - other
 }
 
 operator fun <T: Mathable<T>> ObsVal<T>.plus(other: T): ObsVal<T> = binding {
-  it + other
+    it + other
 }
 
 /*operator fun <T: Mathable<T>> ObsVal<T>.div(other: T): ObsVal<T> = binding {
@@ -80,7 +80,7 @@ operator fun <T: Mathable<T>> ObsVal<T>.plus(other: T): ObsVal<T> = binding {
 
 
 operator fun <T: Mathable<T>> ObsVal<T>.times(other: Number): ObsVal<T> = binding {
-  it*other
+    it*other
 }
 
 /*
@@ -94,7 +94,7 @@ operator fun <T: Mathable<T>> ObsVal<T>.plus(other: Number): ObsVal<T> = binding
 */
 
 operator fun <T: Mathable<T>> ObsVal<T>.div(other: Number): ObsVal<T> = binding {
-  it/other
+    it/other
 }
 
 
@@ -107,11 +107,11 @@ operator fun <T: Mathable<T>> ObsVal<T>.div(other: Number): ObsVal<T> = binding 
 }*/
 
 operator fun <T: Mathable<T>> Var<T>.minusAssign(other: T) {
-  value -= other
+    value -= other
 }
 
 operator fun <T: Mathable<T>> Var<T>.plusAssign(other: T) {
-  value += other
+    value += other
 }
 
 /*operator fun <T: Mathable<T>> Var<T>.divAssign(other: T) {
@@ -126,7 +126,7 @@ operator fun <T: Mathable<T>> Var<T>.plusAssign(other: T) {
 
 
 operator fun <T: Mathable<T>> Var<T>.timesAssign(other: Number) {
-  value *= other
+    value *= other
 }
 
 /*operator fun <T: Mathable<T>> Var<T>.minusAssign(other: Number) {
@@ -138,5 +138,5 @@ operator fun <T: Mathable<T>> Var<T>.plusAssign(other: Number) {
 }*/
 
 operator fun <T: Mathable<T>> Var<T>.divAssign(other: Number) {
-  value /= other
+    value /= other
 }

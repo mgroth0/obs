@@ -176,29 +176,25 @@ abstract class InternallyBackedOCollection<E, C : CollectionChange<E, out Collec
 abstract class InternallyBackedOSet<E> internal constructor() :
     InternallyBackedOCollection<E, SetChange<E>, SetUpdate<E>, SetListenerBase<E>>() {
 
-    final override fun updateFrom(c: SetChange<E>): SetUpdate<E> {
-        return SetUpdate(c)
-    }
+        final override fun updateFrom(c: SetChange<E>): SetUpdate<E> = SetUpdate(c)
 
-    final override fun createListener(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>) -> Unit): SetListenerBase<E> {
-        val l = SetListener<E>(invoke)
-        return l
+        final override fun createListener(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>) -> Unit): SetListenerBase<E> {
+            val l = SetListener<E>(invoke)
+            return l
+        }
     }
-}
 
 abstract class InternallyBackedOList<E> internal constructor() :
     InternallyBackedOCollection<E, ListChange<E>, ListUpdate<E>, ListListenerBase<E>>() {
-    final override fun updateFrom(c: ListChange<E>): ListUpdate<E> {
-        return ListUpdate(c)
-    }
+        final override fun updateFrom(c: ListChange<E>): ListUpdate<E> = ListUpdate(c)
 
-    final override fun createListener(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>) -> Unit): ListListenerBase<E> {
-        val l = ListListener<E>(invoke)
-        return l
-    }
+        final override fun createListener(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>) -> Unit): ListListenerBase<E> {
+            val l = ListListener<E>(invoke)
+            return l
+        }
 
-    abstract override val size: Int
-}
+        abstract override val size: Int
+    }
 
 interface BasicOMutableCollection<E, C : CollectionChange<E, out Collection<E>>, U : CollectionUpdate<E, C>> :
     BasicOCollection<E, C, U, CollectionListenerBase<E, C, U>>,
@@ -207,27 +203,25 @@ interface BasicOMutableCollection<E, C : CollectionChange<E, out Collection<E>>,
 
 abstract class InternallyBackedOQueue<E : Any> internal constructor() :
     InternallyBackedONonNullCollection<E, QueueChange<E>, QueueUpdate<E>, QueueListener<E>>() {
-    final override fun updateFrom(c: QueueChange<E>): QueueUpdate<E> {
-        return QueueUpdate(c)
-    }
+        final override fun updateFrom(c: QueueChange<E>): QueueUpdate<E> = QueueUpdate(c)
 
-    final override fun createListener(invoke: NonNullCollectionListener<E, QueueChange<E>, QueueUpdate<E>>.(change: QueueChange<E>) -> Unit): QueueListener<E> {
-        val l = QueueListener<E>(invoke)
-        return l
-    }
+        final override fun createListener(invoke: NonNullCollectionListener<E, QueueChange<E>, QueueUpdate<E>>.(change: QueueChange<E>) -> Unit): QueueListener<E> {
+            val l = QueueListener<E>(invoke)
+            return l
+        }
 
-    final override fun <W : Any> onChangeWithAlreadyWeak(
-        weakRef: WeakRefInter<W>,
-        op: (W, QueueChange<E>) -> Unit
-    ): MyListenerInter<*> {
-        TODO()
-    }
+        final override fun <W : Any> onChangeWithAlreadyWeak(
+            weakRef: WeakRefInter<W>,
+            op: (W, QueueChange<E>) -> Unit
+        ): MyListenerInter<*> {
+            TODO()
+        }
 
-    final override fun <W : Any> onChangeWithWeak(
-        o: W,
-        op: (W, QueueChange<E>) -> Unit
-    ): MyListenerInter<*> {
-        TODO()
-    }
+        final override fun <W : Any> onChangeWithWeak(
+            o: W,
+            op: (W, QueueChange<E>) -> Unit
+        ): MyListenerInter<*> {
+            TODO()
+        }
 
-}
+    }

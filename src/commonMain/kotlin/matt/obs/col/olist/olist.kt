@@ -144,24 +144,16 @@ class FakeMutableObsList<E>(private val o: MutableObsList<E>) : MutableObsList<E
         element: E
     ) = ILLEGAL
 
-    override fun iterator(): MutableIterator<E> {
-        return FakeMutableIterator(o.iterator())
-    }
+    override fun iterator(): MutableIterator<E> = FakeMutableIterator(o.iterator())
 
-    override fun listIterator(): MutableListIterator<E> {
-        return FakeMutableListIterator(o.listIterator())
-    }
+    override fun listIterator(): MutableListIterator<E> = FakeMutableListIterator(o.listIterator())
 
-    override fun listIterator(index: Int): MutableListIterator<E> {
-        return FakeMutableListIterator(o.listIterator(index))
-    }
+    override fun listIterator(index: Int): MutableListIterator<E> = FakeMutableListIterator(o.listIterator(index))
 
     override fun subList(
         fromIndex: Int,
         toIndex: Int
-    ): MutableList<E> {
-        return FakeMutableList(o.subList(fromIndex, toIndex))
-    }
+    ): MutableList<E> = FakeMutableList(o.subList(fromIndex, toIndex))
 }
 
 
@@ -216,21 +208,13 @@ abstract class BaseBasicWritableOList<E> : InternallyBackedOList<E>(),
 }
 
 
-fun <E> Array<E>.toBasicObservableList(): BasicObservableListImpl<E> {
-    return BasicObservableListImpl(toList())
-}
+fun <E> Array<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(toList())
 
-fun <E> Collection<E>.toBasicObservableList(): BasicObservableListImpl<E> {
-    return BasicObservableListImpl(this)
-}
+fun <E> Collection<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(this)
 
-fun <E> Iterable<E>.toBasicObservableList(): BasicObservableListImpl<E> {
-    return BasicObservableListImpl(this.toList())
-}
+fun <E> Iterable<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(this.toList())
 
-fun <E> Sequence<E>.toBasicObservableList(): BasicObservableListImpl<E> {
-    return BasicObservableListImpl(this.toList())
-}
+fun <E> Sequence<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(this.toList())
 
 
 fun <E> basicROObservableListOf(vararg elements: E): MutableObsList<E> =
@@ -254,271 +238,258 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
     BaseBasicWritableOList<E>(), List<E> by list, ReferenceMonitor {
 
 
-    init {
-        ifPastInitialK2 {
-            println("this is probably fixed by now")
+        init {
+            ifPastInitialK2 {
+                println("this is probably fixed by now")
+            }
         }
-    }
 
     /*
     used to be delegated  List<E> by list, but not any more due to https://youtrack.jetbrains.com/issue/KT-57299/K2-VerifyError-due-to-overriding-final-method-size-on-a-subclass-of-Collection-and-Set
-    * */
+     * */
 
-    final override val size: Int
-        get() = list.size
+        final override val size: Int
+            get() = list.size
 
-    final override fun contains(element: E): Boolean {
-        return list.contains(element)
-    }
+        final override fun contains(element: E): Boolean = list.contains(element)
 
-    final override fun containsAll(elements: Collection<E>): Boolean {
-        return list.containsAll(elements)
-    }
+        final override fun containsAll(elements: Collection<E>): Boolean = list.containsAll(elements)
 
-    final override fun indexOf(element: E): Int {
-        return list.indexOf(element)
-    }
+        final override fun indexOf(element: E): Int = list.indexOf(element)
 
-    final override fun lastIndexOf(element: E): Int {
-        return list.lastIndexOf(element)
-    }
+        final override fun lastIndexOf(element: E): Int = list.lastIndexOf(element)
 
-    final override fun isEmpty(): Boolean {
-        return list.isEmpty()
-    }
+        final override fun isEmpty(): Boolean = list.isEmpty()
 
-    final override fun get(index: Int): E {
-        return list[index]
-    }
+        final override fun get(index: Int): E = list[index]
 
-    constructor(c: Iterable<E>) : this(c.requireNotFxObservable().toMutableList())
+        constructor(c: Iterable<E>) : this(c.requireNotFxObservable().toMutableList())
 
-    constructor() : this(mutableListOf())
+        constructor() : this(mutableListOf())
 
-    final override fun iterator(): MutableIterator<E> = listIterator()
+        final override fun iterator(): MutableIterator<E> = listIterator()
 
-    final override fun add(element: E): Boolean {
-        val b = list.add(element)
-        require(b)
-        if (b) {
-            changedFromOuter(AddAtEnd(list, element))
-        }
-        return b
-    }
-
-    final override fun add(
-        index: Int,
-        element: E
-    ) {
-        list.add(index, element)
-        changedFromOuter(AddAt(list, element, index))
-    }
-
-    final override fun addAll(
-        index: Int,
-        elements: Collection<E>
-    ): Boolean {
-        val b = list.addAll(index, elements)
-        if (b) changedFromOuter(MultiAddAt(list, elements, index))
-        return b
-    }
-
-    final override fun addAll(elements: Collection<E>): Boolean {
-        val b = list.addAll(elements)
-        if (b) changedFromOuter(MultiAddAtEnd(list, elements))
-        return b
-    }
-
-    final override fun clear() {
-        val removed = list.toList()
-        list.clear()
-        changedFromOuter(ClearList(list, removed = removed))
-    }
-
-
-    final override fun listIterator(): MutableListIterator<E> = lItr()
-    final override fun listIterator(index: Int): MutableListIterator<E> = lItr(index)
-
-    private fun lItr(index: Int? = null) = object : MutableListIteratorExtender<E>(list, index ?: 0) {
-
-        var lastElement: E? = null
-        var lastItrDir: ItrDir? = null
-
-        override fun postNext(e: E) {
-            lastElement = e
-            lastItrDir = NEXT
+        final override fun add(element: E): Boolean {
+            val b = list.add(element)
+            require(b)
+            if (b) {
+                changedFromOuter(AddAtEnd(list, element))
+            }
+            return b
         }
 
-        override fun postPrevious(e: E) {
-            lastElement = e
-            lastItrDir = PREVIOUS
+        final override fun add(
+            index: Int,
+            element: E
+        ) {
+            list.add(index, element)
+            changedFromOuter(AddAt(list, element, index))
         }
 
-        override fun remove() {
-            super.remove()
-            changedFromOuter(RemoveAt(list, lastElement ?: TODO("null"), previousIndex() + 1))
+        final override fun addAll(
+            index: Int,
+            elements: Collection<E>
+        ): Boolean {
+            val b = list.addAll(index, elements)
+            if (b) changedFromOuter(MultiAddAt(list, elements, index))
+            return b
         }
 
-        override fun add(element: E) {
-            super.add(element)
-            changedFromOuter(AddAt(list, element, previousIndex()))
+        final override fun addAll(elements: Collection<E>): Boolean {
+            val b = list.addAll(elements)
+            if (b) changedFromOuter(MultiAddAtEnd(list, elements))
+            return b
         }
 
-        @NeedsTest
-        override fun set(element: E) {
-            super.set(element)
-            changedFromOuter(
-                ReplaceAt(
-                    list, lastElement ?: TODO("null"), element, index = when (lastItrDir) {
-                        NEXT -> {
-                            previousIndex()
+        final override fun clear() {
+            val removed = list.toList()
+            list.clear()
+            changedFromOuter(ClearList(list, removed = removed))
+        }
+
+
+        final override fun listIterator(): MutableListIterator<E> = lItr()
+        final override fun listIterator(index: Int): MutableListIterator<E> = lItr(index)
+
+        private fun lItr(index: Int? = null) = object : MutableListIteratorExtender<E>(list, index ?: 0) {
+
+            var lastElement: E? = null
+            var lastItrDir: ItrDir? = null
+
+            override fun postNext(e: E) {
+                lastElement = e
+                lastItrDir = NEXT
+            }
+
+            override fun postPrevious(e: E) {
+                lastElement = e
+                lastItrDir = PREVIOUS
+            }
+
+            override fun remove() {
+                super.remove()
+                changedFromOuter(RemoveAt(list, lastElement ?: TODO("null"), previousIndex() + 1))
+            }
+
+            override fun add(element: E) {
+                super.add(element)
+                changedFromOuter(AddAt(list, element, previousIndex()))
+            }
+
+            @NeedsTest
+            override fun set(element: E) {
+                super.set(element)
+                changedFromOuter(
+                    ReplaceAt(
+                        list, lastElement ?: TODO("null"), element, index = when (lastItrDir) {
+                            NEXT -> {
+                                previousIndex()
+                            }
+
+                            PREVIOUS -> {
+                                previousIndex() + 1
+                            }
+
+                            else -> NEVER
                         }
+                    )
+                )
+            }
+        }
 
-                        PREVIOUS -> {
-                            previousIndex() + 1
-                        }
 
-                        else -> NEVER
-                    }
+        final override fun remove(element: E): Boolean {
+            val i = list.indexOf(element)
+            val b = list.remove(element)
+            if (b) changedFromOuter(RemoveElementFromList(list, element, i))
+            return b
+        }
+
+        final override fun removeAll(elements: Collection<E>): Boolean {
+            val lowestChangedIndex = withIndex().firstOrNull { it.value in elements }?.index
+            val b = list.removeAll(elements)
+            if (b) {
+                changedFromOuter(RemoveElements(list, elements, lowestChangedIndex = lowestChangedIndex!!))
+            }
+            return b
+        }
+
+        final override fun removeAt(index: Int): E {
+            requireNonNegative(index)
+            val e = list.removeAt(index)
+            changedFromOuter(RemoveAt(list, e, index))
+            return e
+        }
+
+        final override fun retainAll(elements: Collection<E>): Boolean {
+            val lowestChangedIndex = withIndex().firstOrNull { it.value !in elements }?.index
+            val toRemove = list.filter { it !in elements }
+            val b = list.retainAll(elements)
+            if (b) changedFromOuter(
+                RetainAllList(
+                    list,
+                    toRemove,
+                    retained = elements,
+                    lowestChangedIndex = lowestChangedIndex!!
                 )
             )
-        }
-    }
-
-
-    final override fun remove(element: E): Boolean {
-        val i = list.indexOf(element)
-        val b = list.remove(element)
-        if (b) changedFromOuter(RemoveElementFromList(list, element, i))
-        return b
-    }
-
-    final override fun removeAll(elements: Collection<E>): Boolean {
-        val lowestChangedIndex = withIndex().firstOrNull { it.value in elements }?.index
-        val b = list.removeAll(elements)
-        if (b) {
-            changedFromOuter(RemoveElements(list, elements, lowestChangedIndex = lowestChangedIndex!!))
-        }
-        return b
-    }
-
-    final override fun removeAt(index: Int): E {
-        requireNonNegative(index)
-        val e = list.removeAt(index)
-        changedFromOuter(RemoveAt(list, e, index))
-        return e
-    }
-
-    final override fun retainAll(elements: Collection<E>): Boolean {
-        val lowestChangedIndex = withIndex().firstOrNull { it.value !in elements }?.index
-        val toRemove = list.filter { it !in elements }
-        val b = list.retainAll(elements)
-        if (b) changedFromOuter(
-            RetainAllList(
-                list,
-                toRemove,
-                retained = elements,
-                lowestChangedIndex = lowestChangedIndex!!
-            )
-        )
-        return b
-    }
-
-    final override fun set(
-        index: Int,
-        element: E
-    ): E {
-        val oldElement = list.set(index, element)
-        changedFromOuter(ReplaceAt(list, removed = oldElement, added = element, index = index))
-        return oldElement
-    }
-
-    final override fun atomicChange(op: MutableObsList<E>.() -> Unit) {
-        requireNot(isAtomicallyChanging)
-        val changes = mutableListOf<ListChange<E>>()
-        atomicChanges = changes
-        isAtomicallyChanging = true
-        op()
-        isAtomicallyChanging = false
-        atomicChanges = null
-        if (changes.isNotEmpty()) {
-            emitChange(AtomicListChange(this, changes))
-        }
-    }
-
-    fun changedFromOuter(c: ListChange<E>) {
-        invalidateSubLists()
-        processChange(c)
-    }
-
-    private var isAtomicallyChanging = false
-    private var atomicChanges: MutableList<ListChange<E>>? = null
-    fun processChange(c: ListChange<E>) {
-        if (isAtomicallyChanging) {
-            atomicChanges!!.add(c)
-        } else {
-            emitChange(c)
-        }
-    }
-
-
-    final override fun subList(
-        fromIndex: Int,
-        toIndex: Int
-    ) = inSync { SubList(fromIndex, toIndex) }
-
-    private fun invalidateSubLists() = inSync {
-        validSubLists.forEach { it.isValid = false }
-        validSubLists.clear()
-    }
-
-    private var validSubLists = mutableListOf<SubList>()
-
-    inner class SubList(
-        private val fromIndex: Int,
-        private var toIndexExclusive: Int
-    ) :
-        MutableList<E> {
-        internal var isValid = true
-
-        private val subList = list.subList(fromIndex, toIndexExclusive)
-
-        init {
-            validSubLists += this
+            return b
         }
 
-        override val size: Int
-            get() {
-                return inSync(this@BasicObservableListImpl) {
+        final override fun set(
+            index: Int,
+            element: E
+        ): E {
+            val oldElement = list.set(index, element)
+            changedFromOuter(ReplaceAt(list, removed = oldElement, added = element, index = index))
+            return oldElement
+        }
+
+        final override fun atomicChange(op: MutableObsList<E>.() -> Unit) {
+            requireNot(isAtomicallyChanging)
+            val changes = mutableListOf<ListChange<E>>()
+            atomicChanges = changes
+            isAtomicallyChanging = true
+            op()
+            isAtomicallyChanging = false
+            atomicChanges = null
+            if (changes.isNotEmpty()) {
+                emitChange(AtomicListChange(this, changes))
+            }
+        }
+
+        fun changedFromOuter(c: ListChange<E>) {
+            invalidateSubLists()
+            processChange(c)
+        }
+
+        private var isAtomicallyChanging = false
+        private var atomicChanges: MutableList<ListChange<E>>? = null
+        fun processChange(c: ListChange<E>) {
+            if (isAtomicallyChanging) {
+                atomicChanges!!.add(c)
+            } else {
+                emitChange(c)
+            }
+        }
+
+
+        final override fun subList(
+            fromIndex: Int,
+            toIndex: Int
+        ) = inSync { SubList(fromIndex, toIndex) }
+
+        private fun invalidateSubLists() = inSync {
+            validSubLists.forEach { it.isValid = false }
+            validSubLists.clear()
+        }
+
+        private var validSubLists = mutableListOf<SubList>()
+
+        inner class SubList(
+            private val fromIndex: Int,
+            private var toIndexExclusive: Int
+        ) :
+            MutableList<E> {
+            internal var isValid = true
+
+            private val subList = list.subList(fromIndex, toIndexExclusive)
+
+            init {
+                validSubLists += this
+            }
+
+            override val size: Int
+                get() {
+                    return inSync(this@BasicObservableListImpl) {
+                        require(isValid)
+                        subList.size
+                    }
+                }
+
+            override fun clear() {
+                inSync(this@BasicObservableListImpl) {
                     require(isValid)
-                    subList.size
-                }
-            }
-
-        override fun clear() {
-            inSync(this@BasicObservableListImpl) {
-                require(isValid)
-                val subListIsEmpty = isEmpty()
-                if (!subListIsEmpty) {
-                    val copy = subList.toList()
-                    val copyWithIndices = copy.zip(fromIndex..<toIndexExclusive)
-                    val copyWithIndices2 = copyWithIndices.map { IndexedValue(it.second, it.first) }
-                    subList.clear()
-                    toIndexExclusive = fromIndex
-                    processChange(
-                        RemoveAtIndices(
-                            collection = this@BasicObservableListImpl,
-                            removed = copyWithIndices2,
-                            quickIsRange = true
+                    val subListIsEmpty = isEmpty()
+                    if (!subListIsEmpty) {
+                        val copy = subList.toList()
+                        val copyWithIndices = copy.zip(fromIndex..<toIndexExclusive)
+                        val copyWithIndices2 = copyWithIndices.map { IndexedValue(it.second, it.first) }
+                        subList.clear()
+                        toIndexExclusive = fromIndex
+                        processChange(
+                            RemoveAtIndices(
+                                collection = this@BasicObservableListImpl,
+                                removed = copyWithIndices2,
+                                quickIsRange = true
+                            )
                         )
-                    )
+                    }
                 }
+
             }
 
-        }
-
-        override fun addAll(elements: Collection<E>): Boolean {
-            return inSync(this@BasicObservableListImpl) {
+            override fun addAll(elements: Collection<E>): Boolean = inSync(this@BasicObservableListImpl) {
                 require(isValid)
                 val addIndex = toIndexExclusive
                 toIndexExclusive += elements.size
@@ -532,130 +503,129 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
                 )
                 r
             }
-        }
 
-        override fun addAll(
-            index: Int,
-            elements: Collection<E>
-        ): Boolean {
-            TODO()
-        }
+            override fun addAll(
+                index: Int,
+                elements: Collection<E>
+            ): Boolean {
+                TODO()
+            }
 
-        override fun add(
-            index: Int,
-            element: E
-        ) {
-            TODO()
-        }
+            override fun add(
+                index: Int,
+                element: E
+            ) {
+                TODO()
+            }
 
-        override fun add(element: E): Boolean {
-            require(isValid)
-            val b = subList.add(element)
-            require(b)
-            toIndexExclusive++
-            processChange(AddAt(this@BasicObservableListImpl, element, fromIndex + subList.size - 1))
-            return b
-        }
+            override fun add(element: E): Boolean {
+                require(isValid)
+                val b = subList.add(element)
+                require(b)
+                toIndexExclusive++
+                processChange(AddAt(this@BasicObservableListImpl, element, fromIndex + subList.size - 1))
+                return b
+            }
 
-        override fun get(index: Int): E {
-            require(isValid)
-            return subList[index]
-        }
+            override fun get(index: Int): E {
+                require(isValid)
+                return subList[index]
+            }
 
-        override fun isEmpty(): Boolean {
-            require(isValid)
-            return subList.isEmpty()
-        }
+            override fun isEmpty(): Boolean {
+                require(isValid)
+                return subList.isEmpty()
+            }
 
-        override fun iterator(): MutableIterator<E> {
-            val itr by lazy { subList.iterator() }
-            return FakeMutableIterator<E>(object : Iterator<E> {
-                override fun hasNext(): Boolean {
-                    require(isValid)
-                    return itr.hasNext()
-                }
+            override fun iterator(): MutableIterator<E> {
+                val itr by lazy { subList.iterator() }
+                return FakeMutableIterator<E>(object : Iterator<E> {
+                    override fun hasNext(): Boolean {
+                        require(isValid)
+                        return itr.hasNext()
+                    }
 
-                override fun next(): E {
-                    require(isValid)
-                    return itr.next()
-                }
-            })
-        }
+                    override fun next(): E {
+                        require(isValid)
+                        return itr.next()
+                    }
+                })
+            }
 
-        override fun listIterator() = NOT_IMPLEMENTED
-        override fun listIterator(index: Int) = NOT_IMPLEMENTED
-        override fun removeAt(index: Int) = NOT_IMPLEMENTED
-        override fun subList(
-            fromIndex: Int,
-            toIndex: Int
-        ) = NOT_IMPLEMENTED
+            override fun listIterator() = NOT_IMPLEMENTED
+            override fun listIterator(index: Int) = NOT_IMPLEMENTED
+            override fun removeAt(index: Int) = NOT_IMPLEMENTED
+            override fun subList(
+                fromIndex: Int,
+                toIndex: Int
+            ) = NOT_IMPLEMENTED
 
-        override fun set(
-            index: Int,
-            element: E
-        ): E {
-            require(isValid)
-            val prev = subList.set(index, element)
-            processChange(
-                ReplaceAt(
-                    this@BasicObservableListImpl,
-                    removed = prev,
-                    added = element,
-                    index = fromIndex + index
+            override fun set(
+                index: Int,
+                element: E
+            ): E {
+                require(isValid)
+                val prev = subList.set(index, element)
+                processChange(
+                    ReplaceAt(
+                        this@BasicObservableListImpl,
+                        removed = prev,
+                        added = element,
+                        index = fromIndex + index
+                    )
                 )
-            )
-            return prev
+                return prev
+            }
+
+            override fun retainAll(elements: Collection<E>) = NOT_IMPLEMENTED
+            override fun removeAll(elements: Collection<E>): Boolean {
+                require(isValid)
+                val prevSize = subList.size
+                val willRemove = subList.withIndex().filter { it.value in elements }
+                val b = subList.removeAll(elements)
+                val newSize = subList.size
+                val numRemoved = prevSize - newSize
+                toIndexExclusive -= numRemoved
+                if (b) processChange(
+                    RemoveAtIndices(
+                        this@BasicObservableListImpl,
+                        willRemove.map { IndexedValue(it.index + fromIndex, it.value) })
+                )
+                return b
+            }
+
+            override fun remove(element: E): Boolean {
+                require(isValid)
+                val i = subList.indexOf(element)
+                val b = subList.remove(element)
+                if (b) toIndexExclusive--
+                if (b) processChange(RemoveAt(this@BasicObservableListImpl, element, i + fromIndex))
+                return b
+            }
+
+            override fun lastIndexOf(element: E): Int {
+                require(isValid)
+                return subList.lastIndexOf(element)
+            }
+
+            override fun indexOf(element: E): Int {
+                require(isValid)
+                return subList.indexOf(element)
+            }
+
+            override fun containsAll(elements: Collection<E>): Boolean {
+                require(isValid)
+                return subList.containsAll(elements)
+            }
+
+            override fun contains(element: E): Boolean {
+                require(isValid)
+                return subList.contains(element)
+            }
         }
 
-        override fun retainAll(elements: Collection<E>) = NOT_IMPLEMENTED
-        override fun removeAll(elements: Collection<E>): Boolean {
-            require(isValid)
-            val prevSize = subList.size
-            val willRemove = subList.withIndex().filter { it.value in elements }
-            val b = subList.removeAll(elements)
-            val newSize = subList.size
-            val numRemoved = prevSize - newSize
-            toIndexExclusive -= numRemoved
-            if (b) processChange(
-                RemoveAtIndices(
-                    this@BasicObservableListImpl,
-                    willRemove.map { IndexedValue(it.index + fromIndex, it.value) })
-            )
-            return b
-        }
 
-        override fun remove(element: E): Boolean {
-            require(isValid)
-            val i = subList.indexOf(element)
-            val b = subList.remove(element)
-            if (b) toIndexExclusive--
-            if (b) processChange(RemoveAt(this@BasicObservableListImpl, element, i + fromIndex))
-            return b
-        }
-
-        override fun lastIndexOf(element: E): Int {
-            require(isValid)
-            return subList.lastIndexOf(element)
-        }
-
-        override fun indexOf(element: E): Int {
-            require(isValid)
-            return subList.indexOf(element)
-        }
-
-        override fun containsAll(elements: Collection<E>): Boolean {
-            require(isValid)
-            return subList.containsAll(elements)
-        }
-
-        override fun contains(element: E): Boolean {
-            require(isValid)
-            return subList.contains(element)
-        }
     }
-
-
-}
 
 
 fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObsList<R> {
@@ -664,18 +634,14 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObs
     override fun onChange(
         listenerName: String?,
         op: (ListChange<R>) -> Unit
-    ): MyListenerInter<*> {
-        return this@view.onChange {
-            op(it.convert(this, converter))
-        }
+    ): MyListenerInter<*> = this@view.onChange {
+        op(it.convert(this, converter))
     }
 
     override val size: Int
         get() = this@view.size
 
-    override fun isEmpty(): Boolean {
-        return this@view.isEmpty()
-    }
+    override fun isEmpty(): Boolean = this@view.isEmpty()
 
     override fun iterator(): Iterator<R> = listIterator()
 
@@ -699,9 +665,7 @@ fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObs
             this@view.debugger = value
         }
 
-    override fun get(index: Int): R {
-        return converter(this@view[index])
-    }
+    override fun get(index: Int): R = converter(this@view[index])
 
     override fun listIterator() = listIterator(0)
 

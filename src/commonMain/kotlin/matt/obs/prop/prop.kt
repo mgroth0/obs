@@ -79,9 +79,7 @@ sealed interface MObservableVal<T, U : ValueUpdate<T>, L : ValueListenerBase<T, 
     override operator fun getValue(
         thisRef: Any?,
         property: KProperty<*>
-    ): T {
-        return value
-    }
+    ): T = value
 
     @Open
     @Suppress("UNCHECKED_CAST")
@@ -287,9 +285,7 @@ interface WritableMObservableVal<T, U : ValueUpdate<T>, L : ValueListenerBase<T,
     override fun getValue(
         thisRef: Any?,
         property: KProperty<*>
-    ): T {
-        return value
-    }
+    ): T = value
 
 
     @Open

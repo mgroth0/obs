@@ -11,30 +11,30 @@ typealias ObsB = ObsVal<B>
 }*/
 
 fun ObsB.not() = binding {
-  !it
+    !it
 }
 
 
 infix fun ObsB.and(other: ObsB) = binding(other) {
-  it && other.value
+    it && other.value
 }
 
 infix fun ObsB.and(other: Boolean) = binding {
-  it && other
+    it && other
 }
 
 infix fun ObsB.or(other: ObsB) = binding(other) {
-  it || other.value
+    it || other.value
 }
 
 infix fun ObsB.or(other: Boolean) = binding {
-  it || other
+    it || other
 }
 
 infix fun ObsB.xor(other: ObsB) = binding(other) {
-  it xor other.value
+    it xor other.value
 }
 
 infix fun ObsB.xor(other: Boolean) = binding {
-  it xor other
+    it xor other
 }

@@ -27,9 +27,7 @@ class MyCustomDecoder<T : TypedObservableHolder>(
     var obj = getNewInstance()
     val observables = obj.namedObservables()
     var gotReplacement = false
-    override fun finishDecoding(): T {
-        return obj
-    }
+    override fun finishDecoding(): T = obj
 }
 
 
@@ -97,7 +95,7 @@ open class TypedObsHolderSerializer<T : TypedObservableHolder>(
     }
 
 
-final    override val serialName = cls.qualifiedName!!
+    final    override val serialName = cls.qualifiedName!!
     final override val elements by lazy {
         buildList {
             addAll(metaProps)
@@ -125,7 +123,14 @@ final    override val serialName = cls.qualifiedName!!
 
                     is AbstractTypedObsList<*>  -> {
                         val cls = theValue.elementCls
-                        val elementSerializer = cls.serializer()
+                        val elementSerializer =  serializer(
+                            cls,
+                            run {
+                                check(cls.typeParameters.isEmpty())
+                                listOf()
+                            },
+                            isNullable = theValue.nullableElements
+                        )
                         add(
                             MyCustomElement(
                                 key = it.key,
@@ -137,7 +142,14 @@ final    override val serialName = cls.qualifiedName!!
 
                     is AbstractTypedObsSet<*>   -> {
                         val cls = theValue.elementCls
-                        val elementSer = cls.serializer()
+                        val elementSer =serializer(
+                            cls,
+                            run {
+                                check(cls.typeParameters.isEmpty())
+                                listOf()
+                            },
+                            isNullable = theValue.nullableElements
+                        )
                         add(
                             MyCustomElement(
                                 key = it.key, serializer = SetSerializer(elementSer), isOptional = true

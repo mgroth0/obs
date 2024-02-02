@@ -62,39 +62,37 @@ class ListBackedObservableSet<E>(
     override fun onChange(
         listenerName: String?,
         op: (SetChange<E>) -> Unit
-    ): MyListenerInter<*> {
-        return list.onChange(listenerName) {
-            val setChange: SetChange<E>? = when (it) {
-                is AtomicListChange      -> TODO()
-                is AddAt                 -> TODO()
-                is AddAtEnd              -> {
-                    val e = it.addedElements.single()
-                    if (e !in list.subList(0, list.indices.last)) {
-                        AddIntoSet(this, e)
-                    } else null
-                }
-
-                is MultiAddAt            -> TODO()
-                is MultiAddAtEnd         -> TODO()
-                is ReplaceAt             -> TODO()
-                is ClearList             -> TODO()
-                is RemoveAt              -> {
-                    val e = it.removedElements.single()
-                    if (e !in list) {
-                        RemoveElementFromSet(this, e)
-                    } else null
-                }
-
-                is RemoveElementFromList -> TODO()
-                is RemoveAtIndices       -> TODO()
-                is RemoveElements        -> TODO()
-                is RetainAllList         -> TODO()
-            }
-            if (setChange != null) {
-                op(setChange)
+    ): MyListenerInter<*> = list.onChange(listenerName) {
+        val setChange: SetChange<E>? = when (it) {
+            is AtomicListChange      -> TODO()
+            is AddAt                 -> TODO()
+            is AddAtEnd              -> {
+                val e = it.addedElements.single()
+                if (e !in list.subList(0, list.indices.last)) {
+                    AddIntoSet(this, e)
+                } else null
             }
 
+            is MultiAddAt            -> TODO()
+            is MultiAddAtEnd         -> TODO()
+            is ReplaceAt             -> TODO()
+            is ClearList             -> TODO()
+            is RemoveAt              -> {
+                val e = it.removedElements.single()
+                if (e !in list) {
+                    RemoveElementFromSet(this, e)
+                } else null
+            }
+
+            is RemoveElementFromList -> TODO()
+            is RemoveAtIndices       -> TODO()
+            is RemoveElements        -> TODO()
+            is RetainAllList         -> TODO()
         }
+        if (setChange != null) {
+            op(setChange)
+        }
+
     }
 
     override fun containsAll(elements: Collection<E>): Boolean {
