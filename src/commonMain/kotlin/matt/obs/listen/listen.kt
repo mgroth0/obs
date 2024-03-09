@@ -1,20 +1,20 @@
 package matt.obs.listen
 
-import matt.lang.NEVER
 import matt.lang.anno.Open
-import matt.lang.ifTrue
+import matt.lang.common.NEVER
+import matt.lang.common.ifTrue
 import matt.lang.model.value.Value
-import matt.lang.sync.ReferenceMonitor
-import matt.lang.sync.inSync
+import matt.lang.sync.common.ReferenceMonitor
+import matt.lang.sync.common.inSync
 import matt.lang.tostring.SimpleStringableClass
-import matt.lang.weak.WeakRefInter
+import matt.lang.weak.common.WeakRefInter
 import matt.model.op.prints.Prints
-import matt.obs.MListenable
 import matt.obs.col.change.CollectionChange
 import matt.obs.col.change.ListChange
 import matt.obs.col.change.NonNullCollectionChange
 import matt.obs.col.change.QueueChange
 import matt.obs.col.change.SetChange
+import matt.obs.common.MListenable
 import matt.obs.listen.update.CollectionUpdate
 import matt.obs.listen.update.ContextUpdate
 import matt.obs.listen.update.ListUpdate
@@ -30,6 +30,7 @@ import matt.obs.listen.update.ValueUpdateWithWeakObj
 import matt.obs.listen.update.ValueUpdateWithWeakObjAndOld
 import matt.obs.map.change.MapChange
 import matt.obs.prop.ObsVal
+import matt.obs.prop.onChangeUntilInclusive
 
 @DslMarker
 annotation class ListenerDSL
@@ -121,7 +122,6 @@ class WeakInvalidListener<T>(
     }
 
     override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<Any, T> = ValueUpdateWithWeakObj(u.new, wref.deref()!!)
-
 }
 
 
@@ -130,7 +130,8 @@ sealed interface ValueListenerBase<T, U : ValueUpdate<T>, U_OUT : ValueUpdate<T>
     var untilExclusive: ((U_OUT) -> Boolean)?
 }
 
-sealed class ValueListener<T, U_IN : ValueUpdate<T>, U_OUT : ValueUpdate<T>> : MyListener<U_IN>(),
+sealed class ValueListener<T, U_IN : ValueUpdate<T>, U_OUT : ValueUpdate<T>> :
+    MyListener<U_IN>(),
     ValueListenerBase<T, U_IN, U_OUT> {
     final override var untilInclusive: ((U_OUT) -> Boolean)? = null
     final override var untilExclusive: ((U_OUT) -> Boolean)? = null
@@ -176,7 +177,8 @@ class NewListener<T>(private val invoke: NewListener<T>.(new: T) -> Unit) :
 
 
 class ChangeListener<T>(private val invoke: ChangeListener<T>.(new: T) -> Unit) :
-    ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>,
+    ValueListener<T, ValueUpdate<T>, ValueUpdate<T>>(),
+    NewOrLessListener<T, ValueUpdate<T>, ValueUpdate<T>>,
     ReferenceMonitor {
 
     private var lastUpdate: Value<T>? = null
@@ -209,14 +211,16 @@ abstract class WeakListenerBase<W : Any, U : Update>() : MyListener<U>(), MyWeak
     final override fun shouldBeCleaned() = wref.deref() == null
 }
 
-sealed class WeakValueListenerBase<W : Any, T> : ValueListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(),
+sealed class WeakValueListenerBase<W : Any, T> :
+    ValueListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(),
     MyWeakListener<ValueUpdate<T>> {
     abstract override val wref: WeakRefInter<out W>
     final override fun shouldBeCleaned() = wref.deref() == null
     final override fun shouldRemove(): Boolean = shouldBeCleaned()
 }
 
-sealed class WeakChangeListenerBase<W : Any, T> : ValueListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(),
+sealed class WeakChangeListenerBase<W : Any, T> :
+    ValueListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>>(),
     MyWeakListener<ValueUpdate<T>> {
     abstract override val wref: WeakRefInter<W>
     private var lastUpdate: Value<T>? = null
@@ -244,7 +248,6 @@ abstract class WeakCollectionListener<W : Any, E, C : CollectionChange<E, out Co
         if (w == null) removeListener()
         else invoke(this, w, change)
     }
-
 }
 
 class WeakListListener<W : Any, E>(
@@ -263,9 +266,10 @@ class WeakChangeListenerWithNewValue<W : Any, T>(
     internal val invoke: WeakChangeListenerWithNewValue<W, T>.(ref: W, new: T) -> Unit
 ) : WeakChangeListenerBase<W, T>(), NewOrLessListener<T, ValueUpdate<T>, ValueUpdateWithWeakObj<W, T>> {
 
-    override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<W, T>? = wref.deref()?.let {
-        ValueUpdateWithWeakObj(u.new, it)
-    }
+    override fun transformUpdate(u: ValueUpdate<T>): ValueUpdateWithWeakObj<W, T>? =
+        wref.deref()?.let {
+            ValueUpdateWithWeakObj(u.new, it)
+        }
 
     override fun subNotify(
         update: ValueUpdateWithWeakObj<W, T>,
@@ -273,7 +277,6 @@ class WeakChangeListenerWithNewValue<W : Any, T>(
     ) {
         invoke(this, update.weakObj, update.new)
     }
-
 }
 
 typealias OldNewListener<T> = OldAndNewListener<T, ValueChange<T>, out ValueChange<T>>
@@ -287,9 +290,10 @@ class WeakListenerWithOld<W : Any, T>(
 
     override fun shouldBeCleaned() = wref.deref() == null
 
-    override fun transformUpdate(u: ValueChange<T>): ValueUpdateWithWeakObjAndOld<W, T>? = wref.deref()?.let {
-        ValueUpdateWithWeakObjAndOld(new = u.new, old = u.old, weakObj = it)
-    }
+    override fun transformUpdate(u: ValueChange<T>): ValueUpdateWithWeakObjAndOld<W, T>? =
+        wref.deref()?.let {
+            ValueUpdateWithWeakObjAndOld(new = u.new, old = u.old, weakObj = it)
+        }
 
     override fun subNotify(
         update: ValueUpdateWithWeakObjAndOld<W, T>,
@@ -297,7 +301,6 @@ class WeakListenerWithOld<W : Any, T>(
     ) {
         invoke(this, update.weakObj, update.old, update.new)
     }
-
 }
 
 class OldAndNewListenerImpl<T>(internal val invoke: OldAndNewListenerImpl<T>.(old: T, new: T) -> Unit) :
@@ -346,7 +349,8 @@ abstract class CollectionListener<E, C : CollectionChange<E, out Collection<E>>,
 class SetListener<E>(invoke: CollectionListener<E, SetChange<E>, SetUpdate<E>>.(change: SetChange<E>) -> Unit) :
     CollectionListener<E, SetChange<E>, SetUpdate<E>>(
         invoke
-    ), SetListenerBase<E>
+    ),
+    SetListenerBase<E>
 
 
 interface ListListenerBase<E> : CollectionListenerBase<E, ListChange<E>, ListUpdate<E>>
@@ -358,7 +362,8 @@ interface SetListenerBase<E> : CollectionListenerBase<E, SetChange<E>, SetUpdate
 class ListListener<E>(invoke: CollectionListener<E, ListChange<E>, ListUpdate<E>>.(change: ListChange<E>) -> Unit) :
     CollectionListener<E, ListChange<E>, ListUpdate<E>>(
         invoke
-    ), ListListenerBase<E>
+    ),
+    ListListenerBase<E>
 
 
 class MapListener<K, V>(internal val invoke: MapListener<K, V>.(change: MapChange<K, V>) -> Unit) :

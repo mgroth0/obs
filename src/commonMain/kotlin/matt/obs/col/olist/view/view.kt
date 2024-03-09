@@ -23,7 +23,7 @@ import matt.obs.listen.update.ListUpdate
 
 /*like a DynamicList, but more sophisticated and performant*/
 sealed class ViewOfObsList<E>(
-    private val source: ImmutableObsList<E>,
+    private val source: ImmutableObsList<E>
 ) : ImmutableObsList<E>, InterestingList
 
 
@@ -74,12 +74,12 @@ class NonNullsOfObsList<E>(val source: ImmutableObsList<E?>) : ImmutableObsList<
                     val lowIndex = c.lowestChangedIndex
                     val nullCount = source.take(lowIndex).count { it == null }
                     var nextI = lowIndex - nullCount
-                    val newRemoved = c.removedElementsIndexed.sortedBy { it.index }.mapNotNull {
-                        it.element?.let { e ->
-                            IndexedValue(index = nextI++, value = e)
+                    val newRemoved =
+                        c.removedElementsIndexed.sortedBy { it.index }.mapNotNull {
+                            it.element?.let { e ->
+                                IndexedValue(index = nextI++, value = e)
+                            }
                         }
-
-                    }
                     /*  var nCount = 0
                       val sourceItr = source.listIterator()
                       var currentI = 0
@@ -138,52 +138,52 @@ class NonNullsOfObsList<E>(val source: ImmutableObsList<E?>) : ImmutableObsList<
 
     override fun listIterator() = listIterator(0)
 
-    override fun listIterator(index: Int): ListIterator<E & Any> = object : ListIterator<E & Any> {
+    override fun listIterator(index: Int): ListIterator<E & Any> =
+        object : ListIterator<E & Any> {
 
-        private val itr = source.listIterator(index)
+            private val itr = source.listIterator(index)
 
-        override fun hasNext(): Boolean {
-            while (itr.hasNext()) {
-                val n = itr.next()
-                if (n != null) {
-                    itr.previous()
-                    return true
+            override fun hasNext(): Boolean {
+                while (itr.hasNext()) {
+                    val n = itr.next()
+                    if (n != null) {
+                        itr.previous()
+                        return true
+                    }
                 }
+                return false
             }
-            return false
-        }
 
-        override fun hasPrevious(): Boolean {
-            while (itr.hasPrevious()) {
-                val n = itr.previous()
-                if (n != null) {
-                    itr.next()
-                    return true
+            override fun hasPrevious(): Boolean {
+                while (itr.hasPrevious()) {
+                    val n = itr.previous()
+                    if (n != null) {
+                        itr.next()
+                        return true
+                    }
                 }
+                return false
             }
-            return false
-        }
 
-        override fun next(): E & Any {
-            do {
-                val n = itr.next()
-                if (n != null) return n
-            } while (true)
-        }
+            override fun next(): E & Any {
+                do {
+                    val n = itr.next()
+                    if (n != null) return n
+                } while (true)
+            }
 
-        override fun nextIndex(): Int {
-            TODO()
-        }
+            override fun nextIndex(): Int {
+                TODO()
+            }
 
-        override fun previous(): E & Any {
-            TODO()
-        }
+            override fun previous(): E & Any {
+                TODO()
+            }
 
-        override fun previousIndex(): Int {
-            TODO()
+            override fun previousIndex(): Int {
+                TODO()
+            }
         }
-
-    }
 
     override fun subList(fromIndex: Int, toIndex: Int): List<E & Any> {
         TODO()
@@ -204,5 +204,4 @@ class NonNullsOfObsList<E>(val source: ImmutableObsList<E?>) : ImmutableObsList<
     override fun contains(element: E & Any): Boolean {
         TODO()
     }
-
 }

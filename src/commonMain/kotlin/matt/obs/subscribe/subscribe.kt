@@ -1,8 +1,8 @@
 package matt.obs.subscribe
 
 import matt.lang.function.Consume
-import matt.lang.weak.WeakRefInter
-import matt.obs.MObservableImpl
+import matt.lang.weak.common.WeakRefInter
+import matt.obs.common.MObservableImpl
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.event.BasicEventListener
 import matt.obs.listen.event.MyEventListener
@@ -26,7 +26,6 @@ open class Channel<E : Event> : MObservableImpl<E, MyEventListener<in E>>() {
     ): MyListenerInter<*> {
         TODO()
     }
-
 }
 
 
@@ -36,7 +35,10 @@ class Beeper : Channel<Beep>() {
 
 class Pager<M> : Channel<PagerMessage<M>>() {
     fun page(message: M) = broadcast(PagerMessage(message))
-    fun listen(op: Consume<M>) = addListener(BasicEventListener {
-        op(it.message)
-    })
+    fun listen(op: Consume<M>) =
+        addListener(
+            BasicEventListener {
+                op(it.message)
+            }
+        )
 }

@@ -1,16 +1,15 @@
 package matt.obs.bindhelp
 
 import matt.lang.anno.Open
+import matt.lang.common.go
 import matt.lang.convert.BiConverter
 import matt.lang.convert.Converter
-import matt.lang.go
 import matt.lang.setall.setAll
-import matt.lang.sync.ReferenceMonitor
-import matt.lang.sync.inSync
-import matt.lang.weak.getValue
+import matt.lang.sync.common.ReferenceMonitor
+import matt.lang.sync.common.inSync
+import matt.lang.weak.common.getValue
 import matt.lang.weak.weak
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
-import matt.obs.MListenable
 import matt.obs.bind.LazyBindableProp
 import matt.obs.bind.binding
 import matt.obs.col.IBObsCol
@@ -19,11 +18,12 @@ import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
 import matt.obs.col.oset.MutableObsSet
 import matt.obs.col.oset.ObsSet
+import matt.obs.common.MListenable
 import matt.obs.listen.MyListenerInter
-import matt.obs.prop.BindableProperty
-import matt.obs.prop.FXBackedPropBase
 import matt.obs.prop.ObsVal
-import matt.obs.prop.Var
+import matt.obs.prop.fx.FXBackedPropBase
+import matt.obs.prop.writable.BindableProperty
+import matt.obs.prop.writable.Var
 
 sealed interface Bindable {
     val bindManager: Bindable
@@ -41,13 +41,12 @@ sealed class BindableImpl : Bindable, ReferenceMonitor {
     final override val bindManager get() = this
     final override var theBind: ABind? = null
 
-    final override fun unbind() = inSync {
-        require(this !is FXBackedPropBase || !isFXBound)
-        theBind?.cut()
-        theBind = null
-    }
-
-
+    final override fun unbind() =
+        inSync {
+            require(this !is FXBackedPropBase || !isFXBound)
+            theBind?.cut()
+            theBind = null
+        }
 }
 
 interface BindableList<E> : Bindable {
@@ -94,11 +93,12 @@ class BindableListImpl<E>(private val target: MutableObsList<E>) : BindableImpl(
         (target as? IBObsCol)?.bindWritePass?.hold()
         target.setAll(source.map(converter))
         (target as? IBObsCol)?.bindWritePass?.release()
-        val listener = source.onChange {
-            (target as? IBObsCol)?.bindWritePass?.hold()
-            target.mirror(it, converter)
-            (target as? IBObsCol)?.bindWritePass?.release()
-        }
+        val listener =
+            source.onChange {
+                (target as? IBObsCol)?.bindWritePass?.hold()
+                target.mirror(it, converter)
+                (target as? IBObsCol)?.bindWritePass?.release()
+            }
         theBind = TheBind(source = source, listener = listener)
     }
 
@@ -110,11 +110,12 @@ class BindableListImpl<E>(private val target: MutableObsList<E>) : BindableImpl(
         (target as? IBObsCol)?.bindWritePass?.hold()
         target.setAll(source.map(converter))
         (target as? IBObsCol)?.bindWritePass?.release()
-        val listener = source.onChangeWithWeak(target) { targ, new ->
-            (targ as? IBObsCol)?.bindWritePass?.hold()
-            targ.mirror(new, converter)
-            (targ as? IBObsCol)?.bindWritePass?.release()
-        }
+        val listener =
+            source.onChangeWithWeak(target) { targ, new ->
+                (targ as? IBObsCol)?.bindWritePass?.hold()
+                targ.mirror(new, converter)
+                (targ as? IBObsCol)?.bindWritePass?.release()
+            }
         theBind = TheBind(source = source, listener = listener)
     }
 
@@ -126,11 +127,12 @@ class BindableListImpl<E>(private val target: MutableObsList<E>) : BindableImpl(
         (target as? IBObsCol)?.bindWritePass?.hold()
         target.setAll(converter(source.value))
         (target as? IBObsCol)?.bindWritePass?.release()
-        val listener = source.onChange {
-            (target as? IBObsCol)?.bindWritePass?.hold()
-            target.setAll(converter(it))
-            (target as? IBObsCol)?.bindWritePass?.release()
-        }
+        val listener =
+            source.onChange {
+                (target as? IBObsCol)?.bindWritePass?.hold()
+                target.setAll(converter(it))
+                (target as? IBObsCol)?.bindWritePass?.release()
+            }
         theBind = TheBind(source = source, listener = listener)
     }
 }
@@ -146,11 +148,12 @@ class BindableSetImpl<E>(private val target: MutableObsSet<E>) : BindableImpl(),
         (target as? IBObsCol)?.bindWritePass?.hold()
         target.setAll(source.map(converter))
         (target as? IBObsCol)?.bindWritePass?.release()
-        val listener = source.onChange {
-            (target as? IBObsCol)?.bindWritePass?.hold()
-            target.mirror(it, converter)
-            (target as? IBObsCol)?.bindWritePass?.release()
-        }
+        val listener =
+            source.onChange {
+                (target as? IBObsCol)?.bindWritePass?.hold()
+                target.mirror(it, converter)
+                (target as? IBObsCol)?.bindWritePass?.release()
+            }
         theBind = TheBind(source = source, listener = listener)
     }
 
@@ -162,11 +165,12 @@ class BindableSetImpl<E>(private val target: MutableObsSet<E>) : BindableImpl(),
         (target as? IBObsCol)?.bindWritePass?.hold()
         target.setAll(converter(source.value))
         (target as? IBObsCol)?.bindWritePass?.release()
-        val listener = source.onChange {
-            (target as? IBObsCol)?.bindWritePass?.hold()
-            target.setAll(converter(it))
-            (target as? IBObsCol)?.bindWritePass?.release()
-        }
+        val listener =
+            source.onChange {
+                (target as? IBObsCol)?.bindWritePass?.hold()
+                target.setAll(converter(it))
+                (target as? IBObsCol)?.bindWritePass?.release()
+            }
         theBind = TheBind(source = source, listener = listener)
     }
 }
@@ -225,13 +229,14 @@ fun <T> bindMultipleTargetsTogether(
     }
 
     @Suppress("UNCHECKED_CAST")
-    val listener = source.observe {
-        targets.forEach {
-            (it.bindManager as BindableValueHelper<T>).apply {
-                wProp setCorrectlyTo { source.value }
+    val listener =
+        source.observe {
+            targets.forEach {
+                (it.bindManager as BindableValueHelper<T>).apply {
+                    wProp setCorrectlyTo { source.value }
+                }
             }
         }
-    }
 
     val b = TheBind(source = source, listener = listener)
     targets.forEach {
@@ -252,30 +257,34 @@ infix fun <TT> Var<TT>.setCorrectlyTo(new: () -> TT) {
 class BindableValueHelper<T>(internal val wProp: Var<T>) : BindableImpl(), BindableValue<T> {
 
 
-    override fun bind(source: ObsVal<out T>): ABind = inSync {
-        require(this !is FXBackedPropBase || !isFXBound)
-        unbind()
-        wProp setCorrectlyTo { source.value }
-        val listener = source.observe {
+    override fun bind(source: ObsVal<out T>): ABind =
+        inSync {
+            require(this !is FXBackedPropBase || !isFXBound)
+            unbind()
             wProp setCorrectlyTo { source.value }
+            val listener =
+                source.observe {
+                    wProp setCorrectlyTo { source.value }
+                }
+            val b = TheBind(source = source, listener = listener)
+            theBind = b
+            return b
         }
-        val b = TheBind(source = source, listener = listener)
-        theBind = b
-        return b
-    }
 
 
-    override fun bindWeakly(source: ObsVal<out T>): TheBind = inSync {
-        require(this !is FXBackedPropBase || !isFXBound)
-        unbind()
-        wProp setCorrectlyTo { source.value }
-        val listener = source.onChangeWithWeak(wProp) { w, it ->
-            w setCorrectlyTo { it }
+    override fun bindWeakly(source: ObsVal<out T>): TheBind =
+        inSync {
+            require(this !is FXBackedPropBase || !isFXBound)
+            unbind()
+            wProp setCorrectlyTo { source.value }
+            val listener =
+                source.onChangeWithWeak(wProp) { w, it ->
+                    w setCorrectlyTo { it }
+                }
+            val b = TheBind(source = source, listener = listener)
+            theBind = b
+            return b
         }
-        val b = TheBind(source = source, listener = listener)
-        theBind = b
-        return b
-    }
 
     override fun bindBidirectional(
         source: Var<T>,
@@ -283,83 +292,88 @@ class BindableValueHelper<T>(internal val wProp: Var<T>) : BindableImpl(), Binda
         clean: Boolean,
         debug: Boolean,
         weak: Boolean
-    ): ABind = inSync {
-        if (clean) {
-            unbind()
-            source.unbind()
-        }
-        if (!checkEquality || source.value != wProp.value) {
-            wProp setCorrectlyTo { source.value }
-        }
+    ): ABind =
+        inSync {
+            if (clean) {
+                unbind()
+                source.unbind()
+            }
+            if (!checkEquality || source.value != wProp.value) {
+                wProp setCorrectlyTo { source.value }
+            }
 
-        val rBlocker = RecursionBlocker()
+            val rBlocker = RecursionBlocker()
 
-        fun createListener(
-            theSource: Var<T>,
-            theTarget: Var<T>
-        ): MyListenerInter<*> = if (weak) {
-            theSource.onChangeWithWeak(theTarget) { deRefedTarget, newValue ->
-                if (!checkEquality || newValue != deRefedTarget.value) {
-                    rBlocker.with {
-                        deRefedTarget setCorrectlyTo { newValue }
+            fun createListener(
+                theSource: Var<T>,
+                theTarget: Var<T>
+            ): MyListenerInter<*> =
+                if (weak) {
+                    theSource.onChangeWithWeak(theTarget) { deRefedTarget, newValue ->
+                        if (!checkEquality || newValue != deRefedTarget.value) {
+                            rBlocker.with {
+                                deRefedTarget setCorrectlyTo { newValue }
+                            }
+                        }
+                    }
+                } else {
+                    theSource.onChange { newValue ->
+                        if (!checkEquality || newValue != theTarget.value) {
+                            rBlocker.with {
+                                theTarget setCorrectlyTo { newValue }
+                            }
+                        }
                     }
                 }
-            }
-        } else {
-            theSource.onChange { newValue ->
-                if (!checkEquality || newValue != theTarget.value) {
-                    rBlocker.with {
-                        theTarget setCorrectlyTo { newValue }
-                    }
-                }
-            }
+
+
+            val sourceListener = createListener(source, wProp)
+            val targetListener = createListener(wProp, source)
+
+
+            val b =
+                BiTheBind(
+                    source = source,
+                    target = wProp,
+                    sourceListener = sourceListener,
+                    targetListener = targetListener,
+                    debug = debug
+                )
+            theBind = b
+
+            source.theBind = b
+            return b
         }
-
-
-        val sourceListener = createListener(source, wProp)
-        val targetListener = createListener(wProp, source)
-
-
-        val b = BiTheBind(
-            source = source,
-            target = wProp,
-            sourceListener = sourceListener,
-            targetListener = targetListener,
-            debug = debug
-        )
-        theBind = b
-
-        source.theBind = b
-        return b
-    }
 
     override fun <S> bindBidirectional(
         source: Var<S>,
         converter: BiConverter<T, S>
-    ): BiTheBind = inSync {
-        unbind()
-        source.unbind()
-        wProp setCorrectlyTo { converter.convertToA(source.value) }
+    ): BiTheBind =
+        inSync {
+            unbind()
+            source.unbind()
+            wProp setCorrectlyTo { converter.convertToA(source.value) }
 
-        val rBlocker = RecursionBlocker()
-        val sourceListener = source.observe {
-            rBlocker.with {
-                wProp setCorrectlyTo { converter.convertToA(source.value) }
-            }
+            val rBlocker = RecursionBlocker()
+            val sourceListener =
+                source.observe {
+                    rBlocker.with {
+                        wProp setCorrectlyTo { converter.convertToA(source.value) }
+                    }
+                }
+            val targetListener =
+                wProp.observe {
+                    rBlocker.with {
+                        source setCorrectlyTo { converter.convertToB(wProp.value) }
+                    }
+                }
+
+            val b =
+                BiTheBind(source = source, target = wProp, sourceListener = sourceListener, targetListener = targetListener)
+            theBind = b
+            source.theBind = b
+            return b
         }
-        val targetListener = wProp.observe {
-            rBlocker.with {
-                source setCorrectlyTo { converter.convertToB(wProp.value) }
-            }
-        }
-
-        val b =
-            BiTheBind(source = source, target = wProp, sourceListener = sourceListener, targetListener = targetListener)
-        theBind = b
-        source.theBind = b
-        return b
-    }
-
 }
 
 interface ABind {

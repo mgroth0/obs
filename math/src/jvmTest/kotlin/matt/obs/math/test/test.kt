@@ -6,7 +6,7 @@ import matt.obs.math.int.op.minus
 import matt.obs.math.int.op.plus
 import matt.obs.math.int.op.rem
 import matt.obs.math.int.op.times
-import matt.obs.prop.BindableProperty
+import matt.obs.prop.writable.BindableProperty
 import matt.test.Tests
 import kotlin.test.Test
 import kotlin.test.assertEquals

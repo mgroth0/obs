@@ -50,12 +50,12 @@
     },
     {
       "type": "Lib",
-      "cfg": "jvmMainImplementation",
+      "cfg": "commonJvmAndroidMainImplementation",
       "key": "kt-reflect"
     },
     {
       "type": "Project",
-      "cfg": "jvmTestImplementation",
+      "cfg": "commonJvmAndroidTestImplementation",
       "path": ":k:test"
     },
     {
@@ -67,6 +67,10 @@
       "type": "Lib",
       "cfg": "jvmTestImplementation",
       "key": "junit-platform-suite-api"
+    },{
+      "type": "Project",
+      "cfg": "androidInstrumentedTestImplementation",
+      "path": ":k:test:ainstrument"
     }
   ]
 }

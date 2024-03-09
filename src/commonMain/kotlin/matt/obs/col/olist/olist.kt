@@ -7,20 +7,21 @@ import matt.collect.itr.ItrDir
 import matt.collect.itr.ItrDir.NEXT
 import matt.collect.itr.ItrDir.PREVIOUS
 import matt.collect.itr.MutableListIteratorExtender
-import matt.lang.ILLEGAL
-import matt.lang.NEVER
-import matt.lang.NOT_IMPLEMENTED
 import matt.lang.anno.NeedsTest
 import matt.lang.anno.Open
 import matt.lang.assertions.require.requireNonNegative
 import matt.lang.assertions.require.requireNot
+import matt.lang.common.ILLEGAL
+import matt.lang.common.NEVER
+import matt.lang.common.NOT_IMPLEMENTED
 import matt.lang.compare.comparableComparator
 import matt.lang.function.Consume
 import matt.lang.function.Op
 import matt.lang.ktversion.ifPastInitialK2
-import matt.lang.sync.ReferenceMonitor
+import matt.lang.sync.common.ReferenceMonitor
+import matt.lang.sync.common.inSync
 import matt.lang.sync.inSync
-import matt.lang.weak.WeakRefInter
+import matt.lang.weak.common.WeakRefInter
 import matt.lang.weak.weak
 import matt.model.op.prints.Prints
 import matt.obs.bind.MyBinding
@@ -47,7 +48,6 @@ import matt.obs.col.change.ReplaceAt
 import matt.obs.col.change.RetainAllList
 import matt.obs.col.olist.dynamic.BasicFilteredList
 import matt.obs.col.olist.dynamic.BasicSortedList
-import matt.obs.col.olist.dynamic.DynamicList
 import matt.obs.fx.requireNotFxObservable
 import matt.obs.listen.ListListener
 import matt.obs.listen.ListListenerBase
@@ -56,8 +56,18 @@ import matt.obs.listen.WeakListListener
 import matt.obs.listen.update.ListUpdate
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.ObsVal
+import matt.obs.tempcommon.tempexpect.dynamicList
 
-interface ImmutableObsList<E> : BasicOCollection<E, ListChange<E>, ListUpdate<E>, ListListenerBase<E>>, List<E> {
+
+interface ImmutableObsList<E> :
+    BasicOCollection<
+        E,
+        ListChange<E>,
+        ListUpdate<E>,
+        ListListenerBase<E>
+    >,
+
+    List<E>  {
     @Open
     override fun <W : Any> onChangeWithWeak(
         o: W,
@@ -74,42 +84,45 @@ interface ImmutableObsList<E> : BasicOCollection<E, ListChange<E>, ListUpdate<E>
         weakRef: WeakRefInter<W>,
         op: (W, ListChange<E>) -> Unit
     ) = run {
-        val listener = WeakListListener(weakRef) { o: W, c: ListChange<E> ->
-            op(o, c)
-        }
+        val listener =
+            WeakListListener(weakRef) { o: W, c: ListChange<E> ->
+                op(o, c)
+            }
         addListener(listener)
     }
 
-    @Open   fun filtered(filter: (E) -> Boolean): BasicFilteredList<E> = DynamicList(this, filter = filter)
-    @Open   fun dynamicallyFiltered(filter: (E) -> ObsB): BasicFilteredList<E> = DynamicList(this, dynamicFilter = filter)
-    @Open   fun sorted(comparator: Comparator<in E>? = null): BasicSortedList<E> = DynamicList(this, comparator = comparator)
-    @Open   fun onAdd(op: Consume<E>) = listen(onAdd = op, onRemove = {})
-    @Open   fun onRemove(op: Consume<E>) = listen(onAdd = { }, onRemove = op)
+    @Open fun filtered(filter: (E) -> Boolean): BasicFilteredList<E> = dynamicList(this, filter = filter)
+    @Open fun dynamicallyFiltered(filter: (E) -> ObsB): BasicFilteredList<E> = dynamicList(this, dynamicFilter = filter)
+    @Suppress("UNCHECKED_CAST")
+    @Open fun sorted(
+        comparator: Comparator<in E>? = null
+    ): BasicSortedList<E> = dynamicList(this, comparator = comparator) as BasicSortedList<E>
+    @Open fun onAdd(op: Consume<E>) = listen(onAdd = op, onRemove = {})
+    @Open fun onRemove(op: Consume<E>) = listen(onAdd = { }, onRemove = op)
 
-    @Open   fun listen(
+    @Open fun listen(
         onAdd: ((E) -> Unit),
-        onRemove: ((E) -> Unit),
+        onRemove: ((E) -> Unit)
     ) {
-        addListener(ListListener {
-            (it as? ListAdditionBase)?.addedElements?.forEach { e ->
-                onAdd(e)
+        addListener(
+            ListListener {
+                (it as? ListAdditionBase)?.addedElements?.forEach { e ->
+                    onAdd(e)
+                }
+                (it as? ListRemovalBase)?.removedElements?.forEach { e ->
+                    onRemove(e)
+                }
             }
-            (it as? ListRemovalBase)?.removedElements?.forEach { e ->
-                onRemove(e)
-            }
-        })
+        )
     }
-
-
 }
 
 interface MutableObsList<E> : ImmutableObsList<E>, BindableList<E>, MutableList<E> {
     fun atomicChange(op: MutableObsList<E>.() -> Unit)
 }
 
-
-fun <E : Comparable<E>> MutableObsList<E>.sorted(): BasicSortedList<E> =
-    DynamicList(this, comparator = comparableComparator())
+@Suppress("UNCHECKED_CAST")
+fun <E : Comparable<E>> MutableObsList<E>.sorted(): BasicSortedList<E> = dynamicList(this, comparator = comparableComparator()) as BasicSortedList<E>
 
 fun <E> MutableObsList<E>.toFakeMutableObsList() = FakeMutableObsList(this)
 
@@ -157,7 +170,8 @@ class FakeMutableObsList<E>(private val o: MutableObsList<E>) : MutableObsList<E
 }
 
 
-abstract class BaseBasicWritableOList<E> : InternallyBackedOList<E>(),
+abstract class BaseBasicWritableOList<E> :
+    InternallyBackedOList<E>(),
     MutableObsList<E>,
     BindableList<E> {
 
@@ -191,16 +205,16 @@ abstract class BaseBasicWritableOList<E> : InternallyBackedOList<E>(),
 
     fun <R> lazyBinding(
         vararg dependencies: MObservableVal<*, *, *>,
-        op: (Collection<E>) -> R,
+        op: (Collection<E>) -> R
     ): MyBinding<R> {
         val prop = this
         return MyBinding { op(prop) }.apply {
             prop.onChange {
-                markInvalid()    //	  value = op(prop)
+                markInvalid()
             }
             dependencies.forEach {
                 it.onChange {
-                    markInvalid()        //		value = op(prop)
+                    markInvalid()
                 }
             }
         }
@@ -212,9 +226,9 @@ fun <E> Array<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObse
 
 fun <E> Collection<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(this)
 
-fun <E> Iterable<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(this.toList())
+fun <E> Iterable<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(toList())
 
-fun <E> Sequence<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(this.toList())
+fun <E> Sequence<E>.toBasicObservableList(): BasicObservableListImpl<E> = BasicObservableListImpl(toList())
 
 
 fun <E> basicROObservableListOf(vararg elements: E): MutableObsList<E> =
@@ -311,51 +325,54 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
         final override fun listIterator(): MutableListIterator<E> = lItr()
         final override fun listIterator(index: Int): MutableListIterator<E> = lItr(index)
 
-        private fun lItr(index: Int? = null) = object : MutableListIteratorExtender<E>(list, index ?: 0) {
+        private fun lItr(index: Int? = null) =
+            object : MutableListIteratorExtender<E>(list, index ?: 0) {
 
-            var lastElement: E? = null
-            var lastItrDir: ItrDir? = null
+                var lastElement: E? = null
+                var lastItrDir: ItrDir? = null
 
-            override fun postNext(e: E) {
-                lastElement = e
-                lastItrDir = NEXT
-            }
+                override fun postNext(e: E) {
+                    lastElement = e
+                    lastItrDir = NEXT
+                }
 
-            override fun postPrevious(e: E) {
-                lastElement = e
-                lastItrDir = PREVIOUS
-            }
+                override fun postPrevious(e: E) {
+                    lastElement = e
+                    lastItrDir = PREVIOUS
+                }
 
-            override fun remove() {
-                super.remove()
-                changedFromOuter(RemoveAt(list, lastElement ?: TODO("null"), previousIndex() + 1))
-            }
+                override fun remove() {
+                    super.remove()
+                    changedFromOuter(RemoveAt(list, lastElement ?: TODO("null"), previousIndex() + 1))
+                }
 
-            override fun add(element: E) {
-                super.add(element)
-                changedFromOuter(AddAt(list, element, previousIndex()))
-            }
+                override fun add(element: E) {
+                    super.add(element)
+                    changedFromOuter(AddAt(list, element, previousIndex()))
+                }
 
-            @NeedsTest
-            override fun set(element: E) {
-                super.set(element)
-                changedFromOuter(
-                    ReplaceAt(
-                        list, lastElement ?: TODO("null"), element, index = when (lastItrDir) {
-                            NEXT -> {
-                                previousIndex()
-                            }
+                @NeedsTest
+                override fun set(element: E) {
+                    super.set(element)
+                    changedFromOuter(
+                        ReplaceAt(
+                            list, lastElement ?: TODO("null"), element,
+                            index =
+                                when (lastItrDir) {
+                                    NEXT -> {
+                                        previousIndex()
+                                    }
 
-                            PREVIOUS -> {
-                                previousIndex() + 1
-                            }
+                                    PREVIOUS -> {
+                                        previousIndex() + 1
+                                    }
 
-                            else -> NEVER
-                        }
+                                    else -> NEVER
+                                }
+                        )
                     )
-                )
+                }
             }
-        }
 
 
         final override fun remove(element: E): Boolean {
@@ -439,10 +456,11 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
             toIndex: Int
         ) = inSync { SubList(fromIndex, toIndex) }
 
-        private fun invalidateSubLists() = inSync {
-            validSubLists.forEach { it.isValid = false }
-            validSubLists.clear()
-        }
+        private fun invalidateSubLists() =
+            inSync {
+                validSubLists.forEach { it.isValid = false }
+                validSubLists.clear()
+            }
 
         private var validSubLists = mutableListOf<SubList>()
 
@@ -486,23 +504,23 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
                         )
                     }
                 }
-
             }
 
-            override fun addAll(elements: Collection<E>): Boolean = inSync(this@BasicObservableListImpl) {
-                require(isValid)
-                val addIndex = toIndexExclusive
-                toIndexExclusive += elements.size
-                val r = subList.addAll(elements)
-                processChange(
-                    MultiAddAt(
-                        collection = this@BasicObservableListImpl,
-                        added = elements,
-                        index = addIndex
+            override fun addAll(elements: Collection<E>): Boolean =
+                inSync(this@BasicObservableListImpl) {
+                    require(isValid)
+                    val addIndex = toIndexExclusive
+                    toIndexExclusive += elements.size
+                    val r = subList.addAll(elements)
+                    processChange(
+                        MultiAddAt(
+                            collection = this@BasicObservableListImpl,
+                            added = elements,
+                            index = addIndex
+                        )
                     )
-                )
-                r
-            }
+                    r
+                }
 
             override fun addAll(
                 index: Int,
@@ -539,17 +557,19 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
 
             override fun iterator(): MutableIterator<E> {
                 val itr by lazy { subList.iterator() }
-                return FakeMutableIterator<E>(object : Iterator<E> {
-                    override fun hasNext(): Boolean {
-                        require(isValid)
-                        return itr.hasNext()
-                    }
+                return FakeMutableIterator<E>(
+                    object : Iterator<E> {
+                        override fun hasNext(): Boolean {
+                            require(isValid)
+                            return itr.hasNext()
+                        }
 
-                    override fun next(): E {
-                        require(isValid)
-                        return itr.next()
+                        override fun next(): E {
+                            require(isValid)
+                            return itr.next()
+                        }
                     }
-                })
+                )
             }
 
             override fun listIterator() = NOT_IMPLEMENTED
@@ -589,7 +609,8 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
                 if (b) processChange(
                     RemoveAtIndices(
                         this@BasicObservableListImpl,
-                        willRemove.map { IndexedValue(it.index + fromIndex, it.value) })
+                        willRemove.map { IndexedValue(it.index + fromIndex, it.value) }
+                    )
                 )
                 return b
             }
@@ -623,107 +644,106 @@ open class BasicObservableListImpl<E> private constructor(private val list: Muta
                 return subList.contains(element)
             }
         }
-
-
     }
 
 
-fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) = object : ImmutableObsList<R> {
+fun <E, R> ImmutableObsList<E>.view(converter: (E) -> R) =
+    object : ImmutableObsList<R> {
 
 
-    override fun onChange(
-        listenerName: String?,
-        op: (ListChange<R>) -> Unit
-    ): MyListenerInter<*> = this@view.onChange {
-        op(it.convert(this, converter))
-    }
+        override fun onChange(
+            listenerName: String?,
+            op: (ListChange<R>) -> Unit
+        ): MyListenerInter<*> =
+            this@view.onChange {
+                op(it.convert(this, converter))
+            }
 
-    override val size: Int
-        get() = this@view.size
+        override val size: Int
+            get() = this@view.size
 
-    override fun isEmpty(): Boolean = this@view.isEmpty()
+        override fun isEmpty(): Boolean = this@view.isEmpty()
 
-    override fun iterator(): Iterator<R> = listIterator()
+        override fun iterator(): Iterator<R> = listIterator()
 
-    override fun addListener(listener: ListListenerBase<R>): ListListener<R> {
-        TODO()
-    }
-
-    override var nam: String?
-        get() = this@view.nam
-        set(value) {
-            this@view.nam = value
-        }
-
-    override fun removeListener(listener: MyListenerInter<*>) {
-        TODO()
-    }
-
-    override var debugger: Prints?
-        get() = this@view.debugger
-        set(value) {
-            this@view.debugger = value
-        }
-
-    override fun get(index: Int): R = converter(this@view[index])
-
-    override fun listIterator() = listIterator(0)
-
-    override fun listIterator(index: Int) = object : ListIterator<R> {
-        private val itr = this@view.listIterator(index)
-        override fun hasNext() = itr.hasNext()
-
-        override fun hasPrevious(): Boolean {
+        override fun addListener(listener: ListListenerBase<R>): ListListener<R> {
             TODO()
         }
 
-        override fun next() = converter(itr.next())
+        override var nam: String?
+            get() = this@view.nam
+            set(value) {
+                this@view.nam = value
+            }
 
-        override fun nextIndex(): Int {
+        override fun removeListener(listener: MyListenerInter<*>) {
             TODO()
         }
 
-        override fun previous(): R {
+        override var debugger: Prints?
+            get() = this@view.debugger
+            set(value) {
+                this@view.debugger = value
+            }
+
+        override fun get(index: Int): R = converter(this@view[index])
+
+        override fun listIterator() = listIterator(0)
+
+        override fun listIterator(index: Int) =
+            object : ListIterator<R> {
+                private val itr = this@view.listIterator(index)
+                override fun hasNext() = itr.hasNext()
+
+                override fun hasPrevious(): Boolean {
+                    TODO()
+                }
+
+                override fun next() = converter(itr.next())
+
+                override fun nextIndex(): Int {
+                    TODO()
+                }
+
+                override fun previous(): R {
+                    TODO()
+                }
+
+                override fun previousIndex(): Int {
+                    TODO()
+                }
+            }
+
+        override fun subList(
+            fromIndex: Int,
+            toIndex: Int
+        ): List<R> {
             TODO()
         }
 
-        override fun previousIndex(): Int {
+        override fun lastIndexOf(element: R): Int {
             TODO()
         }
 
-    }
-
-    override fun subList(
-        fromIndex: Int,
-        toIndex: Int
-    ): List<R> {
-        TODO()
-    }
-
-    override fun lastIndexOf(element: R): Int {
-        TODO()
-    }
-
-    override fun indexOf(element: R): Int {
-        this@view.forEachIndexed { idx, it ->
-            if (converter(it) == element) return idx
+        override fun indexOf(element: R): Int {
+            this@view.forEachIndexed { idx, it ->
+                if (converter(it) == element) return idx
+            }
+            return -1
         }
-        return -1
-    }
 
-    override fun containsAll(elements: Collection<R>): Boolean {
-        TODO()
-    }
+        override fun containsAll(elements: Collection<R>): Boolean {
+            TODO()
+        }
 
-    override fun contains(element: R): Boolean {
-        TODO()
-    }
+        override fun contains(element: R): Boolean {
+            TODO()
+        }
 
-    override fun releaseUpdatesAfter(op: Op) {
-        TODO()
+        override fun releaseUpdatesAfter(op: Op) {
+            TODO()
+        }
     }
-
-}
 
 inline fun <reified E, reified T : BasicObservableListImpl<E>> T.withChangeListener(
     listenerName: String? = null,

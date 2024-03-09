@@ -28,8 +28,10 @@ class ValueUpdateWithWeakObj<W : Any, T>(
 ) : ValueUpdate<T>, WeakUpdate<W>
 
 
-/*inspired by invalidation listeners!*/
-/*sometimes listeners don't always need to calculate stuff, so that stuff should not be calculated eagerly*/
+/*inspired by invalidation listeners!
+
+
+sometimes listeners don't always need to calculate stuff, so that stuff should not be calculated eagerly*/
 open class LazyNewValueUpdate<T>(private val newOp: () -> T) : ValueUpdate<T> {
     final override val new by lazy { newOp() }
 }
@@ -51,7 +53,8 @@ class ValueUpdateWithWeakObjAndOld<W : Any, T>(
 ) :
     ValueChange<T>(
             old = old, new = new
-        ), WeakUpdate<W>
+        ),
+        WeakUpdate<W>
 
 abstract class NonNullCollectionUpdate<E, C : NonNullCollectionChange<E, out Collection<E>>>(internal open val change: C) : Update
 abstract class CollectionUpdate<E, C : CollectionChange<E, out Collection<E>>>(internal open val change: C) : Update

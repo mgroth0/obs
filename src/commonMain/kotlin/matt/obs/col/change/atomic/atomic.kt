@@ -1,6 +1,6 @@
 package matt.obs.col.change.atomic
 
-import matt.lang.NEVER
+import matt.lang.common.NEVER
 import matt.log.taball
 import matt.model.data.index.toKotlinIndexedValue
 import matt.model.data.index.withIndex
@@ -38,14 +38,15 @@ fun <E> AtomicListChange<E>.compile(): AtomicListChange<E> {
                 if (lastChange.index == c.index) {
                     val i = c.index
                     compiledChanges.removeLast()
-                    val newRemoval = RemoveAtIndices(
-                        collection,
-                        listOf(
-                            lastChange.removed.withIndex(i),
-                            c.removed.withIndex(i + 1)
-                        ).map { it.toKotlinIndexedValue() },
-                        quickIsRange = true
-                    )
+                    val newRemoval =
+                        RemoveAtIndices(
+                            collection,
+                            listOf(
+                                lastChange.removed.withIndex(i),
+                                c.removed.withIndex(i + 1)
+                            ).map { it.toKotlinIndexedValue() },
+                            quickIsRange = true
+                        )
                     compiledChanges += newRemoval
                     lastChange = newRemoval
                     continue
@@ -61,42 +62,46 @@ fun <E> AtomicListChange<E>.compile(): AtomicListChange<E> {
                     val indexOfNew = lastChange.lastIndex + 1
 
 
-                    val newRemoval = RemoveAtIndices(
-                        collection,
-                        List(oldSize + 1) {
-                            if (it < oldSize) {
-                                oldItr.next().toKotlinIndexedValue()
-                            } else if (it == oldSize) c.removed.withIndex(indexOfNew).toKotlinIndexedValue()
-                            else NEVER
-                        },
+                    val newRemoval =
+                        RemoveAtIndices(
+                            collection,
+                            List(oldSize + 1) {
+                                if (it < oldSize) {
+                                    oldItr.next().toKotlinIndexedValue()
+                                } else if (it == oldSize) c.removed.withIndex(indexOfNew).toKotlinIndexedValue()
+                                else NEVER
+                            },
 
-                        quickIsRange = true
-                    )
+                            quickIsRange = true
+                        )
                     compiledChanges += newRemoval
                     lastChange = newRemoval
                     continue
                 }
             }
         } else if (lastChange is ReplaceAt) {
-            val cSingleIndex = when (c) {
-                is RemoveAt        -> c.lowestChangedIndex
-                is RemoveAtIndices -> c.lowestChangedIndex
-                else               -> null
-            }
-            val cSingleRemoved = when (c) {
-                is RemoveAt        -> c.removed
-                is RemoveAtIndices -> c.removedElements.singleOrNull()
-                else               -> null
-            }
+            val cSingleIndex =
+                when (c) {
+                    is RemoveAt        -> c.lowestChangedIndex
+                    is RemoveAtIndices -> c.lowestChangedIndex
+                    else               -> null
+                }
+            val cSingleRemoved =
+                when (c) {
+                    is RemoveAt        -> c.removed
+                    is RemoveAtIndices -> c.removedElements.singleOrNull()
+                    else               -> null
+                }
             if (cSingleIndex != null && cSingleRemoved != null) {
                 if (lastChange.index == cSingleIndex - 1) {
                     if (lastChange.added == cSingleRemoved) {
                         compiledChanges.removeLast()
-                        val newRemoval = RemoveAt(
-                            collection,
-                            lastChange.removed,
-                            lastChange.index
-                        )
+                        val newRemoval =
+                            RemoveAt(
+                                collection,
+                                lastChange.removed,
+                                lastChange.index
+                            )
                         compiledChanges += newRemoval
                         lastChange = newRemoval
                         continue
@@ -107,11 +112,12 @@ fun <E> AtomicListChange<E>.compile(): AtomicListChange<E> {
             if (c is AddAt) {
                 if (lastChange.index == c.index - 1) {
                     compiledChanges.removeLast()
-                    val newAdd = MultiAddAt(
-                        collection = collection,
-                        added = listOf(lastChange.added, c.added),
-                        index = lastChange.index,
-                    )
+                    val newAdd =
+                        MultiAddAt(
+                            collection = collection,
+                            added = listOf(lastChange.added, c.added),
+                            index = lastChange.index
+                        )
                     compiledChanges += newAdd
                     lastChange = newAdd
                     continue
@@ -121,11 +127,12 @@ fun <E> AtomicListChange<E>.compile(): AtomicListChange<E> {
             if (c is AddAt) {
                 if (lastChange.lastIndex == c.index - 1) {
                     compiledChanges.removeLast()
-                    val newAdd = MultiAddAt(
-                        collection = collection,
-                        added = lastChange.added + listOf(c.added),
-                        index = lastChange.index,
-                    )
+                    val newAdd =
+                        MultiAddAt(
+                            collection = collection,
+                            added = lastChange.added + listOf(c.added),
+                            index = lastChange.index
+                        )
                     compiledChanges += newAdd
                     lastChange = newAdd
                     continue
@@ -135,7 +142,6 @@ fun <E> AtomicListChange<E>.compile(): AtomicListChange<E> {
 
         lastChange = c
         compiledChanges += c
-
     }
 
     if (DEV) taball("output changes", compiledChanges)
@@ -146,6 +152,4 @@ fun <E> AtomicListChange<E>.compile(): AtomicListChange<E> {
         changes = compiledChanges,
         isCompiled = true
     )
-
-
 }

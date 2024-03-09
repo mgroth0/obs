@@ -3,8 +3,11 @@
 package matt.obs.prop.cast
 
 import matt.model.flowlogic.recursionblocker.RecursionBlocker
-import matt.obs.prop.BindableProperty
-import matt.obs.prop.Var
+import matt.obs.prop.writable.BindableProperty
+import matt.obs.prop.writable.Var
+
+
+
 
 class CastedWritableProp<S, C>(source: Var<S>): BindableProperty<C>(source.value as C) {
     init {

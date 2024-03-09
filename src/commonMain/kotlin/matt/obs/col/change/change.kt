@@ -67,16 +67,18 @@ class AtomicListChange<E>(
 
 
     override val lowestChangedIndex: Int
-        get() = run {
-            changes.minOf { it.lowestChangedIndex }
-        }
+        get() =
+            run {
+                changes.minOf { it.lowestChangedIndex }
+            }
 
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
-    ): AtomicListChange<T> = AtomicListChange(
-        collection as List<T>, changes.map { it.convert(collection, convert) }, isCompiled = isCompiled
-    )
+    ): AtomicListChange<T> =
+        AtomicListChange(
+            collection as List<T>, changes.map { it.convert(collection, convert) }, isCompiled = isCompiled
+        )
 
 
     override fun toStringProps() = mapOf(("changes" to changes.elementsToString(delimiter = "\n\t")))
@@ -133,9 +135,10 @@ class AddIntoSet<E>(
         convert: (E) -> T
     ): AddIntoSet<T> = AddIntoSet(collection as Set<T>, convert(added))
 
-    override fun toStringProps() = mapOf(
-        "added" to added
-    )
+    override fun toStringProps() =
+        mapOf(
+            "added" to added
+        )
 
     override val addedElements = listOf(added)
 }
@@ -149,9 +152,10 @@ class AddAtEnd<E>(
         convert: (E) -> T
     ) = AddAtEnd(collection as List<T>, convert(added))
 
-    override fun toStringProps() = mapOf(
-        "added" to added
-    )
+    override fun toStringProps() =
+        mapOf(
+            "added" to added
+        )
 
     override val addedElementsIndexed get() = orderedSetOf(added withIndex End)
     override val lowestChangedIndex: Int = collection.size - 1
@@ -167,9 +171,10 @@ class AddAt<E>(
         convert: (E) -> T
     ) = AddAt(collection as List<T>, convert(added), index = index)
 
-    override fun toStringProps() = mapOf(
-        "added" to added, "index" to index
-    )
+    override fun toStringProps() =
+        mapOf(
+            "added" to added, "index" to index
+        )
 
     override val addedElementsIndexed get() = orderedSetOf(added withIndex index)
     override val lowestChangedIndex: Int = index
@@ -185,7 +190,9 @@ class MultiAddIntoSet<E>(
     val added: Collection<E>
 ) : MultiAddition<E, Set<E>>(
         collection
-    ), SetChange<E>, SetAdditionBase<E> {
+    ),
+    SetChange<E>,
+    SetAdditionBase<E> {
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
@@ -196,8 +203,11 @@ class MultiAddIntoSet<E>(
     override val addedElements get() = added.toList()
 }
 
-sealed class MultiAdditionIntoList<E>(@Open override val collection: List<E>) : SimpleStringableClass(),
-    ListAdditionBase<E>
+sealed class MultiAdditionIntoList<E>(
+    @Open override val collection: List<E>
+) :
+    SimpleStringableClass(),
+        ListAdditionBase<E>
 
 class MultiAddAtEnd<E>(
     collection: List<E>,
@@ -215,7 +225,6 @@ class MultiAddAtEnd<E>(
     override val addedElementsIndexed get() = added.map { it withIndex End }.toOrderedSet()
 
     override val lowestChangedIndex = collection.size - added.size
-
 }
 
 class MultiAddAt<E>(
@@ -244,22 +253,20 @@ class MultiAddAt<E>(
     val isRange by lazy {
         true
     }
-
 }
 
 sealed class Removal<E, COL : Collection<E>>(
     @Open override val collection: COL,
     val removed: E
-) : SimpleStringableClass(), RemovalBase<E, COL> { //  override val removedElements get() = listOf(removed)
-}
+) : SimpleStringableClass(), RemovalBase<E, COL>
 
 sealed class SetRemoval<E>(
-    @Open   override val collection: Set<E>,
+    @Open override val collection: Set<E>,
     removed: E
 ) : Removal<E, Set<E>>(collection, removed), SetRemovalBase<E>
 
 sealed class ListRemoval<E>(
-    @Open  override val collection: List<E>,
+    @Open override val collection: List<E>,
     removed: E
 ) : Removal<E, List<E>>(collection, removed), ListRemovalBase<E>
 
@@ -279,16 +286,6 @@ class RemoveElementFromSet<E>(
     override fun toStringProps() = mapOf("removed" to removed)
 }
 
-//open class RemoveElement<E>(collection: Collection<E>, removed: E, override val lowestChangedIndex: Int): Removal<E>(
-//  collection,
-//  removed
-//), ListRemovalBase<E> {
-//  override fun <T> convert(collection: Collection<T>, convert: (E)->T) =
-//	RemoveElement(collection, convert(removed), lowestChangedIndex)
-//
-//  override val removedElementsIndexed get() = orderedSetOf(removed withIndex First)
-//
-//}
 
 
 class RemoveElementFromList<E>(
@@ -324,22 +321,20 @@ class RemoveAt<E>(
     override val lowestChangedIndex = index
 
     override fun toStringProps() = mapOf("index" to index, "removed" to removed)
-
-} //class RemoveFirst<E>(collection: Collection<E>, removed: E): matt.obs.map.change.Removal<E>(collection, removed)
+}
 
 sealed class MultiRemoval<E, COL : Collection<E>>(
     @Open override val collection: COL,
     val removed: Collection<E>
-) : SimpleStringableClass(), RemovalBase<E, COL> { //  override val removedElements get() = removed.toList()
-}
+) : SimpleStringableClass(), RemovalBase<E, COL>
 
 sealed class MultiRemovalFromSet<E>(
-    @Open   override val collection: Set<E>,
+    @Open override val collection: Set<E>,
     removed: Collection<E>
 ) : MultiRemoval<E, Set<E>>(collection, removed), SetRemovalBase<E>
 
 sealed class MultiRemovalFromList<E>(
-    @Open  override val collection: List<E>,
+    @Open override val collection: List<E>,
     removed: Collection<E>
 ) : MultiRemoval<E, List<E>>(collection, removed), ListRemovalBase<E>
 
@@ -358,10 +353,10 @@ class RemoveElementsFromSet<E>(
         convert: (E) -> T
     ) = RemoveElementsFromSet(collection as Set<T>, removed.map(convert))
 
-    override fun toStringProps() = mapOf(
-        "removed" to removed.elementsToString()
-    )
-
+    override fun toStringProps() =
+        mapOf(
+            "removed" to removed.elementsToString()
+        )
 }
 
 
@@ -378,10 +373,10 @@ class RemoveElements<E>(
         convert: (E) -> T
     ) = RemoveElements(collection as List<T>, removed.map(convert), lowestChangedIndex = lowestChangedIndex)
 
-    override fun toStringProps() = mapOf(
-        "removed" to removed.elementsToString()
-    )
-
+    override fun toStringProps() =
+        mapOf(
+            "removed" to removed.elementsToString()
+        )
 }
 
 
@@ -391,7 +386,6 @@ class IndexedValueConverter<E> : BiConverter<IndexedValue<E>, E> {
     override fun convertToA(b: E): IndexedValue<E> {
         error("only goes one way (this shouldn't be a BiConverter!!!)")
     }
-
 }
 
 class RemoveAtIndices<E>(
@@ -402,20 +396,22 @@ class RemoveAtIndices<E>(
     private val removedWithIndices = removed
 
     override val removedElementsIndexed
-        get() = removedWithIndices.map {
-            MyIndexedValue(
-                element = it.value, index = Index(it.index)
-            )
-        }.toOrderedSet()
+        get() =
+            removedWithIndices.map {
+                MyIndexedValue(
+                    element = it.value, index = Index(it.index)
+                )
+            }.toOrderedSet()
 
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
-    ): RemoveAtIndices<T> = RemoveAtIndices(
-        collection as List<T>,
-        removedWithIndices.map { IndexedValue(it.index, convert(it.value)) },
-        quickIsRange = quickIsRange
-    )
+    ): RemoveAtIndices<T> =
+        RemoveAtIndices(
+            collection as List<T>,
+            removedWithIndices.map { IndexedValue(it.index, convert(it.value)) },
+            quickIsRange = quickIsRange
+        )
 
     override val lowestChangedIndex: Int = removed.minOfOrNull { it.index }!!
 
@@ -433,11 +429,12 @@ class RemoveAtIndices<E>(
         } else removed.minOf { it.index }
     }
 
-    override fun toStringProps() = mapOf(
-        "size" to removed.size,
-        "firstIndex" to firstIndex,
-        "lastIndex" to lastIndex
-    )
+    override fun toStringProps() =
+        mapOf(
+            "size" to removed.size,
+            "firstIndex" to firstIndex,
+            "lastIndex" to lastIndex
+        )
 }
 
 
@@ -447,14 +444,14 @@ class RetainAllSet<E>(
     val retained: Collection<E>
 ) : MultiRemovalFromSet<E>(
         collection, removed
-    ), SetChange<E> {
+    ),
+    SetChange<E> {
     override fun <T> convert(
         collection: Collection<T>,
         convert: (E) -> T
     ) = RetainAllSet(collection as Set<T>, removed.map(convert), retained = retained.map(convert))
 
     override val removedElements = removed.toList()
-
 }
 
 
@@ -476,21 +473,16 @@ class RetainAllList<E>(
 
     override val removedElementsIndexed: OrderedSet<MyIndexedValue<E, out RemovalIndex>>
         get() = removed.map { it withIndex All }.toOrderedSet()
-
-
 }
 
 
 sealed class Replacement<E>(
-    final  override val collection: List<E>,
+    final override val collection: List<E>,
     val removed: E,
     val added: E
-) : SimpleStringableClass(), ListAdditionBase<E>,
-    ListRemovalBase<E> { //  override val addedElements get() = listOf(added)
-    //  override val removedElements get() = listOf(removed)
-
-
-}
+) : SimpleStringableClass(),
+    ListAdditionBase<E>,
+    ListRemovalBase<E>
 
 class ReplaceAt<E>(
     collection: List<E>,
@@ -511,10 +503,10 @@ class ReplaceAt<E>(
     override val lowestChangedIndex: Int
         get() = index
 
-    override fun toStringProps() = mapOf(
-        "removed" to removed, "added" to added, "index" to index
-    )
-
+    override fun toStringProps() =
+        mapOf(
+            "removed" to removed, "added" to added, "index" to index
+        )
 }
 
 class ClearSet<E>(
@@ -597,9 +589,7 @@ fun <E> MutableList<E>.mirror(
                 require(c.isRange)
                 subList(
                     c.lowestChangedIndex, c.removedElementsIndexed.last().index.i + 1
-                ).clear()        //		c.removedElementsIndexed.sortedBy { it.index }.forEach {
-                //		  removeAt(it.index.i)
-                //		}
+                ).clear()
             }
 
             is AtomicListChange      -> {

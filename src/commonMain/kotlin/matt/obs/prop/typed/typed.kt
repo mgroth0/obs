@@ -11,16 +11,16 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.serializer
 import matt.classload.systemClassGetter
-import matt.lang.classname.JvmQualifiedClassName
+import matt.lang.classname.common.JvmQualifiedClassName
 import matt.lang.setall.setAll
-import matt.obs.MObservable
 import matt.obs.col.BasicOCollection
 import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
 import matt.obs.col.oset.BasicObservableSet
 import matt.obs.col.oset.MutableObsSet
 import matt.obs.col.oset.ObsSet
-import matt.obs.prop.BindableProperty
+import matt.obs.common.MObservable
+import matt.obs.prop.writable.BindableProperty
 import kotlin.reflect.KClass
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -39,10 +39,11 @@ class TypedBindablePropertySerializer<T>(private val dataSerializer: KSerializer
     override fun deserialize(decoder: Decoder): TypedBindableProperty<T> {
         val value = dataSerializer.deserialize(decoder)
         val valueDescriptor = dataSerializer.descriptor
-        val cls = with(systemClassGetter()) {
-            val serialName = valueDescriptor.serialName.removeSuffix("?") /*? at the end of a serialDescriptor means it is nullable*/
-            JvmQualifiedClassName(serialName).get() ?: error("Could not get class for serial name: $serialName")
-        }
+        val cls =
+            with(systemClassGetter()) {
+                val serialName = valueDescriptor.serialName.removeSuffix("?") /*? at the end of a serialDescriptor means it is nullable*/
+                JvmQualifiedClassName(serialName).get() ?: error("Could not get class for serial name: $serialName")
+            }
         return TypedBindableProperty(
             cls = cls,
             nullable = valueDescriptor.isNullable,
@@ -68,7 +69,6 @@ class TypedBindableProperty<T>(
     override fun setFromEncoded(loadedValue: T) {
         value = loadedValue
     }
-
 }
 
 
@@ -81,7 +81,8 @@ class TypedMutableObsList<E>(
             elementCls = elementCls,
             nullableElements = nullableElements,
             list = list
-        ), MutableObsList<E> by list
+        ),
+        MutableObsList<E> by list
 
 class TypedImmutableObsList<E>(
     elementCls: KClass<*>,
@@ -91,7 +92,8 @@ class TypedImmutableObsList<E>(
         elementCls = elementCls,
         nullableElements = nullableElements,
         list = list
-    ), ImmutableObsList<E> by list
+    ),
+    ImmutableObsList<E> by list
 
 sealed class AbstractTypedObsList<E>(
     elementCls: KClass<*>,
@@ -107,7 +109,6 @@ sealed class AbstractTypedObsList<E>(
     final override fun setFromEncoded(loadedValue: Collection<E>) {
         (list as MutableObsList<E>).setAll(loadedValue)
     }
-
 }
 
 
@@ -119,7 +120,8 @@ class TypedMutableObsSet<E>(
         elementCls = elementCls,
         nullableElements = nullableElements,
         set = set
-    ), MutableObsSet<E> by set
+    ),
+    MutableObsSet<E> by set
 
 class TypedImmutableObsSet<E>(
     elementCls: KClass<*>,
@@ -129,7 +131,8 @@ class TypedImmutableObsSet<E>(
         elementCls = elementCls,
         nullableElements = nullableElements,
         set = set
-    ), ObsSet<E> by set
+    ),
+    ObsSet<E> by set
 
 
 sealed class AbstractTypedObsSet<E>(
@@ -161,8 +164,7 @@ sealed class AbstractTypedObsCollection<E>(
 
     protected abstract val colSer: KSerializer<*>
 
-    final override fun provideEncodable() = col
-
+    final override fun provideEncodable() = col.tempDebugCollectionDelegate()
 }
 
 

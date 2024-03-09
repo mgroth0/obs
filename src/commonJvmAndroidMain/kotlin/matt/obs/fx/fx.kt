@@ -1,17 +1,16 @@
-@file:JvmName("FxCommonJvmAndroidKt")
 
 package matt.obs.fx
 
 import matt.classload.systemClassGetter
 import matt.lang.assertions.require.requireNot
-import matt.lang.classname.JvmQualifiedClassName
-import matt.lang.go
+import matt.lang.classname.common.JvmQualifiedClassName
+import matt.lang.common.go
 
 
-internal val JAVAFX_OBSERVABLE_CLASS by lazy {
+private val JAVAFX_OBSERVABLE_CLASS by lazy {
     with(systemClassGetter()) {
-        /*warn("observableClass is null")*/
-        /*It's gonna be null when using a program that doesn't depend on javafx... which I finally am capable of*/
+        /*warn("observableClass is null")
+        It's gonna be null when using a program that doesn't depend on javafx... which I finally am capable of*/
         JvmQualifiedClassName("javafx.beans.Observable").get()
     }
 }

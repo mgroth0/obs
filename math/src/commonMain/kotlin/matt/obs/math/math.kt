@@ -1,7 +1,7 @@
 package matt.obs.math
 
-import matt.lang.Num
 import matt.lang.assertions.require.requireNotEmpty
+import matt.lang.common.Num
 import matt.math.langg.arithmetic.neg.unaryMinus
 import matt.obs.bind.binding
 import matt.obs.prop.ObsVal

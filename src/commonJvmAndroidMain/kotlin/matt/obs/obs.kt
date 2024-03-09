@@ -1,20 +1,20 @@
 package matt.obs
 
 import matt.async.thread.TheThreadProvider
-import matt.lang.weak.JvmDump
-import matt.lang.weak.MyWeakRef
-import matt.lang.weak.onGarbageCollected
+import matt.lang.weak.j.JvmDump
+import matt.lang.weak.j.onGarbageCollected
+import matt.lang.weak.weak
 import matt.obs.listen.MyWeakListener
 
 
-val TheDump by lazy {
+private val TheDump by lazy {
     JvmDump(TheThreadProvider)
 }
 
 
 actual fun maybeRemoveByRefQueue(wl: MyWeakListener<*>): Boolean {
     val weakObj = wl.wref.deref() ?: return false
-    val wlRef = MyWeakRef(wl)
+    val wlRef = weak(wl)
     weakObj.onGarbageCollected(TheDump) {
         wlRef.deref()?.tryRemovingListener()
     }

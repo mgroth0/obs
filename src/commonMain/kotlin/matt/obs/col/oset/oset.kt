@@ -4,7 +4,7 @@ import matt.collect.itr.IteratorExtender
 import matt.collect.itr.MutableIteratorExtender
 import matt.lang.anno.Open
 import matt.lang.model.value.Value
-import matt.lang.weak.WeakRefInter
+import matt.lang.weak.common.WeakRefInter
 import matt.lang.weak.weak
 import matt.obs.bind.binding
 import matt.obs.col.BasicOCollection
@@ -39,25 +39,25 @@ interface ObsSet<E> : Set<E>, BasicOCollection<E, SetChange<E>, SetUpdate<E>, Se
         weakRef: WeakRefInter<W>,
         op: (W, SetChange<E>) -> Unit
     ) = run {
-        val listener = WeakSetListener(weakRef) { o: W, c: SetChange<E> ->
-            op(o, c)
-        }
+        val listener =
+            WeakSetListener(weakRef) { o: W, c: SetChange<E> ->
+                op(o, c)
+            }
         addListener(listener)
     }
-
-
 }
 
 
 fun <E> Collection<E>.toBasicImmutableObservableSet(): ObsSet<E> = BasicImmutableObservableSet(this)
 
-fun <E> Iterable<E>.toBasicImmutableObservableSet(): ObsSet<E> = BasicImmutableObservableSet(this.toSet())
+fun <E> Iterable<E>.toBasicImmutableObservableSet(): ObsSet<E> = BasicImmutableObservableSet(toSet())
 
-fun <E> Sequence<E>.toBasicImmutableObservableSet(): ObsSet<E> = BasicImmutableObservableSet(this.toSet())
+fun <E> Sequence<E>.toBasicImmutableObservableSet(): ObsSet<E> = BasicImmutableObservableSet(toSet())
 
 fun <E> basicImmutableObservableSetOf(vararg values: E) = BasicImmutableObservableSet<E>(values.toSet())
 
-open class BasicImmutableObservableSet<E>(private val theSet: Set<E>) : InternallyBackedOSet<E>(),
+open class BasicImmutableObservableSet<E>(private val theSet: Set<E>) :
+    InternallyBackedOSet<E>(),
     ObsSet<E> {
 
 
@@ -75,13 +75,13 @@ open class BasicImmutableObservableSet<E>(private val theSet: Set<E>) : Internal
     final override fun isEmpty(): Boolean = theSet.isEmpty()
 
     @Open
-    override fun iterator(): Iterator<E> = object : IteratorExtender<E>(theSet) {
-        var lastNext: E? = null
-        override fun postNext(e: E) {
-            lastNext = e
+    override fun iterator(): Iterator<E> =
+        object : IteratorExtender<E>(theSet) {
+            var lastNext: E? = null
+            override fun postNext(e: E) {
+                lastNext = e
+            }
         }
-    }
-
 }
 
 
@@ -89,13 +89,14 @@ interface MutableObsSet<E> : ObsSet<E>, MutableSet<E>
 
 fun <E> Collection<E>.toBasicObservableSet(): BasicObservableSet<E> = BasicObservableSet(this)
 
-fun <E> Iterable<E>.toBasicObservableSet(): BasicObservableSet<E> = BasicObservableSet(this.toSet())
+fun <E> Iterable<E>.toBasicObservableSet(): BasicObservableSet<E> = BasicObservableSet(toSet())
 
-fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> = BasicObservableSet(this.toSet())
+fun <E> Sequence<E>.toBasicObservableSet(): BasicObservableSet<E> = BasicObservableSet(toSet())
 
 fun <E> basicObservableSetOf(vararg values: E) = BasicObservableSet<E>(values.toMutableSet())
 
-class BasicObservableSet<E>(private val theSet: MutableSet<E>) : BasicImmutableObservableSet<E>(theSet),
+class BasicObservableSet<E>(private val theSet: MutableSet<E>) :
+    BasicImmutableObservableSet<E>(theSet),
     MutableObsSet<E> {
 
 
@@ -103,22 +104,23 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>) : BasicImmutableO
     constructor() : this(emptySet())
 
 
-    override fun iterator() = object : MutableIteratorExtender<E>(theSet) {
-        var lastNext: Value<E>? = null
-        override fun postNext(e: E) {
-            lastNext = Value(e)
-        }
+    override fun iterator() =
+        object : MutableIteratorExtender<E>(theSet) {
+            var lastNext: Value<E>? = null
+            override fun postNext(e: E) {
+                lastNext = Value(e)
+            }
 
-        override fun remove() {
-            super.remove()
-            emitChange(
-                RemoveElementFromSet(
-                    theSet,
-                    lastNext!!.value
+            override fun remove() {
+                super.remove()
+                emitChange(
+                    RemoveElementFromSet(
+                        theSet,
+                        lastNext!!.value
+                    )
                 )
-            )
+            }
         }
-    }
 
     override fun add(element: E): Boolean {
         val b = theSet.add(element)
@@ -159,7 +161,6 @@ class BasicObservableSet<E>(private val theSet: MutableSet<E>) : BasicImmutableO
         if (b) emitChange(RetainAllSet(theSet, toRemove, retained = elements))
         return b
     }
-
 }
 
 

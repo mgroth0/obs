@@ -5,8 +5,8 @@ import matt.obs.bindings.str.ObsS
 import matt.obs.col.change.ListAdditionBase
 import matt.obs.col.change.ListRemovalBase
 import matt.obs.col.olist.basicMutableObservableListOf
-import matt.obs.prop.BindableProperty
 import matt.obs.prop.ObsVal
+import matt.obs.prop.writable.BindableProperty
 import matt.prim.str.mybuild.api.StringDslLike
 
 
@@ -18,9 +18,10 @@ class MyObsStringDSL : StringDslLike {
     private val parts = basicMutableObservableListOf<ObsVal<*>>()
 
 
-    private val stringM = MyBinding {
-        parts.joinToString(separator = delimiter.value) { it.value.toString() }
-    }
+    private val stringM =
+        MyBinding {
+            parts.joinToString(separator = delimiter.value) { it.value.toString() }
+        }
     val stringO: ObsS = stringM
 
     init {
@@ -62,5 +63,4 @@ class MyObsStringDSL : StringDslLike {
         +subDSL.stringO
         appendStatic(")")
     }
-
 }

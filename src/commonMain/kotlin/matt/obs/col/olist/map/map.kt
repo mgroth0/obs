@@ -25,9 +25,10 @@ fun <V, K> ObsSet<V>.toMappedMap(keySelectorFun: (V) -> K): BasicOMap<K, V> {
              }*/
 
             is ClearSet              -> map.clear()
-            is RemoveElementsFromSet -> it.removed.forEach {
-                map.remove(keySelectorFun(it))
-            }
+            is RemoveElementsFromSet ->
+                it.removed.forEach {
+                    map.remove(keySelectorFun(it))
+                }
 
             is SetRemoval            -> map.remove(keySelectorFun(it.removed))
 

@@ -1,7 +1,7 @@
 package matt.obs.col.olist.cat
 
 import matt.lang.setall.setAll
-import matt.lang.sync.SimpleReferenceMonitor
+import matt.lang.sync.common.SimpleReferenceMonitor
 import matt.lang.sync.inSync
 import matt.obs.col.change.mirror
 import matt.obs.col.olist.ImmutableObsList
@@ -43,6 +43,5 @@ class ConcatList<E>(
                 realPartEndExclusive = firstList.size + secondList.size
             }
         }
-
     }
 }

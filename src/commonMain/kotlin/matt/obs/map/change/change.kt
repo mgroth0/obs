@@ -2,7 +2,6 @@ package matt.obs.map.change
 
 sealed interface MapChange<K, V> {
     val map: Map<K, V>
-    //  fun <T> convert(collection: Collection<T>, convert: (E)->T): CollectionChange<T>
 }
 
 class Put<K, V>(override val map: Map<K, V>, val key: K, val value: V): MapChange<K, V>

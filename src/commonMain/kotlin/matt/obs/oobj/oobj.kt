@@ -1,9 +1,9 @@
 package matt.obs.oobj
 
 import matt.lang.anno.Open
-import matt.lang.weak.WeakRefInter
-import matt.obs.MListenable
-import matt.obs.MObservableImpl
+import matt.lang.weak.common.WeakRefInter
+import matt.obs.common.MListenable
+import matt.obs.common.MObservableImpl
 import matt.obs.invalid.CustomInvalidations
 import matt.obs.listen.ContextListener
 import matt.obs.listen.MyListenerInter
@@ -26,18 +26,19 @@ interface MObservableObject<T> : MListenable<ContextListener<T>>, CustomInvalida
         TODO()
     }
     @Open
-    fun onChange(op: T.() -> Unit) = addListener(ContextListener(uncheckedThis) {
-        op()
-    })
-
-
+    fun onChange(op: T.() -> Unit) =
+        addListener(
+            ContextListener(uncheckedThis) {
+                op()
+            }
+        )
 }
 
-abstract class ObservableObject<T : ObservableObject<T>> : MObservableImpl<ContextUpdate, ContextListener<T>>(),
+abstract class ObservableObject<T : ObservableObject<T>> :
+    MObservableImpl<ContextUpdate, ContextListener<T>>(),
     MObservableObject<T> {
 
     final override fun markInvalid() {
         notifyListeners(ContextUpdate)
     }
-
 }

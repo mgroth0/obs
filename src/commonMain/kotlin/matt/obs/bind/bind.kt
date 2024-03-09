@@ -1,21 +1,21 @@
 package matt.obs.bind
 
+import matt.lang.common.err
 import matt.lang.convert.BiConverter
 import matt.lang.convert.Converter
-import matt.lang.err
 import matt.lang.setall.setAll
-import matt.lang.sync.ReferenceMonitor
-import matt.lang.sync.inSync
-import matt.lang.weak.WeakRefInter
+import matt.lang.sync.common.ReferenceMonitor
+import matt.lang.sync.common.inSync
+import matt.lang.weak.common.WeakRefInter
 import matt.lang.weak.weak
 import matt.model.flowlogic.keypass.KeyPass
 import matt.model.op.debug.DebugLogger
-import matt.obs.MObservable
 import matt.obs.bindhelp.BindableValue
 import matt.obs.bindhelp.BindableValueHelper
 import matt.obs.col.BasicOCollection
 import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.col.olist.MutableObsList
+import matt.obs.common.MObservable
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
 import matt.obs.lazy.DependentValue
@@ -25,20 +25,22 @@ import matt.obs.listen.WeakInvalidListener
 import matt.obs.listen.update.LazyMaybeNewValueUpdate
 import matt.obs.listen.update.ValueUpdate
 import matt.obs.oobj.MObservableObject
-import matt.obs.prop.BindableProperty
 import matt.obs.prop.MObservableROValBase
 import matt.obs.prop.MObservableVal
 import matt.obs.prop.MObservableValNewOnly
 import matt.obs.prop.ObsVal
 import matt.obs.prop.ValProp
-import matt.obs.prop.Var
-import matt.obs.prop.VarProp
-import matt.obs.prop.WritableMObservableVal
+import matt.obs.prop.cast.CastedWritableProp
+import matt.obs.prop.writable.BindableProperty
+import matt.obs.prop.writable.Var
+import matt.obs.prop.writable.VarProp
+import matt.obs.prop.writable.WritableMObservableVal
 
 
-infix fun <T : Any> ObsVal<T?>.coalesceNull(backup: ObsVal<T?>) = MyBinding(this, backup) {
-    this@coalesceNull.value ?: backup.value
-}
+infix fun <T : Any> ObsVal<T?>.coalesceNull(backup: ObsVal<T?>) =
+    MyBinding(this, backup) {
+        this@coalesceNull.value ?: backup.value
+    }
 
 
 fun <T> BindableValue<T>.smartBind(
@@ -52,7 +54,10 @@ fun <T> BindableValue<T>.smartBind(
     property: MObservableVal<T, *, *>,
     readonly: Boolean,
     weak: Boolean = false
-) {/*why did I have that requirement???*//*require(property is ReadOnlyBindableProperty)*/
+) {
+    /*why did I have that requirement???
+
+    require(property is ReadOnlyBindableProperty)*/
     if (readonly || (property !is Var<T>)) {
         if (weak) {
             bindWeakly(property)
@@ -74,25 +79,25 @@ fun <T, R> MObservableObject<T>.binding(
 
 fun <T, R> ObsVal<T>.binding(
     vararg dependencies: MObservable,
-    op: (T) -> R,
+    op: (T) -> R
 ) = MyBinding(this, *dependencies) { op(value) }
 
 
 fun <W : Any, T, R> ObsVal<T>.weakBinding(
     w: W,
     vararg dependencies: MObservable,
-    op: (W, T) -> R,
+    op: (W, T) -> R
 ) = MyWeakBinding(w, this, *dependencies) { ww -> op(ww, value) }
 
 fun <T, R> ObsVal<T>.binding(
     vararg dependencies: MObservable,
-    converter: Converter<T, R>,
+    converter: Converter<T, R>
 ) = MyBinding(this, *dependencies) { converter.convertToB(value) }
 
 
 fun <E, R> BasicOCollection<E, *, *, *>.binding(
     vararg dependencies: MObservable,
-    op: (BasicOCollection<E, *, *, *>) -> R,
+    op: (BasicOCollection<E, *, *, *>) -> R
 ): MyBinding<R> = MyBinding(this, *dependencies) { op(this) }
 
 
@@ -105,10 +110,12 @@ fun <T, R> ObsVal<T>.deepBinding(
 ) {
     propGetter(value).value
 }.apply {
-    addDependency(mainDep = this@deepBinding,
+    addDependency(
+        mainDep = this@deepBinding,
         moreDeps = listOf(*dependencies),
         debugLogger = debugLogger,
-        { propGetter(it.value) })
+        { propGetter(it.value) }
+    )
 }
 
 fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(
@@ -117,42 +124,51 @@ fun <T, R> ObsVal<T>.deepBindingIgnoringFutureNullOuterChanges(
 ) = MyBinding(this, *deps) {
     propGetter(value)?.value
 }.apply {
-    addDependencyIgnoringFutureNullOuterChanges(this@deepBindingIgnoringFutureNullOuterChanges,
-        { propGetter(it.value) })
+    addDependencyIgnoringFutureNullOuterChanges(
+        this@deepBindingIgnoringFutureNullOuterChanges,
+        { propGetter(it.value) }
+    )
 }
 
 
-fun <T> MyBinding<T>.eager() = BindableProperty(value).also { prop ->
-    onChange {
-        prop.value = it
+fun <T> MyBinding<T>.eager() =
+    BindableProperty(value).also { prop ->
+        onChange {
+            prop.value = it
+        }
     }
-}
 
 interface MyBindingBase<T> : MObservableValNewOnly<T>, CustomDependencies {
     open override fun removeDependency(o: MObservable) {
-
     }
 }
 
 
 abstract class MyBindingBaseImpl<T> :
     MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>(),
-    MyBindingBase<T>, CustomDependencies {
+    MyBindingBase<T>,
+    CustomDependencies {
 
 
     protected abstract fun calc(): T
 
-    final override fun observe(op: () -> Unit) = addListener(InvalidListener {
-        op()
-    })
+    final override fun observe(op: () -> Unit) =
+        addListener(
+            InvalidListener {
+                op()
+            }
+        )
 
     final override fun observeWeakly(
         w: WeakRefInter<*>,
         op: () -> Unit
     ): WeakInvalidListener<T> {
-        val l = WeakInvalidListener<T>(w) {
-            op()
-        }
+
+
+        val l =
+            WeakInvalidListener<T>(w) {
+                op()
+            }
         addListener(l)
         return l
     }
@@ -170,7 +186,7 @@ abstract class MyBindingBaseImpl<T> :
     final override fun <O : MObservable> addDependency(
         mainDep: O,
         moreDeps: List<MObservable>?,
-        debugLogger: DebugLogger?,/*vararg dependencies: MObservable,*/
+        debugLogger: DebugLogger?, /*vararg dependencies: MObservable,*/
         vararg deepDependencies: (O) -> MObservable?
     ) = depHelper.addDependency(mainDep = mainDep, moreDeps = moreDeps, debugLogger = debugLogger, *deepDependencies)
 
@@ -202,8 +218,6 @@ abstract class MyBindingBaseImpl<T> :
     ) = depHelper.addWeakDependency(
         weakRef = weakRef, mainDep = mainDep, moreDeps = moreDeps, debugLogger = debugLogger, *deepDependencies
     )
-
-
 }
 
 open class MyBinding<T>(
@@ -218,8 +232,6 @@ open class MyBinding<T>(
     }
 
     final override val value: T get() = cVal.get()
-
-
 }
 
 open class MyWeakBinding<W : Any, T>(
@@ -245,8 +257,6 @@ open class MyWeakBinding<W : Any, T>(
     }
 
     final override val value: T get() = cVal.get()
-
-
 }
 
 
@@ -256,6 +266,8 @@ open class LazyBindableProp<T>(
     WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>,
     ReferenceMonitor {
 
+    final override fun <R> cast(): Var<R> = CastedWritableProp(this)
+
     constructor(t: T) : this({ t })
 
     final override fun calc(): T = calcArg()
@@ -264,7 +276,7 @@ open class LazyBindableProp<T>(
     final override var value: T
         get() = inSync { cVal.get() }
         set(value) {
-            require(!this.isBound || bindWritePass.isHeld)
+            require(!isBound || bindWritePass.isHeld)
             cVal.setOp { value }
             markInvalid()
         }
@@ -277,7 +289,7 @@ open class LazyBindableProp<T>(
     }
 
     fun setLazily(newCalc: () -> T) {
-        require(!this.isBound || bindWritePass.isHeld)
+        require(!isBound || bindWritePass.isHeld)
         cVal.setOp(newCalc)
         markInvalid()
     }
@@ -306,6 +318,5 @@ open class LazyBindableProp<T>(
 
     final override var theBind by bindManager::theBind
     final override fun unbind() = bindManager.unbind()
-
 }
 

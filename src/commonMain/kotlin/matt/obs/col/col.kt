@@ -1,16 +1,18 @@
 package matt.obs.col
 
+import matt.lang.anno.JetBrainsYouTrackProject.KT
 import matt.lang.anno.Open
-import matt.lang.weak.WeakRefInter
+import matt.lang.anno.YouTrackIssue
+import matt.lang.weak.common.WeakRefInter
 import matt.model.flowlogic.keypass.KeyPass
-import matt.obs.MListenable
-import matt.obs.MObservableImpl
 import matt.obs.bindhelp.BindableList
 import matt.obs.col.change.CollectionChange
 import matt.obs.col.change.ListChange
 import matt.obs.col.change.NonNullCollectionChange
 import matt.obs.col.change.QueueChange
 import matt.obs.col.change.SetChange
+import matt.obs.common.MListenable
+import matt.obs.common.MObservableImpl
 import matt.obs.listen.CollectionListener
 import matt.obs.listen.CollectionListenerBase
 import matt.obs.listen.ListListener
@@ -27,7 +29,7 @@ import matt.obs.listen.update.NonNullCollectionUpdate
 import matt.obs.listen.update.QueueUpdate
 import matt.obs.listen.update.SetUpdate
 import matt.obs.prop.ValProp
-import matt.obs.prop.VarProp
+import matt.obs.prop.writable.VarProp
 
 interface NonNullBasicOCollection<E, C : NonNullCollectionChange<E, out Collection<E>>, U : NonNullCollectionUpdate<E, C>, L : NonNullCollectionListenerBase<E, C, U>> :
     Collection<E>,
@@ -57,14 +59,46 @@ interface NonNullBasicOCollection<E, C : NonNullCollectionChange<E, out Collecti
         weakRef: WeakRefInter<W>,
         op: (W, C) -> Unit
     ): MyListenerInter<*>
-
-
 }
 
 
 interface BasicOCollection<E, C : CollectionChange<E, out Collection<E>>, U : CollectionUpdate<E, C>, L : CollectionListenerBase<E, C, U>> :
-    Collection<E>,
+
+/*
+
+TEMPORARILY commenting out Collection<E> here as I wait for this issue to be fixed
+
+
+Collection<E>,*/
+
+
+    @YouTrackIssue(KT, 65555)
     MListenable<L> {
+
+
+
+
+    fun isEmpty(): Boolean
+    val size: Int
+    fun iterator(): Iterator<E>
+    fun containsAll(elements: Collection<E>): Boolean
+    fun contains(element: E): Boolean
+
+    @Open
+    fun tempDebugCollectionDelegate() =
+        object: Collection<E> {
+            override val size: Int
+                get() = this@BasicOCollection.size
+
+            override fun isEmpty(): Boolean = this@BasicOCollection.isEmpty()
+
+            override fun iterator(): Iterator<E> = this@BasicOCollection.iterator()
+
+            override fun containsAll(elements: Collection<E>): Boolean = this@BasicOCollection.containsAll(elements)
+
+            override fun contains(element: E): Boolean = this@BasicOCollection.contains(element)
+        }
+
     @Open
     override fun observe(op: () -> Unit) = onChange { op() }
 
@@ -91,8 +125,6 @@ interface BasicOCollection<E, C : CollectionChange<E, out Collection<E>>, U : Co
         weakRef: WeakRefInter<W>,
         op: (W, C) -> Unit
     ): MyListenerInter<*>
-
-
 }
 
 
@@ -107,13 +139,15 @@ abstract class InternallyBackedONonNullCollection<E, C : NonNullCollectionChange
         listenerName: String?,
         op: (C) -> Unit
     ): L {
-        val l = createListener {
-            //	  println("addListener c = $it")
-            op(it)
-        }
-        return addListener(l.also {
-            if (listenerName != null) it.name = listenerName
-        })
+        val l =
+            createListener {
+                op(it)
+            }
+        return addListener(
+            l.also {
+                if (listenerName != null) it.name = listenerName
+            }
+        )
     }
 
     protected abstract fun createListener(invoke: NonNullCollectionListener<E, C, U>.(change: C) -> Unit): L
@@ -121,14 +155,14 @@ abstract class InternallyBackedONonNullCollection<E, C : NonNullCollectionChange
     internal val bindWritePass = KeyPass()
 
     protected fun emitChange(change: C) {
-        require(this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)
+        require(this !is BindableList<*> || !isBound || bindWritePass.isHeld)
         notifyListeners(updateFrom((change)))
     }
 
     protected abstract fun updateFrom(c: C): U
 
     val isEmptyProp: ValProp<Boolean> by lazy {
-        VarProp(this.isEmpty()).apply {
+        VarProp(isEmpty()).apply {
             onChange {
                 value = this@InternallyBackedONonNullCollection.isEmpty()
             }
@@ -145,12 +179,15 @@ abstract class InternallyBackedOCollection<E, C : CollectionChange<E, out Collec
         listenerName: String?,
         op: (C) -> Unit
     ): L {
-        val l = createListener {
-            op(it)
-        }
-        return addListener(l.also {
-            if (listenerName != null) it.name = listenerName
-        })
+        val l =
+            createListener {
+                op(it)
+            }
+        return addListener(
+            l.also {
+                if (listenerName != null) it.name = listenerName
+            }
+        )
     }
 
     protected abstract fun createListener(invoke: CollectionListener<E, C, U>.(change: C) -> Unit): L
@@ -158,14 +195,14 @@ abstract class InternallyBackedOCollection<E, C : CollectionChange<E, out Collec
     internal val bindWritePass = KeyPass()
 
     protected fun emitChange(change: C) {
-        require(this !is BindableList<*> || !this.isBound || bindWritePass.isHeld)
+        require(this !is BindableList<*> || !isBound || bindWritePass.isHeld)
         notifyListeners(updateFrom((change)))
     }
 
     protected abstract fun updateFrom(c: C): U
 
     val isEmptyProp: ValProp<Boolean> by lazy {
-        VarProp(this.isEmpty()).apply {
+        VarProp(isEmpty()).apply {
             onChange {
                 value = this@InternallyBackedOCollection.isEmpty()
             }
@@ -223,5 +260,4 @@ abstract class InternallyBackedOQueue<E : Any> internal constructor() :
         ): MyListenerInter<*> {
             TODO()
         }
-
     }

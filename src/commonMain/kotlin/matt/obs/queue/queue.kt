@@ -12,7 +12,8 @@ fun <E : Any> MyMutableQueue<E>.wrapInObservableQueue(): ObservableQueue<E> {
     return ObservableQueue(this)
 }
 
-class ObservableQueue<E : Any> internal constructor(private val q: MyMutableQueue<E>) : InternallyBackedOQueue<E>(),
+class ObservableQueue<E : Any> internal constructor(private val q: MyMutableQueue<E>) :
+    InternallyBackedOQueue<E>(),
     MyMutableQueue<E>,
     Collection<E> by q {
 
