@@ -12,9 +12,8 @@ import matt.obs.bindings.bool.ObsB
 import matt.obs.col.olist.ImmutableObsList
 import matt.obs.col.olist.MutableObsList
 import matt.obs.col.olist.basicMutableObservableListOf
-import matt.obs.col.olist.dynamic.BasicFilteredList
-import matt.obs.col.olist.dynamic.BasicSortedList
 import matt.obs.col.olist.dynamic.InterestingList
+import matt.obs.col.olist.dynamic.SortedFilteredList
 import matt.obs.common.MObservable
 import matt.obs.invalid.CustomDependencies
 import matt.obs.invalid.DependencyHelper
@@ -34,8 +33,7 @@ class AllOfTheseShouldBeInCommon {
         private val target: MutableObsList<E> = basicMutableObservableListOf()
     ) : SimpleStringableClass(),
         ImmutableObsList<E> by target,
-        BasicFilteredList<E>,
-        BasicSortedList<E>,
+        SortedFilteredList<E>,
         CustomDependencies,
         InterestingList {
 

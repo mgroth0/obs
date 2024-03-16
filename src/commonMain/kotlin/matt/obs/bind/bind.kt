@@ -1,5 +1,6 @@
 package matt.obs.bind
 
+import matt.lang.anno.Open
 import matt.lang.common.err
 import matt.lang.convert.BiConverter
 import matt.lang.convert.Converter
@@ -75,7 +76,7 @@ fun <T, E> ObsVal<T>.boundList(propGetter: (T) -> Iterable<E>): MutableObsList<E
 fun <T, R> MObservableObject<T>.binding(
     vararg dependencies: MObservable,
     op: T.() -> R
-): MyBinding<R> = MyBinding(this, *dependencies) { uncheckedThis.op() }
+): MyBinding<R> = MyBinding(this, *dependencies) { noLongerUncheckedThis.op() }
 
 fun <T, R> ObsVal<T>.binding(
     vararg dependencies: MObservable,
@@ -148,6 +149,7 @@ abstract class MyBindingBaseImpl<T> :
     MObservableROValBase<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>(),
     MyBindingBase<T>,
     CustomDependencies {
+
 
 
     protected abstract fun calc(): T
@@ -266,7 +268,15 @@ open class LazyBindableProp<T>(
     WritableMObservableVal<T, ValueUpdate<T>, NewOrLessListener<T, ValueUpdate<T>, out ValueUpdate<T>>>,
     ReferenceMonitor {
 
-    final override fun <R> cast(): Var<R> = CastedWritableProp(this)
+    @Open
+    override fun <R> cast(cast: (T) -> R): ObsVal<R> = super<MyBindingBaseImpl>.cast(cast)
+
+    @Open
+    override fun <R> cast(
+        cast: (T) -> R,
+        castBack: (R) -> T
+    ): CastedWritableProp<T, R> = CastedWritableProp(this, cast, castBack)
+
 
     constructor(t: T) : this({ t })
 

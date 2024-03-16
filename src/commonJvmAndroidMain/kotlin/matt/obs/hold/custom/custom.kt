@@ -4,19 +4,19 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
-import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
-import matt.lang.anno.Open
 import matt.lang.common.err
+import matt.obs.common.CustomDecoderAndEncoder
+import matt.obs.common.custom.ElementDecoder
 
-abstract class CustomSerializer<T, D : CustomDecoder<T>, E : ElementDecoder<*, T, D>> : KSerializer<T> {
+abstract class CustomSerializer<T, D : CustomDecoderAndEncoder<T, E>, E : ElementDecoder<*>> :
+    KSerializer<T> {
     abstract val serialName: String
     final override val descriptor: SerialDescriptor by lazy {
         buildClassSerialDescriptor(serialName) {
-
-            elements.forEach {
+            newDecoder().elements.forEach {
                 element(
                     elementName = it.key,
                     descriptor = it.serializer.descriptor,
@@ -26,13 +26,14 @@ abstract class CustomSerializer<T, D : CustomDecoder<T>, E : ElementDecoder<*, T
         }
     }
 
-    abstract val elements: List<E>
+
 
 
     final override fun deserialize(decoder: Decoder): T {
 
         val customDecoder = newDecoder()
         val compositeDecoder = decoder.beginStructure(descriptor)
+        val elements = customDecoder.elements
         val elementsNotFound = elements.toMutableList()
         while (true) {
             val index = compositeDecoder.decodeElementIndex(descriptor)
@@ -41,7 +42,7 @@ abstract class CustomSerializer<T, D : CustomDecoder<T>, E : ElementDecoder<*, T
                     val element = elements[index]
                     require(element in elementsNotFound)
                     elementsNotFound.remove(element)
-                    element.load(descriptor, compositeDecoder, index, customDecoder)
+                    element.load(descriptor, compositeDecoder, index)
                 }
 
                 index == CompositeDecoder.DECODE_DONE  -> break
@@ -51,7 +52,7 @@ abstract class CustomSerializer<T, D : CustomDecoder<T>, E : ElementDecoder<*, T
         }
 
         elementsNotFound.forEach {
-            it.handleNotFound(customDecoder)
+            it.handleNotFound()
         }
 
         compositeDecoder.endStructure(descriptor)
@@ -59,21 +60,23 @@ abstract class CustomSerializer<T, D : CustomDecoder<T>, E : ElementDecoder<*, T
         return customDecoder.finishDecoding()
     }
 
+
     abstract fun newDecoder(): D
+    abstract fun newEncoder(value: T): D
 
 
     final override fun serialize(
         encoder: Encoder,
         value: T
     ) {
+        val customEncoder = newEncoder(value)
         encoder.encodeStructure(descriptor) {
             var i = 0
-            elements.forEach {
+            customEncoder.elements.forEach {
                 it.save(
                     descriptor = descriptor,
                     index = i++,
-                    encoder = this,
-                    obj = value
+                    encoder = this
                 )
             }
         }
@@ -81,54 +84,6 @@ abstract class CustomSerializer<T, D : CustomDecoder<T>, E : ElementDecoder<*, T
 }
 
 
-interface Element<V, D> {
-    val key: String
-    val serializer: KSerializer<V>
 
-    /*not sure if this even matters, since I am handling questions regarding this manually (handleNotFound,shouldEncode)*/
-    val isOptional: Boolean
-}
 
-abstract class ElementDecoder<V, T, D : CustomDecoder<T>>(
-    @Open override val serializer: KSerializer<V>
-) : Element<V, D> {
-    fun load(
-        descriptor: SerialDescriptor,
-        decoder: CompositeDecoder,
-        index: Int,
-        customDecoder: D
-    ) {
-        val loadedValue = decoder.decodeSerializableElement(descriptor, index, serializer)
-        handleLoadedValue(loadedValue, customDecoder)
-    }
 
-    abstract fun shouldEncode(v: V): Boolean
-
-    fun save(
-        descriptor: SerialDescriptor,
-        encoder: CompositeEncoder,
-        index: Int,
-        obj: T
-    ) {
-        val currentValue = getCurrentValue(obj)
-        if (shouldEncode(currentValue)) encoder.encodeSerializableElement(
-            descriptor = descriptor,
-            index = index,
-            serializer = serializer,
-            value = currentValue
-        )
-    }
-
-    abstract fun handleLoadedValue(
-        v: V,
-        customDecoder: D
-    )
-
-    abstract fun getCurrentValue(obj: T): V
-
-    abstract fun handleNotFound(customDecoder: D)
-}
-
-interface CustomDecoder<T> {
-    fun finishDecoding(): T
-}

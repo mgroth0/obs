@@ -48,6 +48,8 @@ interface MyListenerInter<U : Update> {
     fun tryRemovingListener()
     var removeAfterInvocation: Boolean
     var name: String?
+    fun preInvocation(update: U): U?
+    fun postInvocation()
 }
 
 @ListenerDSL
@@ -67,7 +69,7 @@ abstract class MyListener<U : Update> : SimpleStringableClass(), MyListenerInter
     }
 
 
-    internal fun preInvocation(update: U): U? {
+    final override fun preInvocation(update: U): U? {
         removeCondition?.invoke()?.ifTrue {
             removeListener()
             return null
@@ -75,7 +77,7 @@ abstract class MyListener<U : Update> : SimpleStringableClass(), MyListenerInter
         return update
     }
 
-    internal fun postInvocation() {
+    final override fun postInvocation() {
         if (removeAfterInvocation) {
             removeListener()
         } else removeCondition?.invoke()?.ifTrue {
@@ -395,9 +397,9 @@ class ObsHolderListener : MyListener<ObsHolderUpdate>() {
 }
 
 
-fun <T> ObsVal<T>.whenEqualsOnce(
+inline fun <reified T> ObsVal<T>.whenEqualsOnce(
     t: T,
-    op: () -> Unit
+    crossinline op: () -> Unit
 ) {
     if (value == t) op()
     else {

@@ -6,8 +6,21 @@ import matt.lang.sync.common.ReferenceMonitor
 import matt.lang.sync.common.SimpleReferenceMonitor
 import matt.lang.sync.common.inSync
 import matt.lang.sync.inSync
+import kotlin.jvm.JvmInline
 
-private object EMPTY
+private sealed interface CalculatedValue<out V> {
+    fun assume(): V
+}
+private data object EMPTY: CalculatedValue<Nothing> {
+    override fun assume(): Nothing {
+        error("bad assumption")
+    }
+}
+
+@JvmInline
+private value class Value<V>(val v: V): CalculatedValue<V> {
+    override fun assume(): V = v
+}
 
 class DependentValue<V>(private var op: () -> V) : ReferenceMonitor {
 
@@ -30,7 +43,7 @@ class DependentValue<V>(private var op: () -> V) : ReferenceMonitor {
 
     private val invalidationDuringGetMonitor = SimpleReferenceMonitor()
     private var justMarkedInvalid = false
-    @Suppress("UNCHECKED_CAST")
+
     fun get(): V =
         inSync {
             val momentValid =
@@ -38,16 +51,16 @@ class DependentValue<V>(private var op: () -> V) : ReferenceMonitor {
                     justMarkedInvalid = false
                     valid
                 }
-            return if (momentValid) lastCalculated as V else {
+            return if (momentValid) lastCalculated.assume() else {
                 calc()
-                lastCalculated as V
+                lastCalculated.assume()
             }
         }
 
 
     private fun calc() {
         val t = if (stopwatch != null) Clock.System.now() else null
-        lastCalculated = op()
+        lastCalculated = Value(op())
         t?.go {
             println("stopwatch\t${(Clock.System.now() - t)}\t$stopwatch")
         }
@@ -56,6 +69,6 @@ class DependentValue<V>(private var op: () -> V) : ReferenceMonitor {
         }
     }
 
-    private var lastCalculated: Any? = EMPTY
+    private var lastCalculated: CalculatedValue<V> = EMPTY
     private var valid: Boolean = false
 }

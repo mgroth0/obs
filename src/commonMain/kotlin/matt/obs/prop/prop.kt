@@ -23,7 +23,9 @@ import matt.obs.prop.newold.MObservableValNewAndOld
 import matt.obs.prop.writable.BindableProperty
 import matt.service.scheduler.Scheduler
 import kotlin.properties.ReadOnlyProperty
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
+import kotlin.reflect.cast
 
 typealias ObsVal<T> = MObservableVal<T, *, *>
 
@@ -39,7 +41,8 @@ interface MObservableVal<T, U : ValueUpdate<T>, L : ValueListenerBase<T, U, out 
     override val value: T
 
 
-    fun <R> cast(): ObsVal<R>
+    fun <R> cast(cast: (T) -> R): ObsVal<R>
+    fun <R> cast(cast: (T) -> R, castBack: (R) -> T): ObsVal<R>
 
 
     override fun observe(op: () -> Unit): MyListenerInter<*>
@@ -89,9 +92,9 @@ fun <T> ObsVal<T>.onChangeOnce(op: (T) -> Unit) =
         removeAfterInvocation = true
     }
 
-fun <T> ObsVal<T>.onChangeUntilInclusive(
-    until: (T) -> Boolean,
-    op: (T) -> Unit
+inline fun <reified T> ObsVal<T>.onChangeUntilInclusive(
+    crossinline until: (T) -> Boolean,
+    crossinline op: (T) -> Unit
 ) = onChange {
     op(it)
 }.apply {
@@ -99,9 +102,9 @@ fun <T> ObsVal<T>.onChangeUntilInclusive(
         until(it.new)
     }
 }
-fun <T> ObsVal<T>.onChangeUntilExclusive(
-    until: (T) -> Boolean,
-    op: (T) -> Unit
+inline fun <reified T> ObsVal<T>.onChangeUntilExclusive(
+    crossinline until: (T) -> Boolean,
+    crossinline op: (T) -> Unit
 ) = onChange {
     op(it)
 }.apply {
@@ -224,11 +227,26 @@ abstract class MObservableROValBase<T, U : ValueUpdate<T>, L : ValueListenerBase
         property: KProperty<*>
     ): T = value
 
+
+    open fun <R: T> cast(cls: KClass<R & Any>): ObsVal<R> =
+        cast {
+            cls.cast(it)
+        }
+
     @Open
-    @Suppress("UNCHECKED_CAST")
-    override fun <R> cast(): ObsVal<R> =
+    override fun <R> cast(cast: (T) -> R, castBack: (R) -> T): ObsVal<R> =
         binding {
-            it as R
+            /*
+             * I GET IT!
+             * The `cast` function from the kotlin standard reflection library is relatively safe because it inherently disallows casting to generic types, since it requires a class instance and you cannot have a class instance with filled type parameters! I think this applies for nullable types too!
+             */
+            cast(it)
+        }
+
+    @Open
+    override fun <R> cast(cast: (T) -> R): ObsVal<R> =
+        binding {
+            cast(it)
         }
 }
 

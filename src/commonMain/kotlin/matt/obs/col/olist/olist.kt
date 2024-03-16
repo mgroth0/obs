@@ -93,10 +93,10 @@ interface ImmutableObsList<E> :
 
     @Open fun filtered(filter: (E) -> Boolean): BasicFilteredList<E> = dynamicList(this, filter = filter)
     @Open fun dynamicallyFiltered(filter: (E) -> ObsB): BasicFilteredList<E> = dynamicList(this, dynamicFilter = filter)
-    @Suppress("UNCHECKED_CAST")
+
     @Open fun sorted(
         comparator: Comparator<in E>? = null
-    ): BasicSortedList<E> = dynamicList(this, comparator = comparator) as BasicSortedList<E>
+    ): BasicSortedList<E> = dynamicList(this, comparator = comparator)
     @Open fun onAdd(op: Consume<E>) = listen(onAdd = op, onRemove = {})
     @Open fun onRemove(op: Consume<E>) = listen(onAdd = { }, onRemove = op)
 
@@ -121,7 +121,7 @@ interface MutableObsList<E> : ImmutableObsList<E>, BindableList<E>, MutableList<
     fun atomicChange(op: MutableObsList<E>.() -> Unit)
 }
 
-@Suppress("UNCHECKED_CAST")
+
 fun <E : Comparable<E>> MutableObsList<E>.sorted(): BasicSortedList<E> = dynamicList(this, comparator = comparableComparator()) as BasicSortedList<E>
 
 fun <E> MutableObsList<E>.toFakeMutableObsList() = FakeMutableObsList(this)

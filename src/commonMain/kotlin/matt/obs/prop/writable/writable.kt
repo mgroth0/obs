@@ -45,8 +45,14 @@ interface WritableMObservableVal<T, U : ValueUpdate<T>, L : ValueListenerBase<T,
     }
 
 
-    override fun <R> cast(): Var<R>
-
+    @Open
+    /*override fun <R: T> cast(cast: (T) -> R, castBack: (R) -> T): Var<R>*/
+    override fun <R> cast(cast: (T) -> R, castBack: (R) -> T): Var<R>
+    @Open
+    override fun <R> cast(cast: (T) -> R): ObsVal<R> =
+        binding {
+            cast(it)
+        }
     @Open
     fun <R> proxy(converter: BiConverter<T, R>) = ProxyProp(this, converter)
 
@@ -126,8 +132,21 @@ open class BindableProperty<T>(value: T) :
     BindableValue<T> {
 
     @Open
-    override fun <R> cast() = CastedWritableProp<T, R>(this)
+    override fun <R> cast(cast: (T) -> R, castBack: (R) -> T) = CastedWritableProp<T, R>(this, cast, castBack)
+    @Open
+    override fun <R> cast(cast: (T) -> R): ObsVal<R> =
+        binding {
+            cast(it)
+        }
 
+  /*  override fun <R : T> cast(cls: KClass<R & Any>): ObsVal<R> = CastedWritableProp(
+        this,
+        {
+
+            it as R
+        }
+        ,{it}
+    )*/
     val monitorForSetting = SimpleReferenceMonitor()
 
     private val bindWritePass by lazy { KeyPass() }

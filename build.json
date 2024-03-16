@@ -50,7 +50,7 @@
     },
     {
       "type": "Lib",
-      "cfg": "commonJvmAndroidMainImplementation",
+      "cfg": "commonMainImplementation",
       "key": "kt-reflect"
     },
     {
@@ -60,7 +60,7 @@
     },
     {
       "type": "Project",
-      "cfg": "jvmTestImplementation",
+      "cfg": "commonMainImplementation",
       "path": ":k:reflect"
     },
     {

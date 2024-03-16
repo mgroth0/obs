@@ -1,5 +1,6 @@
 package matt.obs.hold
 
+import kotlinx.serialization.serializer
 import matt.collect.itr.filterNotNull
 import matt.lang.anno.Open
 import matt.lang.common.go
@@ -18,7 +19,7 @@ import matt.obs.col.oset.basicObservableSetOf
 import matt.obs.common.MObservable
 import matt.obs.listen.MyListenerInter
 import matt.obs.listen.ObsHolderListener
-import matt.obs.prop.typed.TypedBindableProperty
+import matt.obs.prop.typed.CastingTypedBindableProperty
 import matt.obs.prop.typed.TypedImmutableObsList
 import matt.obs.prop.typed.TypedImmutableObsSet
 import matt.obs.prop.typed.TypedMutableObsList
@@ -148,7 +149,25 @@ open class TypedObservableHolder : ObservableHolderImplBase<TypedSerializableEle
         defaultValue: T,
         noinline onChange: (() -> Unit)? = null
     ) = provider {
-        val fx = TypedBindableProperty(T::class, nullable = null is T, value = defaultValue)
+        /*val nullable = null is T*/
+        val experiment: CastingTypedBindableProperty<T> =
+            CastingTypedBindableProperty(
+                value = defaultValue,
+                serializer = serializer<T>(),
+                /*cls = T::class,*/
+                cast = {
+                    it as T
+                }
+            )
+        val fx = experiment
+     /*   val fx: TypedBindableProperty<T & Any> =
+            if (nullable) {
+                val thing: NullableTypedBindableProperty<T & Any> = nullableTypedBindableProperty(value = defaultValue)
+                thing
+            } else {
+                val thing: NonNullableTypedBindableProperty<T & Any> = nonNullabletypedBindableProperty(value = defaultValue!!)
+                thing
+            }*/
         onChange?.go { listener ->
             fx.onChange { listener() }
         }
@@ -170,37 +189,41 @@ open class TypedObservableHolder : ObservableHolderImplBase<TypedSerializableEle
         }
 
 
-    inline fun <reified E> registeredMutableList(vararg default: E) =
+    inline fun <reified E: Any> registeredMutableList(vararg default: E) =
         provider {
             val list = basicMutableObservableListOf(*default)
-            val fx = TypedMutableObsList(elementCls = E::class, nullableElements = null is E, list = list)
+            val fx =
+                TypedMutableObsList(
+                    elementCls = E::class, nullableElements = /*null is E*/false, list = list,
+                    elementSer = serializer<E>()
+                )
             _observables[it] = fx
             postRegister(fx)
             SimpleGetter(fx)
         }
 
-    inline fun <reified E> registeredList(vararg default: E) =
+    inline fun <reified E: Any> registeredList(vararg default: E) =
         provider {
             val list = basicROObservableListOf(*default)
-            val fx = TypedImmutableObsList(elementCls = E::class, nullableElements = null is E, list = list)
+            val fx = TypedImmutableObsList(elementCls = E::class, nullableElements = /*null is E*/false, list = list, elementSer = serializer<E>())
             _observables[it] = fx
             postRegister(fx)
             SimpleGetter(fx)
         }
 
-    inline fun <reified E> registeredSet(vararg default: E) =
+    inline fun <reified E: Any> registeredSet(vararg default: E) =
         provider {
             val set = basicImmutableObservableSetOf(*default)
-            val fx = TypedImmutableObsSet(elementCls = E::class, nullableElements = null is E, set = set)
+            val fx = TypedImmutableObsSet(elementCls = E::class, nullableElements = /*null is E*/false, set = set, elementSer = serializer<E>())
             _observables[it] = fx
             postRegister(fx)
             SimpleGetter(fx)
         }
 
-    inline fun <reified E> registeredMutableSet(vararg default: E) =
+    inline fun <reified E: Any> registeredMutableSet(vararg default: E) =
         provider {
             val set = basicObservableSetOf(*default)
-            val fx = TypedMutableObsSet(elementCls = E::class, nullableElements = null is E, set = set)
+            val fx = TypedMutableObsSet(elementCls = E::class, nullableElements = /*null is E*/false, set = set, elementSer = serializer<E>())
             _observables[it] = fx
             postRegister(fx)
             SimpleGetter(fx)

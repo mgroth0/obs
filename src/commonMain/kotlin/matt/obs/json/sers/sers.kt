@@ -4,7 +4,8 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import matt.json.oldfx.common.jsonObj
+import kotlinx.serialization.json.buildJsonObject
+import matt.json.oldfx.common.putIfValueNotNull
 import matt.json.ser.JsonArraySerializer
 import matt.json.ser.JsonObjectSerializer
 import matt.json.ser.MyJsonSerializer
@@ -12,6 +13,7 @@ import matt.obs.col.olist.BasicObservableListImpl
 import matt.obs.hold.NamedObsHolder
 import matt.obs.prop.writable.BindableProperty
 import kotlin.reflect.KClass
+import kotlin.reflect.cast
 
 class BindablePropertySerializer<T>(val serializer: KSerializer<T>): MyJsonSerializer<BindableProperty<T>>(
     BindableProperty::class
@@ -24,7 +26,7 @@ class BindablePropertySerializer<T>(val serializer: KSerializer<T>): MyJsonSeria
     override fun serialize(value: BindableProperty<T>): JsonElement = Json.encodeToJsonElement(serializer, value.value)
 }
 
-class BasicObservableListImplSerializer<E: Any>(val serializer: KSerializer<in E>):
+class BasicObservableListImplSerializer<E: Any>(val serializer: KSerializer<in E>, private val elementClass: KClass<E>):
     JsonArraySerializer<BasicObservableListImpl<E>>(BasicObservableListImpl::class) {
     override fun deserialize(jsonArray: JsonArray): BasicObservableListImpl<E> {
 
@@ -32,8 +34,7 @@ class BasicObservableListImplSerializer<E: Any>(val serializer: KSerializer<in E
 
         return BasicObservableListImpl(
             jsonArray.map {
-                @Suppress("UNCHECKED_CAST")
-                Json.decodeFromJsonElement(serializer, it) as E
+                elementClass.cast(Json.decodeFromJsonElement(serializer, it))
             }
         )
     }
@@ -43,10 +44,10 @@ class BasicObservableListImplSerializer<E: Any>(val serializer: KSerializer<in E
 
 
 abstract class JsonObjectFXSerializer<T: NamedObsHolder<*>>(cls: KClass<T>): JsonObjectSerializer<T>(cls) {
-    open val miniSerializers: List<MyJsonSerializer<*>> = listOf()
     final override fun serialize(value: T) =
-        jsonObj(
-            value.namedObservables(),
-            serializers = miniSerializers
-        )
+        buildJsonObject {
+            value.namedObservables().forEach {
+                putIfValueNotNull(it.key, it.value)
+            }
+        }
 }

@@ -11,9 +11,11 @@ import matt.obs.listen.update.ContextUpdate
 
 
 interface MObservableObject<T> : MListenable<ContextListener<T>>, CustomInvalidations {
+
+    fun cast(o: Any?): T
+
     @Open
-    @Suppress("UNCHECKED_CAST")
-    val uncheckedThis get() = this as T
+    val noLongerUncheckedThis get() = cast(this)
 
     @Open
     override fun observe(op: () -> Unit) = onChange { op() }
@@ -28,7 +30,7 @@ interface MObservableObject<T> : MListenable<ContextListener<T>>, CustomInvalida
     @Open
     fun onChange(op: T.() -> Unit) =
         addListener(
-            ContextListener(uncheckedThis) {
+            ContextListener(noLongerUncheckedThis) {
                 op()
             }
         )

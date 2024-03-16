@@ -36,9 +36,13 @@ sealed interface Bindable {
     @Open
     val isBoundBidirectionally: Boolean get() = theBind is BiTheBind
 }
+sealed interface MoreTypeSafeBindable<T>: Bindable {
+    override val bindManager: BindableValueHelper<T>
+}
 
 sealed class BindableImpl : Bindable, ReferenceMonitor {
-    final override val bindManager get() = this
+    @Open
+    override val bindManager get() = this
     final override var theBind: ABind? = null
 
     final override fun unbind() =
@@ -175,7 +179,7 @@ class BindableSetImpl<E>(private val target: MutableObsSet<E>) : BindableImpl(),
     }
 }
 
-interface BindableValue<T> : Bindable {
+interface BindableValue<T> : MoreTypeSafeBindable<T> {
     fun bind(source: ObsVal<out T>): ABind
     fun bindWeakly(source: ObsVal<out T>): ABind
     fun bindBidirectional(
@@ -222,17 +226,17 @@ fun <T> bindMultipleTargetsTogether(
     targets.forEach {
         require(it !is FXBackedPropBase || !it.isFXBound)
         it.unbind()
-        @Suppress("UNCHECKED_CAST")
-        (it.bindManager as BindableValueHelper<T>).apply {
+
+        (it.bindManager).apply {
             wProp setCorrectlyTo { source.value }
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
+
     val listener =
         source.observe {
             targets.forEach {
-                (it.bindManager as BindableValueHelper<T>).apply {
+                (it.bindManager).apply {
                     wProp setCorrectlyTo { source.value }
                 }
             }
@@ -256,6 +260,8 @@ infix fun <TT> Var<TT>.setCorrectlyTo(new: () -> TT) {
 
 class BindableValueHelper<T>(internal val wProp: Var<T>) : BindableImpl(), BindableValue<T> {
 
+    override val bindManager: BindableValueHelper<T>
+        get() = this
 
     override fun bind(source: ObsVal<out T>): ABind =
         inSync {

@@ -1,4 +1,3 @@
-@file:Suppress("UNCHECKED_CAST")
 
 package matt.obs.prop.cast
 
@@ -9,19 +8,18 @@ import matt.obs.prop.writable.Var
 
 
 
-class CastedWritableProp<S, C>(source: Var<S>): BindableProperty<C>(source.value as C) {
+class CastedWritableProp<S, C>(source: Var<S>, cast: (S) -> C, castBack: (C) -> S): BindableProperty<C>(cast(source.value)) {
     init {
         val rBlocker = RecursionBlocker()
         onChange {
             rBlocker.with {
-                @Suppress("UNCHECKED_CAST")
-                source.value = it as S
+                source.value = castBack(it)
             }
         }
         source.onChange {
             rBlocker.with {
-                @Suppress("UNCHECKED_CAST")
-                value = it as C
+
+                value = cast(it)
             }
         }
     }
